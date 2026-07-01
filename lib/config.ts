@@ -1,0 +1,1 @@
+export const SOGLIA_PREZZO_PUBBLICO = 1000;
