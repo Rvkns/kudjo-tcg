@@ -17,6 +17,7 @@ export const PropostaVenditaSchema = z.object({
   gioco: GiocoSchema,
   descrizione_carta: z.string().min(1),
   messaggio: z.string().min(1),
+  foto: z.string().optional(),
   timestamp: z.string().min(1),
 });
 

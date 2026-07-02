@@ -1,7 +1,164 @@
 {
+  "Common": {
+    "brand": "Kudjo",
+    "tagline": "Trading Card Store & Auctions",
+    "readMore": "Read More",
+    "contactDealer": "Contact Dealer",
+    "back": "Back",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "success": "Sent successfully!",
+    "yes": "Yes",
+    "no": "No",
+    "disclaimer": "Note: Transactions are concluded privately, outside of this platform. Kudjo does not manage online payments or escrow services.",
+    "priceOnRequest": "Price on request",
+    "currencySymbol": "€",
+    "languages": {
+      "it": "Italiano",
+      "en": "English"
+    }
+  },
+  "Navbar": {
+    "collezione": "Collection",
+    "vendiciCarta": "Sell to Us",
+    "chiSiamo": "About Us",
+    "contatti": "Contact"
+  },
+  "Footer": {
+    "desc": "Independent dealer and curator of high-tier Pokémon and One Piece TCG collectible cards. Authenticity guaranteed, private transactions.",
+    "newsletter": "Stay Updated",
+    "newsletterPlaceholder": "Your email",
+    "newsletterBtn": "Subscribe",
+    "newsletterSuccess": "Thank you for subscribing!",
+    "linksTitle": "Navigation",
+    "legalTitle": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "disclaimer": "Disclaimer",
+    "rights": "All rights reserved."
+  },
   "Home": {
     "title": "Kudjo",
-    "subtitle": "A curated collection of Pokémon and One Piece TCG cards",
-    "intro": "A digital showcase for collectors. Every piece selected, photographed, and verified with care."
+    "subtitle": "Curated Pokémon & One Piece TCG Collection",
+    "heroDesc": "We select only the rarest and most fascinating pieces in the global TCG landscape. Every card in our catalog is photographed live, physically verified, and preserved like a piece of art.",
+    "heroCTA": "Explore the Collection",
+    "featuredTitle": "Featured Pieces",
+    "featuredSubtitle": "A selection of the rarest and most exclusive lots currently available in our archive.",
+    "featuredCTA": "View Details",
+    "standards": {
+      "title": "Our Standard",
+      "subtitle": "Why collectors choose Kudjo",
+      "authTitle": "Guaranteed Authenticity",
+      "authDesc": "Every single card is analyzed under a microscope to ensure its authenticity and structural integrity before cataloging.",
+      "photoTitle": "Real Photography",
+      "photoDesc": "No stock images or AI mockups. We show every piece with macro front, back, and angled shots to highlight the holography.",
+      "p2pTitle": "Transparent Negotiation",
+      "p2pDesc": "No automated checkout or platform fees. The sale is concluded privately with the dealer for maximum discretion."
+    }
+  },
+  "Collection": {
+    "title": "The Collection",
+    "subtitle": "Browse our physical lots currently available for private purchase.",
+    "searchPlaceholder": "Search by card name, set, code...",
+    "filters": {
+      "title": "Filters",
+      "game": "Game",
+      "set": "Set",
+      "condition": "Condition",
+      "graded": "Graded",
+      "status": "Status",
+      "all": "All",
+      "gradedOnly": "Graded Only",
+      "rawOnly": "Raw Only (Ungraded)",
+      "available": "Available",
+      "reserved": "Reserved",
+      "sold": "Sold"
+    },
+    "sorting": {
+      "title": "Sort by",
+      "recent": "Recent arrivals",
+      "price_asc": "Price: low to high",
+      "price_desc": "Price: high to low"
+    },
+    "empty": "No lots match the selected filters.",
+    "statusLabels": {
+      "disponibile": "Available",
+      "riservata": "Reserved",
+      "venduta": "Sold"
+    }
+  },
+  "Detail": {
+    "details": "Lot Specifications",
+    "game": "Game",
+    "set": "Origin Set",
+    "rarity": "Rarity",
+    "printingLang": "Printing Language",
+    "condition": "Condition",
+    "grading": "Grading",
+    "grade": "Grade",
+    "variant": "Variant",
+    "historyTitle": "History & Provenance",
+    "inquireTitle": "Inquire for Information",
+    "inquireDesc": "Interested in this lot? Fill out the form below to start a private negotiation directly with our dealer.",
+    "whatsappCTA": "Inquire via WhatsApp",
+    "emailCTA": "Inquire via Email",
+    "form": {
+      "name": "Full Name",
+      "contact": "Contact Method (Email or Phone)",
+      "message": "Message",
+      "messageDefault": "Hello, I am interested in purchasing the lot: {cardName} ({collectNo}) from the set {setName}. Please send me details on how to proceed. Thank you.",
+      "submit": "Send Inquiry"
+    },
+    "dualPhotoNote": "Holographic view: hover with mouse (or tap on mobile) to reveal foil reflections."
+  },
+  "Sell": {
+    "title": "Sell to Us",
+    "subtitle": "Propose your best cards for direct purchase by Kudjo.",
+    "intro": "We are constantly looking for rare pieces, graded cards (PSA/BGS/CGC), and entire Pokémon & One Piece TCG collections. Fill out the form describing your card. We will reply within 24 hours with an initial valuation.",
+    "instructions": "Note: For this initial contact phase, file upload is not required. After submitting the form, you can send us detailed macro photos of the front and back via WhatsApp or Email.",
+    "form": {
+      "name": "Name",
+      "contact": "Email or Phone Number",
+      "game": "Select Game",
+      "cardDesc": "Card Description",
+      "cardDescHelp": "Enter card name, set, language, collection number, and perceived condition (e.g. Charizard ex 199/165 ITA NM).",
+      "message": "Additional Notes",
+      "messageHelp": "E.g., graded or ungraded, how you found it, desired price...",
+      "submit": "Submit Proposal"
+    },
+    "success": {
+      "title": "Proposal Received",
+      "desc": "Thank you for proposing your card. Our team will review it shortly.",
+      "ctaText": "To speed up the evaluation, you can send us detailed front/back photos indicating your name:",
+      "whatsapp": "Send Photos on WhatsApp",
+      "email": "Send Photos via Email"
+    }
+  },
+  "ChiSiamo": {
+    "title": "About Us",
+    "subtitle": "A passion for collecting excellence.",
+    "storyTitle": "A Selected History",
+    "storyP1": "Kudjo was born from the need to rise above the chaos of generic online marketplaces and social media groups. We believe that high-value collectible cards deserve the same treatment, care, and presentation as luxury goods or fine art.",
+    "storyP2": "We are not a mass-market comic book shop, nor an automated marketplace. Kudjo is a select independent dealer: we curate a tight archive of pieces whose provenance is known, inspect physical conditions minutely under controlled lighting, and offer an exclusive private negotiation channel.",
+    "visionTitle": "Moving to the Platform",
+    "visionP1": "This catalog represents the MVP and foundation of our ecosystem. Our long-term vision is to evolve Kudjo into a highly specialized premium auction platform, where collectors can trade elite, pre-verified lots in safety and transparency."
+  },
+  "Contatti": {
+    "title": "Contact",
+    "subtitle": "We are at your disposal for any advice or information regarding our lots.",
+    "infoTitle": "Direct Channels",
+    "infoDesc": "Want to talk directly to the dealer for a quick purchase or a specific question? Use our instant contact methods.",
+    "formTitle": "Send a Message",
+    "formDesc": "Fill out the form for any general inquiry or to book a video call inspection of any lot.",
+    "success": "Message sent successfully! We will get back to you as soon as possible."
+  },
+  "Legal": {
+    "title": "Terms & Legal Notes",
+    "subtitle": "Transparency and platform responsibility.",
+    "disclaimerTitle": "Private Transactions Disclaimer",
+    "disclaimerP1": "Kudjo operates exclusively as a digital catalog and showcase of physical lots, owned or on consignment. This site is NOT an e-commerce platform, does not contain online payment gateways (like Stripe or PayPal), and does not offer any integrated auction or bidding service in this version.",
+    "disclaimerP2": "All negotiations, sales agreements, financial transactions, and shipping occur privately, outside of the website infrastructure, via direct agreements between the buyer and the dealer (Kudjo). Kudjo disclaims all liability for payment methods chosen privately by the parties.",
+    "privacyTitle": "Privacy Policy",
+    "privacyP1": "Data collected through contact forms (name, email, phone number) is used solely to respond to inquiries or purchase requests submitted by the user. We do not sell or share data with third parties."
   }
 }

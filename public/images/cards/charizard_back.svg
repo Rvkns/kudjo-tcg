@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 500" width="100%" height="100%">
+      <!-- Base Background -->
+      <rect width="100%" height="100%" rx="16" fill="#0d1117" />
+
+      <!-- Outer Gold Borders -->
+      <rect x="10" y="10" width="330" height="480" rx="12" fill="none" stroke="#9c7a52" stroke-width="2.5" />
+      <rect x="15" y="15" width="320" height="470" rx="10" fill="none" stroke="#9c7a52" stroke-width="0.75" stroke-opacity="0.6" />
+
+      <!-- Inner Dark Plate -->
+      <rect x="25" y="25" width="300" height="450" rx="8" fill="#080a0f" />
+      <rect x="29" y="29" width="292" height="442" rx="6" fill="none" stroke="#6b4f36" stroke-width="0.5" />
+
+      <!-- Central Mandala / Gold Crest -->
+      <g transform="translate(175, 250)">
+        <circle r="60" fill="none" stroke="#9c7a52" stroke-width="1.5" />
+        <circle r="40" fill="none" stroke="#6b4f36" stroke-width="0.75" />
+        <circle r="20" fill="#9c7a52" opacity="0.1" />
+
+        <!-- Star rays -->
+        <g stroke="#9c7a52" stroke-width="1">
+          <line x1="0" y1="-80" x2="0" y2="80" />
+          <line x1="-80" y1="0" x2="80" y2="0" />
+          <line x1="-56" y1="-56" x2="56" y2="56" />
+          <line x1="-56" y1="56" x2="56" y2="-56" />
+        </g>
+
+        <!-- Decorative dots -->
+        <circle cx="0" cy="-80" r="2.5" fill="#9c7a52" />
+        <circle cx="0" cy="80" r="2.5" fill="#9c7a52" />
+        <circle cx="-80" cy="0" r="2.5" fill="#9c7a52" />
+        <circle cx="80" cy="0" r="2.5" fill="#9c7a52" />
+
+        <circle cx="-56" cy="-56" r="2.5" fill="#9c7a52" />
+        <circle cx="56" cy="56" r="2.5" fill="#9c7a52" />
+        <circle cx="-56" cy="56" r="2.5" fill="#9c7a52" />
+        <circle cx="56" cy="-56" r="2.5" fill="#9c7a52" />
+      </g>
+
+      <!-- Top and Bottom Branding text -->
+      <text x="175" y="70" font-family="'Inter', sans-serif" font-weight="bold" font-size="10" fill="#9c7a52" letter-spacing="5" text-anchor="middle">KUDJO ARCHIVE</text>
+      <text x="175" y="440" font-family="'Inter', sans-serif" font-weight="bold" font-size="10" fill="#9c7a52" letter-spacing="5" text-anchor="middle">OFFICIAL CARD BACK</text>
+    </svg>

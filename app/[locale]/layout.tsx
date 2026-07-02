@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import { Fraunces, Inter } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import '../globals.css';
 
 const fraunces = Fraunces({
@@ -16,8 +19,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Kudjo',
-  description: 'Vetrina premium Pokémon & One Piece TCG',
+  title: 'Kudjo - Premium TCG Showcase',
+  description: 'Vetrina premium Pokémon & One Piece TCG - Dealer Selezionato',
 };
 
 export function generateStaticParams() {
@@ -36,10 +39,19 @@ export default async function LocaleLayout({
     notFound();
   }
 
+  // Fetch messages for next-intl provider
+  const messages = await getMessages();
+
   return (
     <html lang={locale} className={`${fraunces.variable} ${inter.variable}`}>
-      <body className="bg-background text-foreground font-sans antialiased">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+      <body className="bg-background text-foreground font-sans antialiased flex flex-col min-h-screen">
+        <NextIntlClientProvider messages={messages}>
+          <Navbar />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

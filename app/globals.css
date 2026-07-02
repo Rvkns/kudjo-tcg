@@ -1,17 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0b0c;
+  --background: #131211;
   --foreground: #f2ede4;
-  --bronze: #9c7a52;
-  --bronze-dark: #6b4f36;
+  --kudjo-yellow: #dfae0b;
+  --kudjo-red: #e11b22;
+  --kudjo-brown: #8f5533;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-bronze: var(--bronze);
-  --color-bronze-dark: var(--bronze-dark);
+  --color-bronze: var(--kudjo-yellow);
+  --color-bronze-dark: var(--kudjo-red);
+  --color-kudjo-yellow: var(--kudjo-yellow);
+  --color-kudjo-red: var(--kudjo-red);
+  --color-kudjo-brown: var(--kudjo-brown);
   --font-display: var(--font-fraunces);
   --font-sans: var(--font-inter);
 }
@@ -20,3 +24,19 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
 }
+
+@keyframes pageEntry {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-entry {
+  animation: pageEntry 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
