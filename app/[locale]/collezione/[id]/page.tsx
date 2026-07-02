@@ -313,7 +313,7 @@ export default function CardDetailPage({
               <h3 className="text-xs font-bold tracking-widest uppercase text-foreground mb-4 pb-2 border-b border-white/5">
                 {t('details')}
               </h3>
-              <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-8 text-xs">
                 <div className="flex justify-between border-b border-white/[0.02] pb-2">
                   <span className="text-neutral-500">{t('game')}</span>
                   <span className="font-semibold text-neutral-300 capitalize">

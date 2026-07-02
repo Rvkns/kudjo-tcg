@@ -13,6 +13,7 @@ import { type Gioco } from '@/lib/schema/gioco';
 
 export default function CollectionPage() {
   const t = useTranslations('Collection');
+  const tCommon = useTranslations('Common');
 
   // Filter States
   const [search, setSearch] = useState('');
@@ -22,6 +23,21 @@ export default function CollectionPage() {
   const [graded, setGraded] = useState<'all' | 'graded' | 'raw'>('all');
   const [status, setStatus] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'price_asc' | 'price_desc'>('recent');
+  
+  // Mobile UI States
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Active filters count
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (search.trim()) count += 1;
+    if (game !== 'all') count += 1;
+    if (selectedSetId !== 'all') count += 1;
+    if (condition !== 'all') count += 1;
+    if (graded !== 'all') count += 1;
+    if (status !== 'all') count += 1;
+    return count;
+  }, [search, game, selectedSetId, condition, graded, status]);
 
   // All populated items loaded directly
   const allItems = useMemo(() => getPopulatedItems(), []);
@@ -136,7 +152,7 @@ export default function CollectionPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0b0b0c] text-foreground font-sans">
+    <div className="relative min-h-screen bg-background text-foreground font-sans">
       <div className="absolute top-0 right-1/4 h-[400px] w-[400px] rounded-full bg-bronze/5 blur-[120px] pointer-events-none" />
 
       <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-20">
@@ -153,9 +169,35 @@ export default function CollectionPage() {
           </p>
         </div>
 
+        {/* Mobile Filter Toggle Button */}
+        <div className="lg:hidden flex items-center justify-between gap-4 w-full bg-white/[0.02] border border-white/5 rounded-xl p-4 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold tracking-wider uppercase text-neutral-300">
+              {t('filters.title')}
+            </span>
+            {activeFiltersCount > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-bronze text-[10px] font-bold text-[#131211]">
+                {activeFiltersCount}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="flex items-center gap-2 rounded border border-bronze bg-bronze/10 px-4 py-2 text-xs font-bold tracking-wider uppercase text-bronze hover:bg-bronze hover:text-[#131211] transition-all cursor-pointer"
+          >
+            {/* Filter icon */}
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            {showMobileFilters ? (tCommon('languages.it') === 'Italiano' ? 'Nascondi Filtri' : 'Hide Filters') : (tCommon('languages.it') === 'Italiano' ? 'Mostra Filtri' : 'Show Filters')}
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-4">
           {/* LEFT: Filters Drawer/Sidebar */}
-          <aside className="lg:col-span-1 flex flex-col gap-6 border-b lg:border-b-0 lg:border-r border-white/5 pb-10 lg:pb-0 lg:pr-8">
+          <aside className={`lg:col-span-1 flex-col gap-6 border-b lg:border-b-0 lg:border-r border-white/5 pb-10 lg:pb-0 lg:pr-8 transition-all duration-300 ${
+            showMobileFilters ? 'flex animate-fade-in' : 'hidden lg:flex'
+          }`}>
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold tracking-widest uppercase text-foreground">
                 {t('filters.title')}

@@ -23,7 +23,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="w-full border-t border-white/5 bg-[#0b0b0c] text-neutral-400 font-sans">
+    <footer className="w-full border-t border-white/5 bg-background text-neutral-400 font-sans">
       <div className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-20">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4 md:gap-8">
           {/* Logo & Description */}

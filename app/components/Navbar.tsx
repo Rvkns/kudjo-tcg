@@ -115,7 +115,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/5 bg-[#0b0b0c]/98 py-6 px-8 animate-fade-in">
+        <div className="md:hidden border-t border-white/5 bg-background/98 py-6 px-8 animate-fade-in">
           <nav className="flex flex-col gap-6 font-sans text-sm tracking-widest uppercase font-semibold text-neutral-400">
             {navLinks.map((link) => {
               const isActive = pathname.startsWith(link.href);

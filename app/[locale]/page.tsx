@@ -9,7 +9,7 @@ export default function HomePage() {
   const items = getPopulatedItems().slice(0, 3); // Charizard, Ace, Lugia
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#0b0b0c]">
+    <div className="relative w-full overflow-hidden bg-background">
       {/* Background Decorative Gradient elements */}
       <div className="absolute top-0 left-1/4 h-[500px] w-[500px] rounded-full bg-bronze/5 blur-[120px] pointer-events-none" />
       <div className="absolute top-[600px] right-1/4 h-[600px] w-[600px] rounded-full bg-bronze/5 blur-[150px] pointer-events-none" />
