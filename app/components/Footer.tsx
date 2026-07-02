@@ -29,7 +29,7 @@ export default function Footer() {
           {/* Logo & Description */}
           <div className="md:col-span-2 flex flex-col gap-4">
             <Link href="/" className="flex items-center select-none max-w-max py-1">
-              <KudjoLogo className="h-11 w-auto transition-transform duration-300 hover:scale-[1.02]" />
+              <KudjoLogo className="h-14 w-auto transition-transform duration-300 hover:scale-[1.02]" />
             </Link>
             <p className="max-w-md text-xs leading-relaxed text-neutral-500">
               {t('desc')}

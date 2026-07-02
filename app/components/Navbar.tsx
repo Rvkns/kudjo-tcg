@@ -30,7 +30,7 @@ export default function Navbar() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 md:px-10">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center group select-none py-1">
-          <KudjoLogo className="h-11 w-auto transition-transform duration-300 group-hover:scale-[1.02]" />
+          <KudjoLogo className="h-14 w-auto transition-transform duration-300 group-hover:scale-[1.02]" />
         </Link>
 
         {/* Desktop Navigation Links */}
