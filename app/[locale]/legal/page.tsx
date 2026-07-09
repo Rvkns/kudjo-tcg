@@ -28,23 +28,83 @@ export default function LegalPage() {
             <h2 className="font-display text-lg text-bronze font-light mb-3 uppercase tracking-wider">
               ⚠️ {t('disclaimerTitle')}
             </h2>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 text-neutral-300">
               <p>{t('disclaimerP1')}</p>
               <p>{t('disclaimerP2')}</p>
             </div>
           </div>
 
           {/* Section 2: Privacy Policy */}
-          <div className="flex flex-col gap-3">
-            <h2 className="text-xs font-bold tracking-widest uppercase text-foreground">
+          <div className="flex flex-col gap-4 border-t border-white/5 pt-8">
+            <h2 className="text-sm font-bold tracking-widest uppercase text-foreground">
               {t('privacyTitle')}
             </h2>
-            <p>{t('privacyP1')}</p>
+            <p className="italic text-neutral-300">{t('privacyIntro')}</p>
+            
+            <div className="flex flex-col gap-5 pl-2">
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('controllerTitle')}</h3>
+                <p>{t('controllerText')}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('dataTypeTitle')}</h3>
+                <ul className="list-disc pl-4 flex flex-col gap-1 mt-1">
+                  <li>{t('dataTypeText1')}</li>
+                  <li>{t('dataTypeText2')}</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('purposeTitle')}</h3>
+                <ul className="list-disc pl-4 flex flex-col gap-1 mt-1">
+                  <li>{t('purposeText1')}</li>
+                  <li>{t('purposeText2')}</li>
+                  <li>{t('purposeText3')}</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('recipientsTitle')}</h3>
+                <p>{t('recipientsText')}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('retentionTitle')}</h3>
+                <p>{t('retentionText')}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('rightsTitle')}</h3>
+                <p>{t('rightsText')}</p>
+              </div>
+            </div>
           </div>
 
-          {/* Section 3: Intellectual Property */}
+          {/* Section 3: Cookie Policy */}
+          <div className="flex flex-col gap-4 border-t border-white/5 pt-8">
+            <h2 className="text-sm font-bold tracking-widest uppercase text-foreground">
+              {t('cookieTitle')}
+            </h2>
+            <p className="italic text-neutral-300">{t('cookieIntro')}</p>
+
+            <div className="flex flex-col gap-5 pl-2">
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('cookieTechnicalTitle')}</h3>
+                <p>{t('cookieTechnicalText')}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('cookieDetailsTitle')}</h3>
+                <ul className="list-disc pl-4 flex flex-col gap-2 mt-1">
+                  <li>{t('cookieDetailsText1')}</li>
+                  <li>{t('cookieDetailsText2')}</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-neutral-200 mb-1">{t('cookieManageTitle')}</h3>
+                <p>{t('cookieManageText')}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Intellectual Property */}
           <div className="flex flex-col gap-3 border-t border-white/5 pt-8">
-            <h2 className="text-xs font-bold tracking-widest uppercase text-foreground">
+            <h2 className="text-sm font-bold tracking-widest uppercase text-foreground">
               Intellectual Property Disclaimer
             </h2>
             <p>

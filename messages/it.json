@@ -152,13 +152,42 @@
     "formDesc": "Compila il modulo per qualsiasi richiesta generica o per prenotare una videochiamata di ispezione di un lotto.",
     "success": "Messaggio inviato con successo! Ti risponderemo il prima possibile."
   },
+  "CookieBanner": {
+    "text": "Questo sito utilizza solo cookie tecnici strettamente necessari (come quello per la selezione della lingua) per garantirti la migliore esperienza di navigazione. Non utilizziamo cookie di profilazione o tracciamento di terze parti.",
+    "accept": "Ho capito",
+    "policy": "Leggi la Cookie Policy"
+  },
   "Legal": {
-    "title": "Termini e Note Legali",
-    "subtitle": "Trasparenza e responsabilità della piattaforma.",
+    "title": "Termini & Note Legali",
+    "subtitle": "Trasparenza, privacy e conformità legale in linea con il Regolamento UE 2016/679 (GDPR).",
     "disclaimerTitle": "Disclaimer Transazioni Private",
     "disclaimerP1": "Kudjo opera esclusivamente come catalogo digitale e vetrina di lotti fisici di proprietà o in conto vendita. Questo sito NON è un e-commerce, non contiene gateway di pagamento online (come Stripe o PayPal) e non offre alcun servizio d'asta o bidding integrato in questa versione.",
     "disclaimerP2": "Qualsiasi trattativa, accordo di vendita, transazione finanziaria e spedizione avviene privatamente, al di fuori dell'infrastruttura del sito web, tramite accordi diretti tra l'acquirente ed il dealer (Kudjo). Kudjo declina ogni responsabilità per le modalità di pagamento scelte privatamente dalle parti.",
-    "privacyTitle": "Informativa sulla Privacy",
-    "privacyP1": "I dati raccolti tramite i moduli di contatto (nome, email, numero di telefono) sono utilizzati esclusivamente al fine di rispondere alle richieste di informazioni o di acquisto inoltrate dall'utente. Non vendiamo né cediamo dati a terze parti."
+    "privacyTitle": "Informativa sulla Privacy (GDPR)",
+    "privacyIntro": "Ai sensi dell'art. 13 del Regolamento UE 2016/679 (GDPR), ti informiamo su come raccogliamo e trattiamo i tuoi dati personali quando interagisci con la nostra piattaforma.",
+    "controllerTitle": "1. Titolare del Trattamento",
+    "controllerText": "Il Titolare del Trattamento è Kudjo (di seguito 'Kudjo' o 'Titolare'), raggiungibile per qualsiasi richiesta o esercizio dei diritti all'indirizzo email: privacy@kudjo.it.",
+    "dataTypeTitle": "2. Tipologia di Dati Trattati",
+    "dataTypeText1": "- Dati di contatto forniti volontariamente: Nome, cognome, indirizzo email e/o numero di telefono inseriti nei moduli di contatto ('Vendici la tua carta', 'Richiedi informazioni' o iscrizione alla newsletter).",
+    "dataTypeText2": "- Dati di navigazione: Indirizzo IP, codici identificativi dei dispositivi, orario di richiesta ed altri parametri relativi al sistema operativo e all'ambiente informatico dell'utente, trattati al solo fine di consentire la navigazione tecnica.",
+    "purposeTitle": "3. Finalità e Base Giuridica del Trattamento",
+    "purposeText1": "- Risposta alle richieste dell'utente (form contatti): La base giuridica è l'esecuzione di misure precontrattuali o contrattuali su richiesta dell'interessato (Art. 6.1.b GDPR).",
+    "purposeText2": "- Invio di newsletter ed aggiornamenti (ove richiesto): La base giuridica è il consenso espresso dell'utente (Art. 6.1.a GDPR).",
+    "purposeText3": "- Manutenzione tecnica e sicurezza del sito: La base giuridica è il legittimo interesse del Titolare a mantenere sicura e funzionante la propria infrastruttura (Art. 6.1.f GDPR).",
+    "recipientsTitle": "4. Destinatari dei Dati",
+    "recipientsText": "I tuoi dati non saranno venduti, affittati o ceduti a terzi per scopi di marketing. Saranno trattati esclusivamente dal Titolare e da fornitori di servizi tecnici designati come Responsabili del Trattamento (es. hosting Vercel e provider del servizio email), nei limiti strettamente necessari al funzionamento del sito.",
+    "retentionTitle": "5. Periodo di Conservazione dei Dati",
+    "retentionText": "I dati dei moduli di contatto saranno conservati per il tempo necessario a dare riscontro alle richieste dell'utente e per un periodo massimo di 12 mesi dall'ultima comunicazione. I dati della newsletter saranno conservati fino alla richiesta di disiscrizione (opt-out), che può avvenire in qualsiasi momento tramite il link presente nelle email.",
+    "rightsTitle": "6. Diritti dell'Interessato",
+    "rightsText": "Ai sensi del GDPR, hai il diritto di chiedere al Titolare: l'accesso ai tuoi dati personali, la rettifica, la cancellazione (oblio), la limitazione del trattamento, l'opposizione al trattamento, nonché la portabilità dei dati. Hai inoltre il diritto di revocare il consenso in qualsiasi momento e di proporre reclamo all'Autorità Garante per la Protezione dei Dati Personali (www.garanteprivacy.it). Puoi esercitare i tuoi diritti scrivendo a privacy@kudjo.it.",
+    "cookieTitle": "Informativa sui Cookie (Cookie Policy)",
+    "cookieIntro": "Questa Cookie Policy spiega cosa sono i cookie e come li utilizziamo per offrirti una navigazione ottimale.",
+    "cookieTechnicalTitle": "1. Cosa sono i Cookie Tecnici?",
+    "cookieTechnicalText": "I cookie tecnici sono file di testo memorizzati sul tuo dispositivo per finalità strettamente connesse al funzionamento del sito. Kudjo utilizza esclusivamente cookie tecnici propri. Non utilizziamo cookie di profilazione o di terze parti per attività pubblicitarie o di tracciamento.",
+    "cookieDetailsTitle": "2. Cookie Utilizzati da Questo Sito",
+    "cookieDetailsText1": "- NEXT_LOCALE: Cookie tecnico proprietario utilizzato per memorizzare e ricordare la preferenza di lingua selezionata dall'utente (IT o EN). Ha una durata di 1 anno e si rinnova a ogni visita. Questo cookie è strettamente necessario ed esente dall'obbligo di consenso preventivo ai sensi delle linee guida del Garante Privacy.",
+    "cookieDetailsText2": "- kudjo-cookie-consent: Variabile memorizzata nel browser locale (localStorage) per registrare l'accettazione della presente informativa ed evitare che il banner compaia a ogni caricamento pagina.",
+    "cookieManageTitle": "3. Come disabilitare i cookie",
+    "cookieManageText": "Puoi disabilitare, limitare o cancellare i cookie modificando le impostazioni del tuo browser web (Chrome, Firefox, Safari, Edge, ecc.). Tieni presente che disabilitando il cookie tecnico NEXT_LOCALE, il sito potrebbe non ricordare la lingua preferita e ripristinare quella di default a ogni nuova sessione."
   }
 }

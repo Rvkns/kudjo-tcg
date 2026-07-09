@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import CookieBanner from '../components/CookieBanner';
 import '../globals.css';
 
 const fraunces = Fraunces({
@@ -51,6 +52,7 @@ export default async function LocaleLayout({
             {children}
           </main>
           <Footer />
+          <CookieBanner />
         </NextIntlClientProvider>
       </body>
     </html>

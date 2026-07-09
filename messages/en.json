@@ -152,13 +152,42 @@
     "formDesc": "Fill out the form for any general inquiry or to book a video call inspection of any lot.",
     "success": "Message sent successfully! We will get back to you as soon as possible."
   },
+  "CookieBanner": {
+    "text": "This website uses only strictly necessary technical cookies (such as language preference) to ensure the best browsing experience. We do not use any profiling or third-party tracking cookies.",
+    "accept": "Understood",
+    "policy": "Read Cookie Policy"
+  },
   "Legal": {
     "title": "Terms & Legal Notes",
-    "subtitle": "Transparency and platform responsibility.",
+    "subtitle": "Transparency, privacy, and legal compliance in accordance with EU Regulation 2016/679 (GDPR).",
     "disclaimerTitle": "Private Transactions Disclaimer",
     "disclaimerP1": "Kudjo operates exclusively as a digital catalog and showcase of physical lots, owned or on consignment. This site is NOT an e-commerce platform, does not contain online payment gateways (like Stripe or PayPal), and does not offer any integrated auction or bidding service in this version.",
     "disclaimerP2": "All negotiations, sales agreements, financial transactions, and shipping occur privately, outside of the website infrastructure, via direct agreements between the buyer and the dealer (Kudjo). Kudjo disclaims all liability for payment methods chosen privately by the parties.",
-    "privacyTitle": "Privacy Policy",
-    "privacyP1": "Data collected through contact forms (name, email, phone number) is used solely to respond to inquiries or purchase requests submitted by the user. We do not sell or share data with third parties."
+    "privacyTitle": "Privacy Policy (GDPR)",
+    "privacyIntro": "Pursuant to Art. 13 of EU Regulation 2016/679 (GDPR), we inform you on how we collect and process your personal data when you interact with our platform.",
+    "controllerTitle": "1. Data Controller",
+    "controllerText": "The Data Controller is Kudjo (hereinafter 'Kudjo' or 'Controller'), who can be contacted for any request or exercise of rights at the email address: privacy@kudjo.it.",
+    "dataTypeTitle": "2. Types of Data Processed",
+    "dataTypeText1": "- Contact data provided voluntarily: First name, last name, email address, and/or phone number entered in the contact forms ('Sell to Us', 'Inquire for Information', or newsletter subscription).",
+    "dataTypeText2": "- Navigation data: IP address, device identification codes, request times, and other parameters relating to the user's operating system and IT environment, processed solely to enable technical navigation.",
+    "purposeTitle": "3. Purposes and Legal Basis of Processing",
+    "purposeText1": "- Responding to user requests (contact form): The legal basis is the execution of pre-contractual or contractual measures at the request of the data subject (Art. 6.1.b GDPR).",
+    "purposeText2": "- Sending newsletters and updates (where requested): The legal basis is the user's express consent (Art. 6.1.a GDPR).",
+    "purposeText3": "- Technical maintenance and security of the site: The legal basis is the Controller's legitimate interest in keeping its infrastructure secure and functional (Art. 6.1.f GDPR).",
+    "recipientsTitle": "4. Data Recipients",
+    "recipientsText": "Your data will not be sold, rented, or transferred to third parties for marketing purposes. It will be processed exclusively by the Controller and by technical service providers designated as Data Processors (e.g., Vercel hosting and email service providers), strictly within the limits necessary for the website operation.",
+    "retentionTitle": "5. Data Retention Period",
+    "retentionText": "Contact form data will be kept for as long as necessary to respond to user requests, and for a maximum period of 12 months from the last communication. Newsletter data will be kept until an unsubscription (opt-out) request is made, which can occur at any time via the link provided in the emails.",
+    "rightsTitle": "6. Rights of the Data Subject",
+    "rightsText": "Under the GDPR, you have the right to request from the Controller: access to your personal data, rectification, erasure (right to be forgotten), restriction of processing, objection to processing, as well as data portability. You also have the right to withdraw your consent at any time and to lodge a complaint with the Data Protection Authority (Garante per la Protezione dei Dati Personali - www.garanteprivacy.it). You can exercise your rights by writing to privacy@kudjo.it.",
+    "cookieTitle": "Cookie Policy",
+    "cookieIntro": "This Cookie Policy explains what cookies are and how we use them to provide you with an optimal browsing experience.",
+    "cookieTechnicalTitle": "1. What are Technical Cookies?",
+    "cookieTechnicalText": "Technical cookies are text files stored on your device for purposes strictly related to the website functioning. Kudjo uses exclusively its own technical cookies. We do not use profiling or third-party cookies for advertising or tracking activities.",
+    "cookieDetailsTitle": "2. Cookies Used by This Site",
+    "cookieDetailsText1": "- NEXT_LOCALE: First-party technical cookie used to store and remember the language preference selected by the user (IT or EN). It lasts for 1 year and renews at each visit. This cookie is strictly necessary and exempt from prior consent obligations under Italian Data Protection Authority guidelines.",
+    "cookieDetailsText2": "- kudjo-cookie-consent: Local browser variable (localStorage) used to record acceptance of this policy and prevent the banner from appearing on every page load.",
+    "cookieManageTitle": "3. How to disable cookies",
+    "cookieManageText": "You can disable, restrict, or delete cookies by modifying your web browser settings (Chrome, Firefox, Safari, Edge, etc.). Please note that by disabling the technical cookie NEXT_LOCALE, the site may not remember your preferred language and will restore the default one at each new session."
   }
 }
