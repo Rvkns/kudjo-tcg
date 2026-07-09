@@ -38,6 +38,30 @@ export const mockSets: Set[] = [
     data_uscita: '2024-06-28',
     numero_carte_totali: 126,
   },
+  {
+    id: 'set_p_sv8a',
+    gioco: 'pokemon',
+    nome: 'Terastal Festive',
+    codice_ufficiale: 'SV8a',
+    data_uscita: '2024-10-18',
+    numero_carte_totali: 187,
+  },
+  {
+    id: 'set_p_mp',
+    gioco: 'pokemon',
+    nome: "McDonald's Promo",
+    codice_ufficiale: 'M-P',
+    data_uscita: '2025-01-01',
+    numero_carte_totali: 30,
+  },
+  {
+    id: 'set_p_pre',
+    gioco: 'pokemon',
+    nome: 'Prismatic Evolutions',
+    codice_ufficiale: 'PRE',
+    data_uscita: '2025-01-17',
+    numero_carte_totali: 131,
+  },
 ];
 
 // Mock Card Definitions
@@ -96,6 +120,42 @@ export const mockCardDefinitions: CardDefinition[] = [
     rarita: 'L',
     lingua_stampa: 'EN',
   },
+  {
+    id: 'card_p_umbreon_sar',
+    set_id: 'set_p_sv8a',
+    nome: 'Umbreon ex',
+    numero_raccolta: '217/187',
+    tipo_carta: 'Pokémon',
+    rarita: 'Special Art Rare',
+    lingua_stampa: 'JA',
+  },
+  {
+    id: 'card_p_pikachu_mcd',
+    set_id: 'set_p_mp',
+    nome: 'Pikachu',
+    numero_raccolta: '020/M-P',
+    tipo_carta: 'Pokémon',
+    rarita: 'Promo',
+    lingua_stampa: 'JA',
+  },
+  {
+    id: 'card_p_espeon_sir',
+    set_id: 'set_p_pre',
+    nome: 'Espeon ex',
+    numero_raccolta: '155/131',
+    tipo_carta: 'Pokémon',
+    rarita: 'Special Illustration Rare',
+    lingua_stampa: 'IT',
+  },
+  {
+    id: 'card_p_sylveon_sir',
+    set_id: 'set_p_pre',
+    nome: 'Sylveon ex',
+    numero_raccolta: '156/131',
+    tipo_carta: 'Pokémon',
+    rarita: 'Special Illustration Rare',
+    lingua_stampa: 'IT',
+  },
 ];
 
 // Mock Variants
@@ -135,6 +195,30 @@ export const mockVariants: Variant[] = [
     card_definition_id: 'card_op_bonney',
     tipo_variante: 'alternate_art',
     note: 'Special Alternate Art Leader (SP)',
+  },
+  {
+    id: 'var_p_umbreon_sar',
+    card_definition_id: 'card_p_umbreon_sar',
+    tipo_variante: 'alternate_art',
+    note: 'Special Art Rare (SAR)',
+  },
+  {
+    id: 'var_p_pikachu_mcd',
+    card_definition_id: 'card_p_pikachu_mcd',
+    tipo_variante: 'promo',
+    note: "McDonald's Promo Card",
+  },
+  {
+    id: 'var_p_espeon_sir',
+    card_definition_id: 'card_p_espeon_sir',
+    tipo_variante: 'alternate_art',
+    note: 'Special Illustration Rare (SIR)',
+  },
+  {
+    id: 'var_p_sylveon_sir',
+    card_definition_id: 'card_p_sylveon_sir',
+    tipo_variante: 'alternate_art',
+    note: 'Special Illustration Rare (SIR)',
   },
 ];
 
@@ -230,6 +314,70 @@ export const mockItems: Item[] = [
     stato: 'venduta',
     nota_storia: 'Splendida leader di OP-07. Già venduta ad un collezionista appassionato nel giugno 2026. Mantenuta in archivio storico a scopo espositivo.',
     data_inserimento: '2026-05-10',
+  },
+  {
+    id: 'item_p_umbreon_psa10',
+    variant_id: 'var_p_umbreon_sar',
+    condizione_raw: 'NM',
+    gradata: true,
+    grading_company: 'PSA',
+    voto: '10',
+    foto: [
+      '/images/cards/umbreon_front.jpg',
+      '/images/cards/umbreon_back.jpg'
+    ],
+    prezzo: 380,
+    stato: 'disponibile',
+    nota_storia: 'Ottenuto da un box di Super Electric Breaker (SV8a) sbustato in Giappone. Gradata direttamente da noi presso PSA, ottenendo il massimo dei voti. La texture di questa carta e il pattern olografico di Terastal Festive la rendono un capolavoro assoluto.',
+    data_inserimento: '2026-07-01',
+  },
+  {
+    id: 'item_p_pikachu_psa10',
+    variant_id: 'var_p_pikachu_mcd',
+    condizione_raw: 'NM',
+    gradata: true,
+    grading_company: 'PSA',
+    voto: '10',
+    foto: [
+      '/images/cards/pikachu_front.jpg',
+      '/images/cards/pikachu_back.jpg'
+    ],
+    prezzo: 120,
+    stato: 'disponibile',
+    nota_storia: "Rilasciata in esclusiva nei menu McDonald's in Giappone nel 2025. Un pezzo promozionale adorabile e molto difficile da trovare in condizioni perfette per via del packaging originale flessibile. Questo esemplare ha ottenuto un meritatissimo PSA 10.",
+    data_inserimento: '2026-07-02',
+  },
+  {
+    id: 'item_p_espeon_psa9',
+    variant_id: 'var_p_espeon_sir',
+    condizione_raw: 'NM',
+    gradata: true,
+    grading_company: 'PSA',
+    voto: '9',
+    foto: [
+      '/images/cards/espeon_front.jpg',
+      '/images/cards/espeon_back.jpg'
+    ],
+    prezzo: 220,
+    stato: 'disponibile',
+    nota_storia: 'Proveniente dal set italiano Evoluzioni Prismatiche (Prismatic Evolutions) del 2025. Trovata in un Elite Trainer Box e gradata PSA. Presenta un\'illustrazione spettacolare incentrata sui dettagli olografici di Teracristal.',
+    data_inserimento: '2026-07-03',
+  },
+  {
+    id: 'item_p_sylveon_psa9',
+    variant_id: 'var_p_sylveon_sir',
+    condizione_raw: 'NM',
+    gradata: true,
+    grading_company: 'PSA',
+    voto: '9',
+    foto: [
+      '/images/cards/sylveon_front.jpg',
+      '/images/cards/sylveon_back.jpg'
+    ],
+    prezzo: 240,
+    stato: 'disponibile',
+    nota_storia: 'Dalla fortunatissima espansione italiana Evoluzioni Prismatiche. Sylveon ex in versione Special Illustration Rare è una delle carte più amate dell\'intero blocco Scarlatto e Violetto. Gradata PSA 9 MINT.',
+    data_inserimento: '2026-07-04',
   },
 ];
 

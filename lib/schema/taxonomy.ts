@@ -23,6 +23,7 @@ export const RARITA_PER_GIOCO: Record<Gioco, readonly string[]> = {
     'Special Illustration Rare',
     'ACE SPEC',
     'Hyper Rare',
+    'Promo',
   ],
   one_piece: ['C', 'UC', 'R', 'SR', 'SEC', 'L', 'SP'],
 };

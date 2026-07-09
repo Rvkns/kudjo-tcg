@@ -42,3 +42,7 @@ next-env.d.ts
 
 # agent runtime folders
 .superpowers/
+
+# temporary source photo folder
+/cards
+
