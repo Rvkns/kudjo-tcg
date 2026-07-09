@@ -6,7 +6,21 @@ import HoloCard from '@/app/components/HoloCard';
 export default function HomePage() {
   const t = useTranslations('Home');
   const tCommon = useTranslations('Common');
-  const items = getPopulatedItems().slice(0, 3); // Charizard, Ace, Lugia
+  
+  // Custom selection of featured items to show on the homepage (including the new ones)
+  const featuredIds = [
+    'item_p_umbreon_psa10',
+    'item_op_ace_manga_psa10',
+    'item_p_charizard_psa10',
+    'item_p_pikachu_psa10',
+    'item_p_espeon_psa9',
+    'item_p_sylveon_psa9',
+  ];
+
+  const allItems = getPopulatedItems();
+  const items = featuredIds
+    .map(id => allItems.find(item => item.id === id))
+    .filter((item): item is NonNullable<typeof item> => !!item);
 
   return (
     <div className="relative w-full overflow-hidden bg-background">
