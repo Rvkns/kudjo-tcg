@@ -20,6 +20,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/collezione', label: t('collezione') },
+    { href: '/concorso', label: t('concorso') },
     { href: '/vendici-carta', label: t('vendiciCarta') },
     { href: '/chi-siamo', label: t('chiSiamo') },
     { href: '/contatti', label: t('contatti') },

@@ -22,7 +22,8 @@
     "collezione": "Collezione",
     "vendiciCarta": "Vendici le tue carte",
     "chiSiamo": "Chi Siamo",
-    "contatti": "Contatti"
+    "contatti": "Contatti",
+    "concorso": "Concorso"
   },
   "Footer": {
     "desc": "Dealer indipendente e curatore di carte da collezione Pokémon e One Piece TCG di alto livello. Autenticità garantita, trattative private.",
@@ -189,5 +190,24 @@
     "cookieDetailsText2": "- kudjo-cookie-consent: Variabile memorizzata nel browser locale (localStorage) per registrare l'accettazione della presente informativa ed evitare che il banner compaia a ogni caricamento pagina.",
     "cookieManageTitle": "3. Come disabilitare i cookie",
     "cookieManageText": "Puoi disabilitare, limitare o cancellare i cookie modificando le impostazioni del tuo browser web (Chrome, Firefox, Safari, Edge, ecc.). Tieni presente che disabilitando il cookie tecnico NEXT_LOCALE, il sito potrebbe non ricordare la lingua preferita e ripristinare quella di default a ogni nuova sessione."
+  },
+  "Concorso": {
+    "countdownPrefix": "POCHI GIORNI AL TERMINE DEL CONCORSO!",
+    "days": "Giorni",
+    "hours": "Ore",
+    "minutes": "Minuti",
+    "seconds": "Secondi",
+    "title": "SP Card Digitali | KTM 990 RC R",
+    "selectPackage": "Seleziona il Pacchetto:",
+    "freeTickets": "Ticket Omaggio",
+    "addToCart": "Aggiungi al carrello",
+    "payPayPal": "Paga con PayPal",
+    "otherPaymentOptions": "Altre opzioni di pagamento",
+    "descriptions": "Descrizioni",
+    "recommendedProducts": "Prodotti consigliati",
+    "newsletterTitle": "Iscriviti alla nostra newsletter",
+    "newsletterBtn": "Iscriviti",
+    "rulesText": "Per maggiori informazioni e per consultare il Regolamento del concorso clicca qui.",
+    "ticketMultiplier": "TICKET X2"
   }
 }

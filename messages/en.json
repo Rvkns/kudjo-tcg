@@ -22,7 +22,8 @@
     "collezione": "Collection",
     "vendiciCarta": "Sell to Us",
     "chiSiamo": "About Us",
-    "contatti": "Contact"
+    "contatti": "Contact",
+    "concorso": "Contest"
   },
   "Footer": {
     "desc": "Independent dealer and curator of high-tier Pokémon and One Piece TCG collectible cards. Authenticity guaranteed, private transactions.",
@@ -189,5 +190,24 @@
     "cookieDetailsText2": "- kudjo-cookie-consent: Local browser variable (localStorage) used to record acceptance of this policy and prevent the banner from appearing on every page load.",
     "cookieManageTitle": "3. How to disable cookies",
     "cookieManageText": "You can disable, restrict, or delete cookies by modifying your web browser settings (Chrome, Firefox, Safari, Edge, etc.). Please note that by disabling the technical cookie NEXT_LOCALE, the site may not remember your preferred language and will restore the default one at each new session."
+  },
+  "Concorso": {
+    "countdownPrefix": "ONLY FEW DAYS LEFT UNTIL CONTEST ENDS!",
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "title": "Digital SP Cards | KTM 990 RC R",
+    "selectPackage": "Select Package:",
+    "freeTickets": "Free Tickets",
+    "addToCart": "Add to Cart",
+    "payPayPal": "Pay with PayPal",
+    "otherPaymentOptions": "Other payment options",
+    "descriptions": "Descriptions",
+    "recommendedProducts": "Recommended Products",
+    "newsletterTitle": "Subscribe to our newsletter",
+    "newsletterBtn": "Subscribe",
+    "rulesText": "For more information and to consult the Contest Rules click here.",
+    "ticketMultiplier": "TICKET X2"
   }
 }
