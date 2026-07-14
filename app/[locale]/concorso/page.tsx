@@ -17,11 +17,11 @@ interface PackageOption {
 
 // Gallery images (Prize + 4 Packages) defined statically outside component to prevent recreation
 const galleryImages = [
-  '/images/concorso/ktm_990_rc_r.png',
-  '/images/concorso/bronze_pack.png',
-  '/images/concorso/silver_pack.png',
-  '/images/concorso/gold_pack.png',
-  '/images/concorso/platinum_pack.png',
+  '/images/concorso/tcg_prize.png',
+  '/images/concorso/bronze_pack_tcg.png',
+  '/images/concorso/silver_pack_tcg.png',
+  '/images/concorso/gold_pack_tcg.png',
+  '/images/concorso/platinum_pack_tcg.png',
 ];
 
 export default function ConcorsoPage() {
@@ -38,8 +38,8 @@ export default function ConcorsoPage() {
       tickets: 10,
       bonus: 0,
       price: 5.00,
-      image: '/images/concorso/bronze_pack.png',
-      labelText: isIt ? '1 SP CARD + 10 TICKET OMAGGIO' : '1 SP CARD + 10 FREE TICKETS',
+      image: '/images/concorso/bronze_pack_tcg.png',
+      labelText: isIt ? '1 BUSTA TCG + 10 TICKET OMAGGIO' : '1 TCG PACK + 10 FREE TICKETS',
     },
     {
       id: 'silver',
@@ -48,8 +48,8 @@ export default function ConcorsoPage() {
       tickets: 50,
       bonus: 5,
       price: 25.00,
-      image: '/images/concorso/silver_pack.png',
-      labelText: isIt ? '6 SP CARD + 55 TICKET OMAGGIO' : '6 SP CARDS + 55 FREE TICKETS',
+      image: '/images/concorso/silver_pack_tcg.png',
+      labelText: isIt ? '6 BUSTE TCG + 55 TICKET OMAGGIO' : '6 TCG PACKS + 55 FREE TICKETS',
     },
     {
       id: 'gold',
@@ -58,8 +58,8 @@ export default function ConcorsoPage() {
       tickets: 100,
       bonus: 15,
       price: 50.00,
-      image: '/images/concorso/gold_pack.png',
-      labelText: isIt ? '13 SP CARD + 115 TICKET OMAGGIO' : '13 SP CARDS + 115 FREE TICKETS',
+      image: '/images/concorso/gold_pack_tcg.png',
+      labelText: isIt ? '13 BUSTE TCG + 115 TICKET OMAGGIO' : '13 TCG PACKS + 115 FREE TICKETS',
     },
     {
       id: 'platinum',
@@ -68,8 +68,8 @@ export default function ConcorsoPage() {
       tickets: 200,
       bonus: 45,
       price: 100.00,
-      image: '/images/concorso/platinum_pack.png',
-      labelText: isIt ? '27 SP CARD + 245 TICKET OMAGGIO' : '27 SP CARDS + 245 FREE TICKETS',
+      image: '/images/concorso/platinum_pack_tcg.png',
+      labelText: isIt ? '27 BUSTE TCG + 245 TICKET OMAGGIO' : '27 TCG PACKS + 245 FREE TICKETS',
     },
   ], [isIt]);
 
@@ -112,7 +112,7 @@ export default function ConcorsoPage() {
   // Active States
   const [selectedPack, setSelectedPack] = useState<PackageOption>(packages[0]);
   const [quantity, setQuantity] = useState<number>(1);
-  const [mainDisplayImage, setMainDisplayImage] = useState<string>('/images/concorso/bronze_pack.png');
+  const [mainDisplayImage, setMainDisplayImage] = useState<string>('/images/concorso/bronze_pack_tcg.png');
   const [activeThumbnailIndex, setActiveThumbnailIndex] = useState<number>(0);
 
   // Update main display image when selected pack changes
@@ -202,7 +202,7 @@ export default function ConcorsoPage() {
             {t('countdownPrefix')}
           </span>
           <span className="hidden lg:inline text-white/95 font-medium">
-            {isIt ? 'KTM 990 RC R DA €15.000. Partecipa ora!' : 'KTM 990 RC R WORTH €15,000. Enter now!'}
+            {isIt ? 'MYSTERY BOX PREMIUM DA €2.500. Partecipa ora!' : 'PREMIUM MYSTERY BOX WORTH €2,500. Enter now!'}
           </span>
         </div>
 
@@ -258,7 +258,7 @@ export default function ConcorsoPage() {
               {galleryImages.map((img, idx) => {
                 const isActive = activeThumbnailIndex === idx;
                 let label = '';
-                if (idx === 0) label = 'KTM 990';
+                if (idx === 0) label = isIt ? 'PREMIO' : 'PRIZE';
                 else if (idx === 1) label = 'BRONZE';
                 else if (idx === 2) label = 'SILVER';
                 else if (idx === 3) label = 'GOLD';
@@ -418,17 +418,17 @@ export default function ConcorsoPage() {
           <div className="space-y-8 text-neutral-400 text-sm md:text-base leading-loose font-sans">
             <div>
               <h3 className="text-foreground font-display text-xl font-medium mb-3 flex items-center gap-2">
-                <span>{isIt ? 'Sbusta le SP Card digitali' : 'Unbox digital SP Cards'}</span>
+                <span>{isIt ? 'Sbusta i Pacchetti digitali' : 'Unbox Digital TCG Packs'}</span>
                 <span>🔥</span>
               </h3>
               <p>
                 {isIt ? (
                   <>
-                    <strong>Kudjo</strong> presenta le esclusive <strong>SP Card digitali Collezionabili</strong> che raffigurano scene uniche ed esclusive della <strong>KTM 990 RC R</strong>. Avrai la possibilità di vincere la moto acquistando i pacchetti promozionali sul nostro sito!
+                    <strong>Kudjo</strong> presenta le esclusive <strong>Buste Digitali Collezionabili</strong> che contengono carte digitali rare Pokémon e One Piece. Avrai la possibilità di vincere il <strong>Super Lotto TCG Finale (Mystery Box Premium e Carte Gradate)</strong> del valore di €2.500 acquistando i pacchetti promozionali sul nostro sito!
                   </>
                 ) : (
                   <>
-                    <strong>Kudjo</strong> presents the exclusive <strong>Collectible digital SP Cards</strong> depicting unique and exclusive scenes of the <strong>KTM 990 RC R</strong>. You will have the chance to win the motorcycle by purchasing promo packages on our site!
+                    <strong>Kudjo</strong> presents the exclusive <strong>Collectible Digital Booster Packs</strong> containing rare digital Pokémon and One Piece cards. You will have the chance to win the <strong>Ultimate TCG Prize Lot (Premium Mystery Box and Graded Cards)</strong> valued at €2,500 by purchasing promo packages on our site!
                   </>
                 )}
               </p>
@@ -441,22 +441,22 @@ export default function ConcorsoPage() {
               <p className="mb-4">
                 {isIt ? (
                   <>
-                    Acquistando i pacchetti promozionali, avrai la possibilità di aprirli digitalmente nel tuo pannello personale e trovare al loro interno SP Card casuali di diverse rarità: <strong className="text-bronze">Comuni, Rare, Epiche o Leggendarie</strong>.
+                    Acquistando i pacchetti promozionali, avrai la possibilità di aprirli digitalmente nel tuo pannello personale e trovare al loro interno Carte digitali casuali di diverse rarità: <strong className="text-bronze">Comuni, Rare, Epiche o Leggendarie</strong>.
                   </>
                 ) : (
                   <>
-                    By purchasing promo packages, you will be able to open them digitally in your personal panel and find random SP Cards of different rarities inside: <strong className="text-bronze">Common, Rare, Epic or Legendary</strong>.
+                    By purchasing promo packages, you will be able to open them digitally in your personal panel and find random digital Cards of different rarities inside: <strong className="text-bronze">Common, Rare, Epic or Legendary</strong>.
                   </>
                 )}
               </p>
               <p>
                 {isIt ? (
                   <>
-                    Collezionandole tutte, potrai completare le collezioni digitali disponibili direttamente nel tuo account. Raggiungendo determinati traguardi sbloccherai <strong className="text-foreground border-b border-bronze/30 pb-0.5">codici sconto esclusivi</strong> per il nostro store di carte collezionabili fisiche.
+                    Collezionandole tutte, potrai completare i Set digitali disponibili direttamente nel tuo account. Raggiungendo determinati traguardi sbloccherai <strong className="text-foreground border-b border-bronze/30 pb-0.5">codici sconto esclusivi</strong> per il nostro store di carte collezionabili fisiche.
                   </>
                 ) : (
                   <>
-                    By collecting them all, you can complete the digital collections available directly in your account. By reaching specific milestones, you will unlock <strong className="text-foreground border-b border-bronze/30 pb-0.5">exclusive discount codes</strong> for our physical collectible card store.
+                    By collecting them all, you can complete the digital Sets available directly in your account. By reaching specific milestones, you will unlock <strong className="text-foreground border-b border-bronze/30 pb-0.5">exclusive discount codes</strong> for our physical collectible card store.
                   </>
                 )}
               </p>
@@ -470,33 +470,33 @@ export default function ConcorsoPage() {
                 <li className="flex items-start gap-2.5">
                   <span className="text-bronze mt-1">•</span>
                   {isIt ? (
-                    <span>Acquistando le SP Card del <strong>Bronze #1</strong> otterrete <strong>10 Tickets Omaggio</strong> e 1 SP Card casuale.</span>
+                    <span>Acquistando i Pacchetti del <strong>Bronze #1</strong> otterrete <strong>10 Tickets Omaggio</strong> e 1 busta digitale casuale.</span>
                   ) : (
-                    <span>By purchasing <strong>Bronze #1</strong> SP Cards, you get <strong>10 Free Tickets</strong> and 1 random SP Card.</span>
+                    <span>By purchasing <strong>Bronze #1</strong> Packs, you get <strong>10 Free Tickets</strong> and 1 random digital pack.</span>
                   )}
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-bronze mt-1">•</span>
                   {isIt ? (
-                    <span>Acquistando le SP Card dello <strong>Silver #2</strong> otterrete 50 Tickets Omaggio + 5 Tickets Bonus per un Totale di <strong>55 Tickets Omaggio</strong> e 3 Sp Card casuali.</span>
+                    <span>Acquistando i Pacchetti dello <strong>Silver #2</strong> otterrete 50 Tickets Omaggio + 5 Tickets Bonus per un Totale di <strong>55 Tickets Omaggio</strong> e 3 buste digitali.</span>
                   ) : (
-                    <span>By purchasing <strong>Silver #2</strong> SP Cards, you get 50 Free Tickets + 5 Bonus Tickets for a Total of <strong>55 Free Tickets</strong> and 3 random SP Cards.</span>
+                    <span>By purchasing <strong>Silver #2</strong> Packs, you get 50 Free Tickets + 5 Bonus Tickets for a Total of <strong>55 Free Tickets</strong> and 3 digital packs.</span>
                   )}
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-bronze mt-1">•</span>
                   {isIt ? (
-                    <span>Acquistando le SP Card dello <strong>Gold #3</strong> otterrete 100 Tickets Omaggio + 15 Tickets Bonus per un Totale di <strong>115 Tickets Omaggio</strong> e 13 Sp Card casuali.</span>
+                    <span>Acquistando i Pacchetti dello <strong>Gold #3</strong> otterrete 100 Tickets Omaggio + 15 Tickets Bonus per un Totale di <strong>115 Tickets Omaggio</strong> e 13 buste digitali.</span>
                   ) : (
-                    <span>By purchasing <strong>Gold #3</strong> SP Cards, you get 100 Free Tickets + 15 Bonus Tickets for a Total of <strong>115 Free Tickets</strong> and 13 random SP Cards.</span>
+                    <span>By purchasing <strong>Gold #3</strong> Packs, you get 100 Free Tickets + 15 Bonus Tickets for a Total of <strong>115 Free Tickets</strong> and 13 digital packs.</span>
                   )}
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-bronze mt-1">•</span>
                   {isIt ? (
-                    <span>Acquistando le SP Card dello <strong>Platinum #4</strong> otterrete 200 Tickets Omaggio + 45 Tickets Bonus per un Totale di <strong>245 Tickets Omaggio</strong> e 27 Sp Card casuali.</span>
+                    <span>Acquistando i Pacchetti dello <strong>Platinum #4</strong> otterrete 200 Tickets Omaggio + 45 Tickets Bonus per un Totale di <strong>245 Tickets Omaggio</strong> e 27 buste digitali.</span>
                   ) : (
-                    <span>By purchasing <strong>Platinum #4</strong> SP Cards, you get 200 Free Tickets + 45 Bonus Tickets for a Total of <strong>245 Free Tickets</strong> and 27 random SP Cards.</span>
+                    <span>By purchasing <strong>Platinum #4</strong> Packs, you get 200 Free Tickets + 45 Bonus Tickets for a Total of <strong>245 Free Tickets</strong> and 27 digital packs.</span>
                   )}
                 </li>
               </ul>
@@ -512,9 +512,9 @@ export default function ConcorsoPage() {
               </p>
               <p>
                 {isIt ? (
-                  <>Ogni acquisto dei pacchetti digitali dà diritto ai corrispondenti Ticket Omaggio per la partecipazione al sorteggio finale della KTM 990 RC R.</>
+                  <>Ogni acquisto dei pacchetti digitali dà diritto ai corrispondenti Ticket Omaggio per la partecipazione al sorteggio finale del Super Lotto TCG.</>
                 ) : (
-                  <>Each purchase of digital packages entitles you to the corresponding Free Tickets to participate in the final draw for the KTM 990 RC R.</>
+                  <>Each purchase of digital packages entitles you to the corresponding Free Tickets to participate in the final draw for the Ultimate TCG Prize Lot.</>
                 )}
               </p>
               <p className="pt-2">
