@@ -76,36 +76,36 @@ export default function ConcorsoPage() {
   // Recommended products list
   const recommendedProducts = [
     {
-      id: 'spacer_husqvarna',
-      name: 'Spacer Husqvarna',
-      price: 20.00,
-      image: 'H', // Custom SVG visual styling
+      id: 'sleeves_pokemon',
+      name: isIt ? 'Sleeves Protettive (Pokémon)' : 'Protective Sleeves (Pokémon)',
+      price: 9.90,
+      image: 'P', // Custom SVG visual styling
       color: 'from-blue-600/20 to-blue-900/40 border-blue-500/20',
-      brand: 'Husqvarna',
+      brand: 'Pokémon',
     },
     {
-      id: 'spacer_triumph',
-      name: 'Spacer Triumph',
-      price: 20.00,
-      image: 'T',
-      color: 'from-slate-600/20 to-slate-900/40 border-slate-500/20',
-      brand: 'Triumph',
-    },
-    {
-      id: 'felpa_sp_bike',
-      name: 'Felpa SP Bike',
-      price: 50.00,
-      image: 'F',
-      color: 'from-neutral-700/20 to-neutral-900/40 border-neutral-600/20',
-      brand: 'SP Bike',
-    },
-    {
-      id: 'spacer_zero',
-      name: 'Spacer Zero Motorcycles',
-      price: 20.00,
-      image: 'Z',
+      id: 'sleeves_one_piece',
+      name: isIt ? 'Sleeves Protettive (One Piece)' : 'Protective Sleeves (One Piece)',
+      price: 9.90,
+      image: 'OP',
       color: 'from-red-600/20 to-red-900/40 border-red-500/20',
-      brand: 'Zero',
+      brand: 'One Piece',
+    },
+    {
+      id: 'deck_box_premium',
+      name: isIt ? 'Portamazzo Premium (Deck Box)' : 'Premium Deck Box',
+      price: 14.90,
+      image: 'D',
+      color: 'from-neutral-700/20 to-neutral-900/40 border-neutral-600/20',
+      brand: 'Kudjo',
+    },
+    {
+      id: 'album_collezione',
+      name: isIt ? 'Raccoglitore 9-Pocket (Binder)' : '9-Pocket Binder Portfolio',
+      price: 24.90,
+      image: 'B',
+      color: 'from-amber-600/20 to-amber-900/40 border-amber-500/20',
+      brand: 'Kudjo',
     },
   ];
 
