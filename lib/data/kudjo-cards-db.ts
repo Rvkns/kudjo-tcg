@@ -136,17 +136,6 @@ function getLocalStorageCollection(): KudjoCardInstance[] {
   }
 }
 
-function addLocalStorageCardsToCollection(cards: KudjoCard[], packTier: string): void {
-  if (typeof window === 'undefined') return;
-  const existing = getLocalStorageCollection();
-  const now = new Date().toISOString();
-  const newInstances: KudjoCardInstance[] = cards.map(c => ({
-    cardId: c.id,
-    foundAt: now,
-    packTier,
-  }));
-  localStorage.setItem(COLLECTION_KEY, JSON.stringify([...existing, ...newInstances]));
-}
 
 function clearLocalStorageCollection(): void {
   if (typeof window === 'undefined') return;
@@ -163,28 +152,7 @@ function getLocalStoragePendingPacks(): KudjoPendingPack[] {
   }
 }
 
-function addLocalStoragePendingPacks(tier: string, quantity: number): void {
-  if (typeof window === 'undefined') return;
-  const existing = getLocalStoragePendingPacks();
-  const idx = existing.findIndex(p => p.tier === tier);
-  if (idx >= 0) {
-    existing[idx].quantity += quantity;
-  } else {
-    existing.push({ tier, quantity });
-  }
-  localStorage.setItem(PACKS_KEY, JSON.stringify(existing));
-}
 
-function consumeLocalStorageOnePack(tier: string): boolean {
-  if (typeof window === 'undefined') return false;
-  const existing = getLocalStoragePendingPacks();
-  const idx = existing.findIndex(p => p.tier === tier);
-  if (idx < 0 || existing[idx].quantity <= 0) return false;
-  existing[idx].quantity -= 1;
-  if (existing[idx].quantity === 0) existing.splice(idx, 1);
-  localStorage.setItem(PACKS_KEY, JSON.stringify(existing));
-  return true;
-}
 
 // ── Exported Async Hybrid APIs ─────────────────────────────────────────────
 
@@ -200,7 +168,7 @@ export async function getUserCollection(): Promise<KudjoCardInstance[]> {
       
       if (error) {
         console.error('Error fetching collection from Supabase:', error);
-        return getLocalStorageCollection();
+        return [];
       }
       return (data || []).map(row => ({
         cardId: row.card_id,
@@ -209,9 +177,9 @@ export async function getUserCollection(): Promise<KudjoCardInstance[]> {
       }));
     }
   } catch (err) {
-    console.error('Supabase get session failed, falling back to localStorage:', err);
+    console.error('Supabase get session failed:', err);
   }
-  return getLocalStorageCollection();
+  return [];
 }
 
 export async function addCardsToCollection(cards: KudjoCard[], packTier: string): Promise<void> {
@@ -229,14 +197,12 @@ export async function addCardsToCollection(cards: KudjoCard[], packTier: string)
       const { error } = await supabase.from('user_collection').insert(rows);
       if (error) {
         console.error('Error adding cards to Supabase:', error);
-        addLocalStorageCardsToCollection(cards, packTier);
       }
       return;
     }
   } catch (err) {
-    console.error('Supabase save failed, falling back to localStorage:', err);
+    console.error('Supabase save failed:', err);
   }
-  addLocalStorageCardsToCollection(cards, packTier);
 }
 
 export async function clearCollection(): Promise<void> {
@@ -252,9 +218,8 @@ export async function clearCollection(): Promise<void> {
       return;
     }
   } catch (err) {
-    console.error('Supabase clear failed, falling back to localStorage:', err);
+    console.error('Supabase clear failed:', err);
   }
-  clearLocalStorageCollection();
 }
 
 export async function getPendingPacks(): Promise<KudjoPendingPack[]> {
@@ -269,7 +234,7 @@ export async function getPendingPacks(): Promise<KudjoPendingPack[]> {
       
       if (error) {
         console.error('Error fetching packs from Supabase:', error);
-        return getLocalStoragePendingPacks();
+        return [];
       }
       return (data || []).map(row => ({
         tier: row.tier,
@@ -277,9 +242,9 @@ export async function getPendingPacks(): Promise<KudjoPendingPack[]> {
       }));
     }
   } catch (err) {
-    console.error('Supabase get packs failed, falling back to localStorage:', err);
+    console.error('Supabase get packs failed:', err);
   }
-  return getLocalStoragePendingPacks();
+  return [];
 }
 
 export async function addPendingPacks(tier: string, quantity: number): Promise<void> {
@@ -311,14 +276,12 @@ export async function addPendingPacks(tier: string, quantity: number): Promise<v
       
       if (error) {
         console.error('Error adding packs to Supabase:', error);
-        addLocalStoragePendingPacks(tier, quantity);
       }
       return;
     }
   } catch (err) {
-    console.error('Supabase add packs failed, falling back to localStorage:', err);
+    console.error('Supabase add packs failed:', err);
   }
-  addLocalStoragePendingPacks(tier, quantity);
 }
 
 export async function consumeOnePack(tier: string): Promise<boolean> {
@@ -356,15 +319,16 @@ export async function consumeOnePack(tier: string): Promise<boolean> {
       }
     }
   } catch (err) {
-    console.error('Supabase consume pack failed, falling back to localStorage:', err);
+    console.error('Supabase consume pack failed:', err);
   }
-  return consumeLocalStorageOnePack(tier);
+  return false;
 }
 
 export async function getTotalPendingPacks(): Promise<number> {
   const packs = await getPendingPacks();
   return packs.reduce((sum, p) => sum + p.quantity, 0);
 }
+
 
 // ── Cloud Sync Logic ────────────────────────────────────────────────────────
 
