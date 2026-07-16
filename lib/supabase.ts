@@ -1,7 +1,14 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
-const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+if (supabaseUrl.startsWith('NEXT_PUBLIC_SUPABASE_URL=')) {
+  supabaseUrl = supabaseUrl.replace('NEXT_PUBLIC_SUPABASE_URL=', '').trim();
+}
+
+let supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+if (supabaseAnonKey.startsWith('NEXT_PUBLIC_SUPABASE_ANON_KEY=')) {
+  supabaseAnonKey = supabaseAnonKey.replace('NEXT_PUBLIC_SUPABASE_ANON_KEY=', '').trim();
+}
 
 // A simple dummy client to prevent crashes if env keys are not configured in Vercel/Production yet
 const createDummyClient = () => {
