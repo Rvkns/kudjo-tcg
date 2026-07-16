@@ -129,7 +129,7 @@ export async function POST(request: Request) {
 
       if (upsertError) {
         console.error('Error upserting packs in demo mode:', upsertError);
-        return NextResponse.json({ error: 'Database error in demo mode simulation' }, { status: 500 });
+        return NextResponse.json({ error: `Errore database: ${upsertError.message} (Codice: ${upsertError.code || 'N/D'})` }, { status: 500 });
       }
 
       return NextResponse.json({ url: `${origin}/it/profilo?success=true&demo=true` });
