@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabase } from '@/lib/supabase';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_vercel_build_prerender');
 
 const PRODUCTS: Record<string, { name: string; price: number; cards: number }> = {
   bronze:   { name: 'BRONZE #1', price: 5.00, cards: 1 },
