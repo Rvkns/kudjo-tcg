@@ -7,6 +7,20 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_fo
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
+const createMockQueryBuilder = () => {
+  const queryBuilder = {
+    select: () => queryBuilder,
+    eq: () => queryBuilder,
+    single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } }),
+    upsert: () => Promise.resolve({ error: null }),
+    insert: () => Promise.resolve({ error: null }),
+    update: () => queryBuilder,
+    delete: () => queryBuilder,
+    then: (resolve: (value: unknown) => void) => resolve({ data: null, error: null }),
+  };
+  return queryBuilder;
+};
+
 const supabaseAdmin = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -15,15 +29,11 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey
       },
     })
   : new Proxy({} as unknown as SupabaseClient, {
-      get() {
-        return () => ({
-          select: () => ({
-            eq: () => ({
-              single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } }),
-            }),
-          }),
-          upsert: () => Promise.resolve({ error: new Error('Missing Supabase Service Key') }),
-        });
+      get(target, prop) {
+        if (prop === 'from') {
+          return () => createMockQueryBuilder();
+        }
+        return () => Promise.resolve({ error: null });
       }
     });
 
