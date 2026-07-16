@@ -8,12 +8,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_fo
 const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
 const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
-console.log('[DEBUG STRIPE] supabaseUrl:', supabaseUrl);
-console.log('[DEBUG STRIPE] supabaseServiceKey length:', supabaseServiceKey.length);
-if (supabaseServiceKey.length > 20) {
-  console.log('[DEBUG STRIPE] supabaseServiceKey start/end:', 
-    supabaseServiceKey.substring(0, 10) + '...' + supabaseServiceKey.slice(-10));
-}
 
 const createMockQueryBuilder = () => {
   const queryBuilder = {
@@ -54,6 +48,14 @@ const PRODUCTS: Record<string, { name: string; price: number; cards: number }> =
 
 export async function POST(request: Request) {
   try {
+    console.log('[DEBUG STRIPE POST] supabaseUrl:', supabaseUrl);
+    console.log('[DEBUG STRIPE POST] supabaseServiceKey length:', supabaseServiceKey.length);
+    if (supabaseServiceKey.length > 20) {
+      console.log('[DEBUG STRIPE POST] supabaseServiceKey start/end:', 
+        supabaseServiceKey.substring(0, 10) + '...' + supabaseServiceKey.slice(-10));
+    }
+    console.log('[DEBUG STRIPE POST] process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY length:', (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').length);
+
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.split(' ')[1];
     if (!token) {
