@@ -80,13 +80,6 @@ function randomFrom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function weightedDraw(): KudjoCard {
-  const roll = Math.random();
-  if (roll < 0.70) return randomFrom(comuniPool);
-  if (roll < 0.95) return randomFrom(ncPool);
-  return randomFrom(raroPool);
-}
-
 /**
  * Draws 5 cards for a single booster pack using the weighted slot system:
  * - Slot 1–3: always Comune

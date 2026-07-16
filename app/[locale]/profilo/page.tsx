@@ -12,7 +12,7 @@ import {
   getCardById,
   type Milestone,
 } from '@/lib/data/kudjo-cards-db';
-import { type KudjoCard, type KudjoCardRarita } from '@/lib/schema/kudjo-card';
+import { type KudjoCard as KudjoCardType, type KudjoCardRarita } from '@/lib/schema/kudjo-card';
 import KudjoCard from '@/app/components/KudjoCard';
 import PackOpeningModal from '@/app/components/PackOpeningModal';
 
@@ -77,13 +77,13 @@ export default function ProfiloPage() {
 
   // Unique cards found
   const uniqueCardIds   = useMemo(() => Object.keys(countMap), [countMap]);
-  const uniqueCards     = useMemo<KudjoCard[]>(() =>
-    uniqueCardIds.map(id => getCardById(id)).filter(Boolean) as KudjoCard[],
+  const uniqueCards     = useMemo<KudjoCardType[]>(() =>
+    uniqueCardIds.map(id => getCardById(id)).filter(Boolean) as KudjoCardType[],
     [uniqueCardIds]
   );
 
   // Filtered cards
-  const filteredCards = useMemo<KudjoCard[]>(() => {
+  const filteredCards = useMemo<KudjoCardType[]>(() => {
     if (filterRarita === 'all') return uniqueCards.sort((a, b) => a.numero - b.numero);
     return uniqueCards.filter(c => c.rarita === filterRarita).sort((a, b) => a.numero - b.numero);
   }, [uniqueCards, filterRarita]);

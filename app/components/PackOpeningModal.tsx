@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { type KudjoCard } from '@/lib/schema/kudjo-card';
+import { type KudjoCard as KudjoCardType } from '@/lib/schema/kudjo-card';
 import { drawPackCards, addCardsToCollection, consumeOnePack } from '@/lib/data/kudjo-cards-db';
 import KudjoCard from './KudjoCard';
 
@@ -40,7 +40,7 @@ export default function PackOpeningModal({
 }: PackOpeningModalProps) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [openingStep, setOpeningStep] = useState<OpeningStep>('idle');
-  const [drawnCards, setDrawnCards] = useState<KudjoCard[]>([]);
+  const [drawnCards, setDrawnCards] = useState<KudjoCardType[]>([]);
   const [revealedCount, setRevealedCount] = useState(0);
 
   const resetModal = useCallback(() => {
