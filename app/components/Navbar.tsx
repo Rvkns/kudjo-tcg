@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import KudjoLogo from './KudjoLogo';
+import { getTotalPendingPacks } from '@/lib/data/kudjo-cards-db';
 
 export default function Navbar() {
   const t = useTranslations('Navbar');
@@ -12,6 +13,17 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingPacksCount, setPendingPacksCount] = useState(0);
+
+  useEffect(() => {
+    setPendingPacksCount(getTotalPendingPacks());
+    // Listen for storage changes (when packs are added/removed)
+    const handler = () => setPendingPacksCount(getTotalPendingPacks());
+    window.addEventListener('storage', handler);
+    // Also poll every 2s to catch same-tab changes
+    const interval = setInterval(() => setPendingPacksCount(getTotalPendingPacks()), 2000);
+    return () => { window.removeEventListener('storage', handler); clearInterval(interval); };
+  }, []);
 
   const toggleLocale = () => {
     const nextLocale = currentLocale === 'it' ? 'en' : 'it';
@@ -20,10 +32,11 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/collezione', label: t('collezione') },
-    { href: '/concorso', label: t('concorso') },
+    { href: '/concorso',   label: t('concorso')   },
+    { href: '/profilo',    label: t('profilo'), badge: pendingPacksCount > 0 ? pendingPacksCount : undefined },
     { href: '/vendici-carta', label: t('vendiciCarta') },
     { href: '/chi-siamo', label: t('chiSiamo') },
-    { href: '/contatti', label: t('contatti') },
+    { href: '/contatti',  label: t('contatti')  },
   ];
 
   return (
@@ -36,15 +49,20 @@ export default function Navbar() {
 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 font-sans text-xs tracking-wider uppercase font-semibold text-neutral-400">
-          {navLinks.map((link) => {
+        {navLinks.map((link) => {
             const isActive = pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`transition-colors duration-300 hover:text-foreground ${isActive ? 'text-bronze' : ''}`}
+                className={`relative transition-colors duration-300 hover:text-foreground flex items-center gap-1.5 ${isActive ? 'text-bronze' : ''}`}
               >
                 {link.label}
+                {'badge' in link && link.badge ? (
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#e11b22] text-white text-[8px] font-bold">
+                    {link.badge}
+                  </span>
+                ) : null}
               </Link>
             );
           })}
@@ -125,9 +143,14 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`transition-colors py-2 duration-300 hover:text-foreground ${isActive ? 'text-bronze' : ''}`}
+                  className={`flex items-center gap-2 transition-colors py-2 duration-300 hover:text-foreground ${isActive ? 'text-bronze' : ''}`}
                 >
                   {link.label}
+                  {'badge' in link && link.badge ? (
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#e11b22] text-white text-[8px] font-bold">
+                      {link.badge}
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}

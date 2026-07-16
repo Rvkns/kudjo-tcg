@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
+import { addPendingPacks, getTotalPendingPacks } from '@/lib/data/kudjo-cards-db';
+
 
 interface PackageOption {
   id: string;
@@ -187,6 +190,25 @@ export default function ConcorsoPage() {
 
   const incrementQty = () => setQuantity(prev => prev + 1);
   const decrementQty = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
+
+  // Digital pack purchase state
+  const [purchaseNotification, setPurchaseNotification] = useState<string | null>(null);
+  const [totalPendingPacks, setTotalPendingPacks] = useState(0);
+
+  useEffect(() => {
+    setTotalPendingPacks(getTotalPendingPacks());
+  }, []);
+
+  const handleAddToCart = () => {
+    // Add digital packs to localStorage
+    addPendingPacks(selectedPack.id, selectedPack.cards * quantity);
+    setTotalPendingPacks(getTotalPendingPacks());
+    const msg = isIt
+      ? `✓ ${selectedPack.cards * quantity} bust${selectedPack.cards * quantity === 1 ? 'a' : 'e'} TCG digitali aggiunte al tuo profilo!`
+      : `✓ ${selectedPack.cards * quantity} digital TCG pack${selectedPack.cards * quantity === 1 ? '' : 's'} added to your profile!`;
+    setPurchaseNotification(msg);
+    setTimeout(() => setPurchaseNotification(null), 4000);
+  };
 
   return (
     <div className="relative min-h-screen bg-[#0b0b0c] text-foreground font-sans animate-page-entry">
@@ -387,13 +409,21 @@ export default function ConcorsoPage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 mt-2">
-              {/* Add to Cart button */}
+              {/* Add to Cart button — also saves digital packs */}
               <button
+                onClick={handleAddToCart}
                 className="w-full bg-[#e11b22] hover:bg-red-700 text-white py-4 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(225,27,34,0.15)] group"
               >
                 <span>{t('addToCart')}</span>
                 <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
               </button>
+
+              {/* Purchase notification */}
+              {purchaseNotification && (
+                <div className="text-center text-[10px] text-emerald-400 font-semibold tracking-wide animate-pulse py-1">
+                  {purchaseNotification}
+                </div>
+              )}
 
               {/* PayPal express checkout */}
               <button
@@ -405,6 +435,22 @@ export default function ConcorsoPage() {
               <button className="text-center text-[10px] tracking-wider uppercase text-neutral-500 hover:text-neutral-300 transition-colors mt-2 cursor-pointer">
                 {t('otherPaymentOptions')}
               </button>
+
+              {/* Link to profile if packs are pending */}
+              {totalPendingPacks > 0 && (
+                <Link
+                  href="/profilo"
+                  className="mt-1 flex items-center justify-center gap-2 border border-bronze/40 bg-bronze/5 rounded-lg py-3 text-[10px] font-bold tracking-widest uppercase text-bronze hover:bg-bronze/10 transition-all"
+                >
+                  <span>🎴</span>
+                  <span>
+                    {isIt
+                      ? `Apri le tue ${totalPendingPacks} buste nel Profilo →`
+                      : `Open your ${totalPendingPacks} pack${totalPendingPacks === 1 ? '' : 's'} in Profile →`
+                    }
+                  </span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
