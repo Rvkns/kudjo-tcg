@@ -4,9 +4,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { addPendingPacks, getTotalPendingPacks } from '@/lib/data/kudjo-cards-db';
+import { getTotalPendingPacks } from '@/lib/data/kudjo-cards-db';
 import { supabase } from '@/lib/supabase';
 import { type User } from '@supabase/supabase-js';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 
 interface PackageOption {
@@ -253,19 +254,111 @@ export default function ConcorsoPage() {
     }
   };
 
-  const handleAddToCart = async () => {
+  const [loadingStripe, setLoadingStripe] = useState(false);
+
+  const handleStripeCheckout = async () => {
+    setLoadingStripe(true);
     try {
-      await addPendingPacks(selectedPack.id, selectedPack.cards * quantity);
-      const total = await getTotalPendingPacks();
-      setTotalPendingPacks(total);
-      const msg = isIt
-        ? `✓ ${selectedPack.cards * quantity} bust${selectedPack.cards * quantity === 1 ? 'a' : 'e'} TCG digitali aggiunte al tuo profilo!`
-        : `✓ ${selectedPack.cards * quantity} digital TCG pack${selectedPack.cards * quantity === 1 ? '' : 's'} added to your profile!`;
-      setPurchaseNotification(msg);
-      setTimeout(() => setPurchaseNotification(null), 4000);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert(isIt ? 'Accedi per completare il pagamento.' : 'Please sign in to complete payment.');
+        return;
+      }
+      
+      const response = await fetch('/api/checkout/stripe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          packId: selectedPack.id,
+          quantity: quantity,
+        }),
+      });
+      
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(isIt ? `Errore durante il checkout: ${data.error}` : `Checkout error: ${data.error}`);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Stripe redirect error:', err);
+      alert(isIt ? 'Errore di connessione al server per Stripe.' : 'Server connection error for Stripe.');
+    } finally {
+      setLoadingStripe(false);
     }
+  };
+
+  const handlePayPalCreateOrder = async () => {
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const token = currentSession?.access_token;
+      if (!token) {
+        alert(isIt ? 'Accedi per completare il pagamento.' : 'Please sign in to complete payment.');
+        throw new Error('Unauthorized');
+      }
+
+      const response = await fetch('/api/checkout/paypal/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          packId: selectedPack.id,
+          quantity: quantity,
+        }),
+      });
+
+      const order = await response.json();
+      if (order.id) {
+        return order.id;
+      } else {
+        throw new Error(order.error || 'Failed to create order');
+      }
+    } catch (err) {
+      console.error('PayPal create order error:', err);
+      alert(isIt ? 'Impossibile avviare il pagamento PayPal.' : 'Unable to initiate PayPal payment.');
+      throw err;
+    }
+  };
+
+  const handlePayPalApprove = async (data: { orderID: string }) => {
+    try {
+      const response = await fetch('/api/checkout/paypal/capture-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: data.orderID,
+        }),
+      });
+
+      const capture = await response.json();
+      if (capture.success) {
+        const total = await getTotalPendingPacks();
+        setTotalPendingPacks(total);
+        const msg = isIt
+          ? `✓ Pagamento completato! ${capture.packsCredited} buste digitali aggiunte al tuo profilo!`
+          : `✓ Payment completed! ${capture.packsCredited} digital TCG packs added to your profile!`;
+        setPurchaseNotification(msg);
+        setTimeout(() => setPurchaseNotification(null), 6000);
+      } else {
+        alert(isIt ? `Errore durante la cattura dell'ordine: ${capture.error}` : `Error capturing payment: ${capture.error}`);
+      }
+    } catch (err) {
+      console.error('PayPal capture error:', err);
+      alert(isIt ? 'Errore nella convalida del pagamento PayPal.' : 'Error validating PayPal payment.');
+    }
+  };
+
+  const handlePayPalError = (err: unknown) => {
+    console.error('PayPal button error:', err);
+    alert(isIt ? 'Errore nel portale PayPal di pagamento.' : 'PayPal payment window error.');
   };
 
   return (
@@ -473,12 +566,13 @@ export default function ConcorsoPage() {
                 </div>
               ) : user ? (
                 <>
-                  {/* Add to Cart button — also saves digital packs */}
+                  {/* Stripe checkout button */}
                   <button
-                    onClick={handleAddToCart}
-                    className="w-full bg-[#e11b22] hover:bg-red-700 text-white py-4 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(225,27,34,0.15)] group"
+                    onClick={handleStripeCheckout}
+                    disabled={loadingStripe}
+                    className="w-full bg-[#e11b22] hover:bg-red-700 disabled:opacity-50 text-white py-4 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(225,27,34,0.15)] group font-sans"
                   >
-                    <span>{t('addToCart')}</span>
+                    <span>{loadingStripe ? (isIt ? 'Elaborazione...' : 'Processing...') : (isIt ? 'Paga con Carta (Stripe)' : 'Pay with Card (Stripe)')}</span>
                     <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
                   </button>
 
@@ -489,14 +583,26 @@ export default function ConcorsoPage() {
                     </div>
                   )}
 
-                  {/* PayPal express checkout */}
-                  <button
-                    className="w-full bg-[#ffc439] hover:bg-[#e2af30] text-[#003087] py-4 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-lg font-sans"
-                  >
-                    <span>{t('payPayPal')}</span>
-                  </button>
+                  {/* PayPal buttons inside SDK script provider */}
+                  <div className="mt-1 relative z-10">
+                    <PayPalScriptProvider
+                      options={{
+                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'paypal_client_id_test_placeholder',
+                        currency: 'EUR',
+                        intent: 'capture',
+                      }}
+                    >
+                      <PayPalButtons
+                        style={{ layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal', height: 48 }}
+                        forceReRender={[selectedPack.id, quantity]}
+                        createOrder={handlePayPalCreateOrder}
+                        onApprove={handlePayPalApprove}
+                        onError={handlePayPalError}
+                      />
+                    </PayPalScriptProvider>
+                  </div>
 
-                  <button className="text-center text-[10px] tracking-wider uppercase text-neutral-500 hover:text-neutral-300 transition-colors mt-2 cursor-pointer">
+                  <button className="text-center text-[10px] tracking-wider uppercase text-neutral-500 hover:text-neutral-300 transition-colors mt-1 cursor-pointer font-sans">
                     {t('otherPaymentOptions')}
                   </button>
 
@@ -504,7 +610,7 @@ export default function ConcorsoPage() {
                   {totalPendingPacks > 0 && (
                     <Link
                       href="/profilo"
-                      className="mt-1 flex items-center justify-center gap-2 border border-bronze/40 bg-bronze/5 rounded-lg py-3 text-[10px] font-bold tracking-widest uppercase text-bronze hover:bg-bronze/10 transition-all"
+                      className="mt-1 flex items-center justify-center gap-2 border border-bronze/40 bg-bronze/5 rounded-lg py-3 text-[10px] font-bold tracking-widest uppercase text-bronze hover:bg-bronze/10 transition-all font-sans"
                     >
                       <span>🎴</span>
                       <span>
