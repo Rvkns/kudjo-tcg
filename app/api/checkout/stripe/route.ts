@@ -1,8 +1,32 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabase } from '@/lib/supabase';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_vercel_build_prerender');
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+const supabaseAdmin = supabaseUrl && supabaseServiceKey
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
+  : new Proxy({} as unknown as SupabaseClient, {
+      get() {
+        return () => ({
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } }),
+            }),
+          }),
+          upsert: () => Promise.resolve({ error: new Error('Missing Supabase Service Key') }),
+        });
+      }
+    });
 
 const PRODUCTS: Record<string, { name: string; price: number; cards: number }> = {
   bronze:   { name: 'BRONZE #1', price: 5.00, cards: 1 },
@@ -36,6 +60,47 @@ export async function POST(request: Request) {
     }
 
     const origin = request.headers.get('origin') || 'http://localhost:3000';
+
+    // Demo Mode check: if the secret key is dummy or unset, simulate successful purchase directly!
+    const isDemoMode = !process.env.STRIPE_SECRET_KEY || 
+                       process.env.STRIPE_SECRET_KEY.includes('placeholder') || 
+                       process.env.STRIPE_SECRET_KEY.includes('dummy');
+
+    if (isDemoMode) {
+      console.log(`[DEMO MODE] Simulating successful Stripe checkout for user ${user.id}`);
+      
+      const targetPacks = product.cards * quantity;
+
+      // 1. Fetch current quantity
+      const { data, error: selectError } = await supabaseAdmin
+        .from('pending_packs')
+        .select('quantity')
+        .eq('user_id', user.id)
+        .eq('tier', packId)
+        .single();
+
+      if (selectError && selectError.code !== 'PGRST116') {
+        console.error('Error fetching current packs in demo mode:', selectError);
+      }
+
+      const currentQty = data?.quantity || 0;
+      const newQty = currentQty + targetPacks;
+
+      // 2. Upsert quantity
+      const { error: upsertError } = await supabaseAdmin
+        .from('pending_packs')
+        .upsert(
+          { user_id: user.id, tier: packId, quantity: newQty },
+          { onConflict: 'user_id,tier' }
+        );
+
+      if (upsertError) {
+        console.error('Error upserting packs in demo mode:', upsertError);
+        return NextResponse.json({ error: 'Database error in demo mode simulation' }, { status: 500 });
+      }
+
+      return NextResponse.json({ url: `${origin}/it/profilo?success=true&demo=true` });
+    }
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
