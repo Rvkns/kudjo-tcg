@@ -14,7 +14,8 @@ interface PackOpeningModalProps {
   onPackOpened: () => void; // callback to refresh parent state
 }
 
-type Phase = 'idle' | 'shaking' | 'revealing' | 'done';
+type Phase = 'idle' | 'opening' | 'done';
+type OpeningStep = 'idle' | 'zoom' | 'rip' | 'reveal' | 'done';
 
 const TIER_COVER: Record<string, string> = {
   bronze:   '/images/concorso/bronze_pack_tcg.png',
@@ -38,15 +39,15 @@ export default function PackOpeningModal({
   onPackOpened,
 }: PackOpeningModalProps) {
   const [phase, setPhase] = useState<Phase>('idle');
+  const [openingStep, setOpeningStep] = useState<OpeningStep>('idle');
   const [drawnCards, setDrawnCards] = useState<KudjoCard[]>([]);
   const [revealedCount, setRevealedCount] = useState(0);
-  const [saved, setSaved] = useState(false);
 
   const resetModal = useCallback(() => {
     setPhase('idle');
+    setOpeningStep('idle');
     setDrawnCards([]);
     setRevealedCount(0);
-    setSaved(false);
   }, []);
 
   const handleClose = () => {
@@ -54,40 +55,47 @@ export default function PackOpeningModal({
     onClose();
   };
 
-  const handleOpenPack = useCallback(() => {
+  const handleStartOpening = useCallback(() => {
     if (availablePacks <= 0 || phase !== 'idle') return;
 
     // Consume one pack from localStorage
     const ok = consumeOnePack(packTier);
     if (!ok) return;
 
-    setPhase('shaking');
+    // Draw cards & save immediately to avoid data loss
+    const cards = drawPackCards();
+    setDrawnCards(cards);
+    addCardsToCollection(cards, packTier);
+    onPackOpened(); // Refresh parent collections
 
+    // Transition to opening & trigger sequential steps
+    setPhase('opening');
+    setOpeningStep('zoom');
+
+    // 1. Zoom in and show laser seam line cut (0ms - 400ms)
+    // 2. Cut & Rip top off (400ms - 1200ms)
     setTimeout(() => {
-      const cards = drawPackCards();
-      setDrawnCards(cards);
+      setOpeningStep('rip');
+    }, 450);
 
-      // ── Save immediately – cards are yours as soon as the pack is opened ──
-      addCardsToCollection(cards, packTier);
-      setSaved(true);
-      onPackOpened(); // notify parent to refresh pack count + collection
+    // 3. Shoot out fanned cards from inside pack (1200ms)
+    setTimeout(() => {
+      setOpeningStep('reveal');
+    }, 1250);
 
-      setPhase('revealing');
-      setRevealedCount(0);
-
-      // Reveal cards one by one
-      cards.forEach((_, i) => {
-        setTimeout(() => {
-          setRevealedCount(i + 1);
-        }, 600 + i * 500);
-      });
-
-      // After all revealed
+    // 4. Flip cards one by one (1800ms - 2800ms)
+    cards.forEach((_, i) => {
       setTimeout(() => {
-        setPhase('done');
-      }, 600 + cards.length * 500 + 400);
+        setRevealedCount(i + 1);
+      }, 1900 + i * 320);
+    });
 
-    }, 1200);
+    // 5. Complete and show grid layout (3600ms)
+    setTimeout(() => {
+      setPhase('done');
+      setOpeningStep('done');
+    }, 3800);
+
   }, [availablePacks, phase, packTier, onPackOpened]);
 
   const handleOpenAnother = () => {
@@ -98,22 +106,60 @@ export default function PackOpeningModal({
 
   const coverSrc = TIER_COVER[packTier] ?? TIER_COVER.bronze;
 
+  // Custom fan style for fanning out cards dynamically from pack center
+  const getFanStyle = (index: number, isFanned: boolean, isRevealed: boolean) => {
+    if (!isFanned) {
+      return {
+        position: 'absolute' as const,
+        left: '50%',
+        top: '50%',
+        transform: 'translate3d(-50%, -40%, 0) scale(0.05) rotateY(180deg)',
+        opacity: 0,
+        zIndex: 10,
+        transformStyle: 'preserve-3d' as const,
+        transition: 'transform 0.4s ease-in, opacity 0.3s ease',
+      };
+    }
+
+    const offsets = [
+      { x: -170, y: 10,  rot: -18, scale: 0.9 },
+      { x: -85,  y: -20, rot: -9,  scale: 0.95 },
+      { x: 0,    y: -30, rot: 0,   scale: 1.0 },
+      { x: 85,   y: -20, rot: 9,   scale: 0.95 },
+      { x: 170,  y: 10,  rot: 18,  scale: 0.9 }
+    ];
+    
+    const offset = offsets[index] || { x: 0, y: 0, rot: 0, scale: 1 };
+    
+    return {
+      position: 'absolute' as const,
+      left: '50%',
+      top: '50%',
+      // Combine 3D rotation with position transforms
+      transform: `translate3d(-50%, -50%, 0) translate3d(${offset.x}px, ${offset.y}px, 0) rotate(${offset.rot}deg) scale(${offset.scale}) rotateY(${isRevealed ? 0 : 180}deg)`,
+      transformStyle: 'preserve-3d' as const,
+      transition: `transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.25) ${index * 0.08}s, opacity 0.5s ease ${index * 0.08}s`,
+      zIndex: 15 + index,
+      opacity: 1,
+    };
+  };
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(0,0,0,0.94)', backdropFilter: 'blur(10px)' }}
       onClick={phase === 'done' ? handleClose : undefined}
     >
       {/* Panel */}
       <div
-        className="relative w-full max-w-2xl rounded-2xl border border-white/10 overflow-hidden"
-        style={{ background: '#0f0e0c' }}
+        className="relative w-full max-w-3xl rounded-2xl border border-white/10 overflow-hidden shadow-2xl"
+        style={{ background: '#0a0a0b' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 z-20 text-neutral-500 hover:text-foreground transition-colors cursor-pointer"
+          className="absolute top-4 right-4 z-50 text-neutral-500 hover:text-foreground transition-colors cursor-pointer"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -122,169 +168,271 @@ export default function PackOpeningModal({
 
         {/* ── IDLE PHASE ── */}
         {phase === 'idle' && (
-          <div className="flex flex-col items-center gap-6 p-10">
+          <div className="flex flex-col items-center gap-6 py-14 px-8">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-bronze/35 bg-bronze/5 px-3 py-1 text-[9px] font-bold tracking-[0.2em] uppercase text-bronze">
               🎴 APERTURA BUSTA
             </div>
-            <h2 className="font-display text-2xl text-foreground font-light text-center">
-              Sei pronto ad aprire<br />
-              <span className="text-bronze font-normal">{packName}</span>?
-            </h2>
-
-            {/* Pack cover image / fallback */}
-            <div className="relative w-36 h-48 rounded-xl overflow-hidden border border-white/10 bg-[#121214] flex items-center justify-center shadow-2xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={coverSrc} alt={packName} className="w-full h-full object-contain p-2" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-              <div className="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] font-bold text-center py-1 tracking-widest uppercase text-bronze">
+            
+            <div className="text-center space-y-1">
+              <h2 className="font-display text-2xl md:text-3xl text-foreground font-light">
                 {packName}
+              </h2>
+              <p className="text-xs text-neutral-500 uppercase tracking-widest">
+                Disponibili: <span className="text-foreground font-bold font-mono">{availablePacks}</span>
+              </p>
+            </div>
+
+            {/* Clickable 3D Pack Cover with Floating Effect */}
+            <div 
+              onClick={handleStartOpening}
+              className="relative w-48 h-64 cursor-pointer select-none group floating-pack mt-4 transition-transform duration-300 hover:scale-[1.03]"
+            >
+              {/* Interactive glow border and label */}
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-30 rounded-xl border border-bronze/20">
+                <div className="bg-bronze text-[#0a0a0b] text-[10px] font-bold px-4 py-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 tracking-widest uppercase">
+                  Tocca per aprire
+                </div>
               </div>
+
+              {/* Complete pack cover */}
+              <img 
+                src={coverSrc} 
+                alt={packName} 
+                className="w-full h-full object-contain p-2 filter drop-shadow-[0_10px_15px_rgba(223,174,11,0.15)] group-hover:drop-shadow-[0_15px_25px_rgba(223,174,11,0.25)] transition-all duration-300" 
+              />
             </div>
 
-            <p className="text-neutral-400 text-sm text-center max-w-xs">
-              Ogni busta contiene <strong className="text-foreground">5 carte</strong> casuali del{' '}
-              <strong className="text-bronze">Kudjo Original Set I</strong>.<br />
-              Potrai trovare carte Comuni, Non Comuni e persino Rare!
-            </p>
-
-            <div className="text-xs text-neutral-500 text-center">
-              Buste disponibili: <span className="text-foreground font-bold">{availablePacks}</span>
+            <div className="text-center space-y-2 max-w-sm">
+              <p className="text-neutral-400 text-xs">
+                Contiene <strong className="text-foreground">5 carte</strong> casuali del <strong className="text-bronze">Kudjo Original Set I</strong>.
+              </p>
+              <p className="text-[10px] text-neutral-500 uppercase tracking-wider animate-pulse">
+                👇 Clicca o tocca sul pacchetto per iniziare lo strappo
+              </p>
             </div>
-
-            <button
-              onClick={handleOpenPack}
-              disabled={availablePacks <= 0}
-              className="bg-[#e11b22] hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 px-10 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(225,27,34,0.2)]"
-            >
-              <span>Apri la Busta!</span>
-              <span>→</span>
-            </button>
           </div>
         )}
 
-        {/* ── SHAKING PHASE ── */}
-        {phase === 'shaking' && (
-          <div className="flex flex-col items-center gap-8 p-12">
-            <div
-              className="relative w-36 h-48 rounded-xl overflow-hidden border border-white/10 bg-[#121214] flex items-center justify-center shadow-2xl"
-              style={{ animation: 'packShake 0.3s ease-in-out infinite' }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={coverSrc} alt={packName} className="w-full h-full object-contain p-2" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            </div>
-            <p className="text-bronze font-display text-xl animate-pulse">Aprendo la busta...</p>
-          </div>
-        )}
+        {/* ── OPENING / TEAR ANIMATION PHASE ── */}
+        {phase === 'opening' && (
+          <div className="relative w-full h-[540px] flex items-center justify-center p-8 overflow-hidden">
+            
+            {/* Holographic sparkle particles backdrop during reveal */}
+            {openingStep === 'reveal' && (
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(223,174,11,0.06)_0%,transparent_70%)] animate-pulse pointer-events-none" />
+            )}
 
-        {/* ── REVEALING PHASE ── */}
-        {(phase === 'revealing' || phase === 'done') && (
-          <div className="flex flex-col items-center gap-6 p-8">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-bronze/35 bg-bronze/5 px-3 py-1 text-[9px] font-bold tracking-[0.2em] uppercase text-bronze">
-              {phase === 'done' ? '✨ HAI TROVATO' : '🎴 RIVELAZIONE...'}
-            </div>
+            {/* Cutter spark seam line overlay */}
+            {openingStep === 'zoom' && (
+              <div className="laser-line" />
+            )}
 
-            {/* Cards row */}
-            <div className="flex items-center justify-center gap-3 flex-wrap min-h-[240px]">
-              {drawnCards.map((card, i) => {
-                const isRevealed = i < revealedCount;
-                return (
-                  <div
-                    key={`${card.id}-${i}`}
-                    className="relative"
-                    style={{
-                      transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease',
-                      transform: isRevealed ? 'rotateY(0deg) scale(1)' : 'rotateY(90deg) scale(0.8)',
-                      opacity: isRevealed ? 1 : 0,
-                      perspective: '600px',
-                    }}
-                  >
-                    <KudjoCard card={card} size="normal" faceDown={!isRevealed} />
-                    {/* Rarity flash */}
-                    {isRevealed && card.rarita === 'raro' && (
-                      <div
-                        className="absolute inset-0 rounded-lg pointer-events-none"
-                        style={{
-                          animation: 'rarityFlash 0.8s ease-out forwards',
-                          background: 'radial-gradient(circle at 50% 50%, rgba(223,174,11,0.6) 0%, transparent 70%)',
-                        }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {/* 1. Pack Top Part (rips off) */}
+            {(openingStep === 'zoom' || openingStep === 'rip') && (
+              <div
+                className={`absolute w-52 h-72 z-30 pointer-events-none ${
+                  openingStep === 'rip' ? 'animate-rip-top' : 'scale-[1.12] transition-transform duration-400 ease-out'
+                }`}
+                style={{
+                  clipPath: 'polygon(0 0, 100% 0, 100% 16%, 85% 14%, 70% 17%, 50% 13%, 35% 16%, 20% 13%, 0 15%)',
+                  WebkitClipPath: 'polygon(0 0, 100% 0, 100% 16%, 85% 14%, 70% 17%, 50% 13%, 35% 16%, 20% 13%, 0 15%)',
+                }}
+              >
+                <img src={coverSrc} alt={packName} className="w-full h-full object-contain p-2" />
+              </div>
+            )}
 
-            {/* Rarity summary */}
-            {phase === 'done' && (
-              <div className="flex items-center gap-3 flex-wrap justify-center">
+            {/* 2. Pack Bottom Pouch Part (shakes and fades out) */}
+            {(openingStep === 'zoom' || openingStep === 'rip' || openingStep === 'reveal') && (
+              <div
+                className={`absolute w-52 h-72 z-20 pointer-events-none ${
+                  openingStep === 'rip' ? 'animate-rip-bottom' : ''
+                } ${
+                  openingStep === 'reveal' ? 'opacity-0 scale-90 translate-y-12 transition-all duration-1000' : 'scale-[1.12] transition-transform duration-400 ease-out'
+                }`}
+                style={{
+                  clipPath: 'polygon(0 15%, 20% 13%, 35% 16%, 50% 13%, 70% 17%, 85% 14%, 100% 16%, 100% 100%, 0 100%)',
+                  WebkitClipPath: 'polygon(0 15%, 20% 13%, 35% 16%, 50% 13%, 70% 17%, 85% 14%, 100% 16%, 100% 100%, 0 100%)',
+                }}
+              >
+                <img src={coverSrc} alt={packName} className="w-full h-full object-contain p-2" />
+              </div>
+            )}
+
+            {/* 3. Fanning Cards (emerge from inside pack bottom) */}
+            {(openingStep === 'reveal') && (
+              <div className="relative w-full h-full">
                 {drawnCards.map((card, i) => {
-                  const rCfg = RARITY_LABELS[card.rarita];
+                  const isFanned = true;
+                  const isRevealed = i < revealedCount;
+                  const fanStyle = getFanStyle(i, isFanned, isRevealed);
+
                   return (
-                    <div
-                      key={`badge-${i}`}
-                      className="text-[8px] font-bold tracking-wider uppercase px-2 py-0.5 rounded border"
-                      style={{ color: rCfg.color, borderColor: rCfg.color + '50', background: rCfg.color + '10' }}
-                    >
-                      {card.nome} · {rCfg.it}
+                    <div key={`${card.id}-${i}`} style={fanStyle}>
+                      {/* 3D card flipper with backface culling */}
+                      <div className="relative w-[160px] h-[224px]" style={{ transformStyle: 'preserve-3d' }}>
+                        
+                        {/* Card Front Side */}
+                        <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+                          <KudjoCard card={card} size="normal" faceDown={false} />
+                          {/* Holographic flash upon flip reveal */}
+                          {isRevealed && (
+                            <div
+                              className="absolute inset-0 rounded-lg pointer-events-none z-40"
+                              style={{
+                                animation: 'rarityFlash 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards',
+                                background: card.rarita === 'raro' 
+                                  ? 'radial-gradient(circle at 50% 50%, rgba(223,174,11,0.5) 0%, transparent 80%)'
+                                  : 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0%, transparent 80%)',
+                              }}
+                            />
+                          )}
+                        </div>
+
+                        {/* Card Back Side */}
+                        <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                          <KudjoCard card={card} size="normal" faceDown={true} />
+                        </div>
+
+                      </div>
                     </div>
                   );
                 })}
               </div>
             )}
+          </div>
+        )}
 
-            {/* Action buttons */}
-            {phase === 'done' && (
-              <div className="flex flex-col items-center gap-3 w-full max-w-xs">
-                {/* Auto-save confirmation banner */}
-                <div className="w-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 py-3 rounded-lg text-xs font-bold tracking-widest uppercase text-center">
-                  ✓ Carte aggiunte alla tua collezione!
+        {/* ── DONE PHASE ── */}
+        {phase === 'done' && (
+          <div className="flex flex-col items-center gap-6 p-8 animate-page-entry">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-bronze/35 bg-bronze/5 px-3 py-1 text-[9px] font-bold tracking-[0.2em] uppercase text-bronze">
+              ✨ HAI TROVATO
+            </div>
+
+            {/* Static cards grid after anim sequence finishes */}
+            <div className="flex items-center justify-center gap-4 flex-wrap min-h-[240px] py-4">
+              {drawnCards.map((card, i) => (
+                <div 
+                  key={`done-${card.id}-${i}`}
+                  className="animate-card-bounce"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  <KudjoCard card={card} size="normal" faceDown={false} />
                 </div>
+              ))}
+            </div>
 
-                <div className="flex gap-3 w-full">
-                  {availablePacks > 1 && (
-                    <button
-                      onClick={handleOpenAnother}
-                      className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-foreground py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer"
-                    >
-                      Apri un&apos;altra →
-                    </button>
-                  )}
-
-                  <button
-                    onClick={handleClose}
-                    className="flex-1 bg-[#e11b22] hover:bg-red-700 text-white py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer shadow-lg"
+            {/* Rarity descriptions */}
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              {drawnCards.map((card, i) => {
+                const rCfg = RARITY_LABELS[card.rarita];
+                return (
+                  <div
+                    key={`badge-${i}`}
+                    className="text-[8px] font-bold tracking-wider uppercase px-2.5 py-1 rounded border"
+                    style={{ color: rCfg.color, borderColor: rCfg.color + '35', background: rCfg.color + '0a' }}
                   >
-                    {availablePacks > 1 ? 'Chiudi' : 'Vai al Profilo'}
-                  </button>
-                </div>
+                    {card.nome} · {rCfg.it}
+                  </div>
+                );
+              })}
+            </div>
 
-                <span className="text-[10px] text-neutral-600 tracking-wider">
-                  Clicca fuori dal pannello per chiudere
-                </span>
+            {/* Bottom action panel */}
+            <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-4">
+              <div className="w-full bg-emerald-950/20 border border-emerald-800/30 text-emerald-400 py-3 rounded-lg text-xs font-bold tracking-widest uppercase text-center shadow-sm">
+                ✓ Aggiunte alla tua collezione!
               </div>
-            )}
 
+              <div className="flex gap-3 w-full">
+                {availablePacks > 1 && (
+                  <button
+                    onClick={handleOpenAnother}
+                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-foreground py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer font-sans"
+                  >
+                    Apri un&apos;altra →
+                  </button>
+                )}
 
+                <button
+                  onClick={handleClose}
+                  className="flex-1 bg-[#e11b22] hover:bg-red-700 text-white py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer shadow-lg font-sans"
+                >
+                  {availablePacks > 1 ? 'Chiudi' : 'Vai al Profilo'}
+                </button>
+              </div>
+
+              <span className="text-[10px] text-neutral-500 tracking-wider font-sans uppercase">
+                Clicca all&apos;esterno per chiudere il riepilogo
+              </span>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Inline keyframes via style tag */}
+      {/* Embedded Animations and Keyframes */}
       <style>{`
-        @keyframes packShake {
-          0%   { transform: translateX(0) rotate(0deg); }
-          25%  { transform: translateX(-6px) rotate(-2deg); }
-          50%  { transform: translateX(6px) rotate(2deg); }
-          75%  { transform: translateX(-4px) rotate(-1deg); }
-          100% { transform: translateX(0) rotate(0deg); }
+        /* Floating booster pack cover style */
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-8px) rotate(1deg); }
         }
+        .floating-pack {
+          animation: float 2.8s ease-in-out infinite;
+        }
+
+        /* Seam cut line sweep effect */
+        @keyframes laserSweep {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .laser-line {
+          position: absolute;
+          top: 15.5%;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background: linear-gradient(90deg, transparent, #ffe066 30%, #dfae0b 50%, #ffe066 70%, transparent);
+          box-shadow: 0 0 10px #dfae0b, 0 0 20px #ffe066;
+          z-index: 40;
+          animation: laserSweep 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* Tear Rip animations */
+        @keyframes ripTop {
+          0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1.12); opacity: 1; }
+          25% { transform: translate3d(-8px, 4px, 0) rotate(-1.5deg) scale(1.12); opacity: 1; }
+          100% { transform: translate3d(120px, -240px, 0) rotate(42deg) scale(1.0); opacity: 0; }
+        }
+        .animate-rip-top {
+          animation: ripTop 1.1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes ripBottom {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1.12); }
+          15%, 45%, 75% { transform: translate3d(-3px, 2px, 0) rotate(-0.5deg) scale(1.12); }
+          30%, 60%, 90% { transform: translate3d(3px, -2px, 0) rotate(0.5deg) scale(1.12); }
+        }
+        .animate-rip-bottom {
+          animation: ripBottom 0.8s ease-in-out;
+        }
+
+        /* Holographic flip shine flash */
         @keyframes rarityFlash {
-          0%   { opacity: 1; }
-          100% { opacity: 0; }
+          0% { opacity: 0; transform: scale(0.95); }
+          15% { opacity: 1; transform: scale(1.02); }
+          100% { opacity: 0; transform: scale(1.05); }
         }
-        @keyframes holoShift {
-          0%   { background-position: 0% 50%; }
-          50%  { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+
+        /* Entrance bounce for cards in done layout */
+        @keyframes cardEntrance {
+          0% { transform: translateY(20px) scale(0.95); opacity: 0; }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .animate-card-bounce {
+          animation: cardEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          opacity: 0;
         }
       `}</style>
     </div>
