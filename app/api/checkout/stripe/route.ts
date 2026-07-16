@@ -8,6 +8,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_fo
 const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
 const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
+console.log('[DEBUG STRIPE] supabaseUrl:', supabaseUrl);
+console.log('[DEBUG STRIPE] supabaseServiceKey length:', supabaseServiceKey.length);
+if (supabaseServiceKey.length > 20) {
+  console.log('[DEBUG STRIPE] supabaseServiceKey start/end:', 
+    supabaseServiceKey.substring(0, 10) + '...' + supabaseServiceKey.slice(-10));
+}
+
 const createMockQueryBuilder = () => {
   const queryBuilder = {
     select: () => queryBuilder,
