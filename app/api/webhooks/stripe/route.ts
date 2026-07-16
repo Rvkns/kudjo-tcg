@@ -1,50 +1,17 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { supabaseAdmin, getActiveConcorso, TICKET_PER_TIER } from '@/lib/supabase-admin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_vercel_build_prerender');
 
-let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
-if (supabaseUrl.startsWith('NEXT_PUBLIC_SUPABASE_URL=')) {
-  supabaseUrl = supabaseUrl.replace('NEXT_PUBLIC_SUPABASE_URL=', '').trim();
-}
-
-let supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-if (supabaseServiceKey.startsWith('SUPABASE_SERVICE_ROLE_KEY=')) {
-  supabaseServiceKey = supabaseServiceKey.replace('SUPABASE_SERVICE_ROLE_KEY=', '').trim();
-}
-
-const createMockQueryBuilder = () => {
-  const queryBuilder = {
-    select: () => queryBuilder,
-    eq: () => queryBuilder,
-    single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } }),
-    upsert: () => Promise.resolve({ error: null }),
-    insert: () => Promise.resolve({ error: null }),
-    update: () => queryBuilder,
-    delete: () => queryBuilder,
-    then: (resolve: (value: unknown) => void) => resolve({ data: null, error: null }),
-  };
-  return queryBuilder;
-};
-
-const supabaseAdmin = supabaseUrl && supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    })
-  : new Proxy({} as unknown as SupabaseClient, {
-      get(target, prop) {
-        if (prop === 'from') {
-          return () => createMockQueryBuilder();
-        }
-        return () => Promise.resolve({ error: null });
-      }
-    });
-
 export const dynamic = 'force-dynamic';
+
+const PACK_CARDS: Record<string, number> = {
+  bronze: 1,
+  silver: 6,
+  gold: 13,
+  platinum: 27,
+};
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -64,7 +31,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Webhook Error: ${errorMsg}` }, { status: 400 });
   }
 
-  // Handle checkout.session.completed event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const metadata = session.metadata;
@@ -73,39 +39,94 @@ export async function POST(request: Request) {
       const userId = metadata.userId;
       const tier = metadata.packTier;
       const quantity = parseInt(metadata.packQuantity, 10);
+      // concorsoId stored in metadata by checkout route
+      const concorsoId = metadata.concorsoId || null;
 
-      console.log(`Payment confirmed via Stripe. Crediting ${quantity} ${tier} packs to user ${userId}`);
+      console.log(`[Webhook] Crediting ${quantity} ${tier} packs to user ${userId}, concorso ${concorsoId}`);
 
-      // 1. Fetch current quantity from Supabase
-      const { data, error: selectError } = await supabaseAdmin
+      // ── Credit pending_packs ───────────────────────────────────────────────
+      const packsQuery = supabaseAdmin
         .from('pending_packs')
         .select('quantity')
         .eq('user_id', userId)
-        .eq('tier', tier)
-        .single();
+        .eq('tier', tier);
 
-      if (selectError && selectError.code !== 'PGRST116') {
-        console.error('Error fetching current packs from Supabase:', selectError);
+      if (concorsoId) {
+        packsQuery.eq('concorso_id', concorsoId);
+      } else {
+        packsQuery.is('concorso_id', null);
+      }
+
+      const { data, error: selectError } = await packsQuery.maybeSingle();
+
+      if (selectError && (selectError as { code?: string }).code !== 'PGRST116') {
+        console.error('[Webhook] Error fetching packs:', selectError);
         return NextResponse.json({ error: 'Database select error' }, { status: 500 });
       }
 
-      const currentQty = data?.quantity || 0;
+      const currentQty = (data as { quantity?: number } | null)?.quantity ?? 0;
       const newQty = currentQty + quantity;
+      const conflictTarget = concorsoId ? 'user_id,tier,concorso_id' : 'user_id,tier';
 
-      // 2. Upsert the quantity
       const { error: upsertError } = await supabaseAdmin
         .from('pending_packs')
         .upsert(
-          { user_id: userId, tier, quantity: newQty },
-          { onConflict: 'user_id,tier' }
+          { user_id: userId, tier, quantity: newQty, concorso_id: concorsoId },
+          { onConflict: conflictTarget }
         );
 
       if (upsertError) {
-        console.error('Error upserting packs on Supabase:', upsertError);
+        console.error('[Webhook] Error upserting packs:', upsertError);
         return NextResponse.json({ error: 'Database upsert error' }, { status: 500 });
       }
 
-      console.log(`Successfully credited ${quantity} packs of tier ${tier} to user ${userId} via Webhook`);
+      // ── Credit user_tickets ────────────────────────────────────────────────
+      if (concorsoId) {
+        const ticketsPerPack = TICKET_PER_TIER[tier] ?? 0;
+        const numPurchased = Math.ceil(quantity / (PACK_CARDS[tier] ?? 1));
+        const ticketsToAdd = ticketsPerPack * numPurchased;
+
+        const { data: existingTickets } = await supabaseAdmin
+          .from('user_tickets')
+          .select('quantity')
+          .eq('user_id', userId)
+          .eq('concorso_id', concorsoId)
+          .maybeSingle();
+
+        const currentTickets = (existingTickets as { quantity?: number } | null)?.quantity ?? 0;
+
+        await supabaseAdmin
+          .from('user_tickets')
+          .upsert(
+            { user_id: userId, concorso_id: concorsoId, quantity: currentTickets + ticketsToAdd, updated_at: new Date().toISOString() },
+            { onConflict: 'user_id,concorso_id' }
+          );
+
+        console.log(`[Webhook] Credited ${ticketsToAdd} tickets to user ${userId} for concorso ${concorsoId}`);
+      }
+
+      // ── If no concorso in metadata, find current active one as fallback ────
+      if (!concorsoId) {
+        const activeConcorso = await getActiveConcorso();
+        if (activeConcorso) {
+          const ticketsToAdd = (TICKET_PER_TIER[tier] ?? 0) * Math.ceil(quantity / (PACK_CARDS[tier] ?? 1));
+          const { data: existingTickets } = await supabaseAdmin
+            .from('user_tickets')
+            .select('quantity')
+            .eq('user_id', userId)
+            .eq('concorso_id', activeConcorso.id)
+            .maybeSingle();
+          const currentTickets = (existingTickets as { quantity?: number } | null)?.quantity ?? 0;
+          await supabaseAdmin
+            .from('user_tickets')
+            .upsert(
+              { user_id: userId, concorso_id: activeConcorso.id, quantity: currentTickets + ticketsToAdd, updated_at: new Date().toISOString() },
+              { onConflict: 'user_id,concorso_id' }
+            );
+        }
+      }
+
+      console.log(`[Webhook] Successfully credited ${quantity} ${tier} packs to user ${userId}`);
     }
   }
 

@@ -1,56 +1,22 @@
 import { NextResponse } from 'next/server';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { supabaseAdmin, getActiveConcorso, TICKET_PER_TIER } from '@/lib/supabase-admin';
 
-let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
-if (supabaseUrl.startsWith('NEXT_PUBLIC_SUPABASE_URL=')) {
-  supabaseUrl = supabaseUrl.replace('NEXT_PUBLIC_SUPABASE_URL=', '').trim();
-}
-
-let supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-if (supabaseServiceKey.startsWith('SUPABASE_SERVICE_ROLE_KEY=')) {
-  supabaseServiceKey = supabaseServiceKey.replace('SUPABASE_SERVICE_ROLE_KEY=', '').trim();
-}
-
-const createMockQueryBuilder = () => {
-  const queryBuilder = {
-    select: () => queryBuilder,
-    eq: () => queryBuilder,
-    single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } }),
-    upsert: () => Promise.resolve({ error: null }),
-    insert: () => Promise.resolve({ error: null }),
-    update: () => queryBuilder,
-    delete: () => queryBuilder,
-    then: (resolve: (value: unknown) => void) => resolve({ data: null, error: null }),
-  };
-  return queryBuilder;
+const PACK_CARDS: Record<string, number> = {
+  bronze: 1,
+  silver: 6,
+  gold: 13,
+  platinum: 27,
 };
-
-const supabaseAdmin = supabaseUrl && supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    })
-  : new Proxy({} as unknown as SupabaseClient, {
-      get(target, prop) {
-        if (prop === 'from') {
-          return () => createMockQueryBuilder();
-        }
-        return () => Promise.resolve({ error: null });
-      }
-    });
 
 async function getPayPalAccessToken() {
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
 
-  if (!clientId || !clientSecret) {
+  if (!clientId || !clientSecret || clientId.includes('placeholder')) {
     throw new Error('PayPal client credentials are not configured.');
   }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
   const response = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
     method: 'POST',
     body: 'grant_type=client_credentials',
@@ -67,13 +33,10 @@ async function getPayPalAccessToken() {
 export async function POST(request: Request) {
   try {
     const { orderId } = await request.json();
-    if (!orderId) {
-      return NextResponse.json({ error: 'Missing order ID' }, { status: 400 });
-    }
+    if (!orderId) return NextResponse.json({ error: 'Missing order ID' }, { status: 400 });
 
     const accessToken = await getPayPalAccessToken();
 
-    // Call PayPal to capture the authorized payment order
     const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
       headers: {
@@ -89,41 +52,75 @@ export async function POST(request: Request) {
       const customId = purchaseUnit?.payments?.captures?.[0]?.custom_id || purchaseUnit?.custom_id;
 
       if (customId) {
-        const { userId, packTier, packQuantity } = JSON.parse(customId);
+        const { userId, packTier, packQuantity, concorsoId } = JSON.parse(customId);
         const quantity = parseInt(packQuantity, 10);
 
-        console.log(`PayPal capture completed. Crediting ${quantity} ${packTier} packs to user ${userId}`);
+        // Resolve concorsoId: use from metadata or fall back to active concorso
+        const resolvedConcorsoId: string | null = concorsoId || (await getActiveConcorso())?.id || null;
 
-        // 1. Fetch current quantity from Supabase
-        const { data, error: selectError } = await supabaseAdmin
+        console.log(`[PayPal] Crediting ${quantity} ${packTier} packs to user ${userId}, concorso ${resolvedConcorsoId}`);
+
+        // ── Credit pending_packs ─────────────────────────────────────────────
+        const packsQuery = supabaseAdmin
           .from('pending_packs')
           .select('quantity')
           .eq('user_id', userId)
-          .eq('tier', packTier)
-          .single();
+          .eq('tier', packTier);
 
-        if (selectError && selectError.code !== 'PGRST116') {
-          console.error('Error fetching current packs from Supabase:', selectError);
+        if (resolvedConcorsoId) {
+          packsQuery.eq('concorso_id', resolvedConcorsoId);
+        } else {
+          packsQuery.is('concorso_id', null);
+        }
+
+        const { data, error: selectError } = await packsQuery.maybeSingle();
+
+        if (selectError && (selectError as { code?: string }).code !== 'PGRST116') {
+          console.error('[PayPal] Error fetching packs:', selectError);
           return NextResponse.json({ error: 'Database select error' }, { status: 500 });
         }
 
-        const currentQty = data?.quantity || 0;
+        const currentQty = (data as { quantity?: number } | null)?.quantity ?? 0;
         const newQty = currentQty + quantity;
+        const conflictTarget = resolvedConcorsoId ? 'user_id,tier,concorso_id' : 'user_id,tier';
 
-        // 2. Upsert the quantity
         const { error: upsertError } = await supabaseAdmin
           .from('pending_packs')
           .upsert(
-            { user_id: userId, tier: packTier, quantity: newQty },
-            { onConflict: 'user_id,tier' }
+            { user_id: userId, tier: packTier, quantity: newQty, concorso_id: resolvedConcorsoId },
+            { onConflict: conflictTarget }
           );
 
         if (upsertError) {
-          console.error('Error upserting packs on Supabase:', upsertError);
+          console.error('[PayPal] Error upserting packs:', upsertError);
           return NextResponse.json({ error: 'Database upsert error' }, { status: 500 });
         }
 
-        console.log(`Successfully credited ${quantity} packs of tier ${packTier} to user ${userId} via PayPal Capture`);
+        // ── Credit user_tickets ──────────────────────────────────────────────
+        if (resolvedConcorsoId) {
+          const ticketsPerPurchase = TICKET_PER_TIER[packTier] ?? 0;
+          const numPurchased = Math.ceil(quantity / (PACK_CARDS[packTier] ?? 1));
+          const ticketsToAdd = ticketsPerPurchase * numPurchased;
+
+          const { data: existingTickets } = await supabaseAdmin
+            .from('user_tickets')
+            .select('quantity')
+            .eq('user_id', userId)
+            .eq('concorso_id', resolvedConcorsoId)
+            .maybeSingle();
+
+          const currentTickets = (existingTickets as { quantity?: number } | null)?.quantity ?? 0;
+
+          await supabaseAdmin
+            .from('user_tickets')
+            .upsert(
+              { user_id: userId, concorso_id: resolvedConcorsoId, quantity: currentTickets + ticketsToAdd, updated_at: new Date().toISOString() },
+              { onConflict: 'user_id,concorso_id' }
+            );
+
+          console.log(`[PayPal] Credited ${ticketsToAdd} tickets to user ${userId}`);
+        }
+
         return NextResponse.json({ success: true, packsCredited: quantity });
       }
     }
@@ -131,7 +128,7 @@ export async function POST(request: Request) {
     return NextResponse.json(captureData);
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    console.error('Error capturing PayPal order:', errorMsg);
+    console.error('[PayPal Capture] Error:', errorMsg);
     return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }
