@@ -23,11 +23,13 @@ create table if not exists public.profiles (
 -- RLS
 alter table public.profiles enable row level security;
 
--- Policies per profiles
+-- Policies per profiles (Pulisci se esistono e ricrea)
+drop policy if exists "Allow public read for profiles" on public.profiles;
 create policy "Allow public read for profiles" 
   on public.profiles for select 
   using (true);
 
+drop policy if exists "Allow users to update own profile" on public.profiles;
 create policy "Allow users to update own profile" 
   on public.profiles for update 
   using (auth.uid() = id);
@@ -47,7 +49,9 @@ begin
 end;
 $$ language plpgsql security definer;
 
-create or replace trigger on_auth_user_created
+-- Rimuovi il trigger se esiste prima di ricrearlo
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
@@ -80,23 +84,28 @@ alter table public.pending_packs enable row level security;
 alter table public.user_collection enable row level security;
 
 -- Policies per pending_packs
+drop policy if exists "Allow users to read own packs" on public.pending_packs;
 create policy "Allow users to read own packs" 
   on public.pending_packs for select 
   using (auth.uid() = user_id);
 
+drop policy if exists "Allow users to manage own packs" on public.pending_packs;
 create policy "Allow users to manage own packs" 
   on public.pending_packs for all 
   using (auth.uid() = user_id);
 
 -- Policies per user_collection
+drop policy if exists "Allow users to read own collection" on public.user_collection;
 create policy "Allow users to read own collection" 
   on public.user_collection for select 
   using (auth.uid() = user_id);
 
+drop policy if exists "Allow users to insert into own collection" on public.user_collection;
 create policy "Allow users to insert into own collection" 
   on public.user_collection for insert 
   with check (auth.uid() = user_id);
 
+drop policy if exists "Allow users to delete from own collection" on public.user_collection;
 create policy "Allow users to delete from own collection" 
   on public.user_collection for delete 
   using (auth.uid() = user_id);
@@ -162,26 +171,35 @@ alter table public.variants enable row level security;
 alter table public.items enable row level security;
 
 -- Policies Pubbliche (Tutti possono leggere la vetrina)
+drop policy if exists "Allow public read for sets" on public.sets;
 create policy "Allow public read for sets" on public.sets for select using (true);
+
+drop policy if exists "Allow public read for card_definitions" on public.card_definitions;
 create policy "Allow public read for card_definitions" on public.card_definitions for select using (true);
+
+drop policy if exists "Allow public read for variants" on public.variants;
 create policy "Allow public read for variants" on public.variants for select using (true);
+
+drop policy if exists "Allow public read for items" on public.items;
 create policy "Allow public read for items" on public.items for select using (true);
 
 -- Policies di Scrittura (Solo gli amministratori autenticati o il database manager possono scrivere)
--- Nota: In produzione, puoi legare questo controllo a un ruolo admin specifico o disabilitare le policy di scrittura
--- lasciandole accessibili solo via dashboard/service_role.
+drop policy if exists "Restrict write to authenticated admins for sets" on public.sets;
 create policy "Restrict write to authenticated admins for sets" 
   on public.sets for all 
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Restrict write to authenticated admins for card_definitions" on public.card_definitions;
 create policy "Restrict write to authenticated admins for card_definitions" 
   on public.card_definitions for all 
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Restrict write to authenticated admins for variants" on public.variants;
 create policy "Restrict write to authenticated admins for variants" 
   on public.variants for all 
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Restrict write to authenticated admins for items" on public.items;
 create policy "Restrict write to authenticated admins for items" 
   on public.items for all 
   using (auth.role() = 'authenticated');
