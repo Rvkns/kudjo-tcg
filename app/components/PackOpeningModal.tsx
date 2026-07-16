@@ -66,6 +66,12 @@ export default function PackOpeningModal({
     setTimeout(() => {
       const cards = drawPackCards();
       setDrawnCards(cards);
+
+      // ── Save immediately – cards are yours as soon as the pack is opened ──
+      addCardsToCollection(cards, packTier);
+      setSaved(true);
+      onPackOpened(); // notify parent to refresh pack count + collection
+
       setPhase('revealing');
       setRevealedCount(0);
 
@@ -82,14 +88,7 @@ export default function PackOpeningModal({
       }, 600 + cards.length * 500 + 400);
 
     }, 1200);
-  }, [availablePacks, phase, packTier]);
-
-  const handleSaveAndKeep = () => {
-    if (saved) return;
-    addCardsToCollection(drawnCards, packTier);
-    setSaved(true);
-    onPackOpened(); // notify parent to refresh pack count
-  };
+  }, [availablePacks, phase, packTier, onPackOpened]);
 
   const handleOpenAnother = () => {
     resetModal();
@@ -103,7 +102,7 @@ export default function PackOpeningModal({
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)' }}
-      onClick={phase === 'done' && saved ? handleClose : undefined}
+      onClick={phase === 'done' ? handleClose : undefined}
     >
       {/* Panel */}
       <div
@@ -234,39 +233,37 @@ export default function PackOpeningModal({
 
             {/* Action buttons */}
             {phase === 'done' && (
-              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
-                {!saved ? (
+              <div className="flex flex-col items-center gap-3 w-full max-w-xs">
+                {/* Auto-save confirmation banner */}
+                <div className="w-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 py-3 rounded-lg text-xs font-bold tracking-widest uppercase text-center">
+                  ✓ Carte aggiunte alla tua collezione!
+                </div>
+
+                <div className="flex gap-3 w-full">
+                  {availablePacks > 1 && (
+                    <button
+                      onClick={handleOpenAnother}
+                      className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-foreground py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer"
+                    >
+                      Apri un&apos;altra →
+                    </button>
+                  )}
+
                   <button
-                    onClick={handleSaveAndKeep}
+                    onClick={handleClose}
                     className="flex-1 bg-[#e11b22] hover:bg-red-700 text-white py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer shadow-lg"
                   >
-                    ✓ Aggiungi alla Collezione
+                    {availablePacks > 1 ? 'Chiudi' : 'Vai al Profilo'}
                   </button>
-                ) : (
-                  <div className="flex-1 bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 py-3 rounded-lg text-xs font-bold tracking-widest uppercase text-center">
-                    ✓ Carte Salvate!
-                  </div>
-                )}
+                </div>
 
-                {availablePacks > 1 && (
-                  <button
-                    onClick={handleOpenAnother}
-                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-foreground py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer"
-                  >
-                    Apri un&apos;altra →
-                  </button>
-                )}
+                <span className="text-[10px] text-neutral-600 tracking-wider">
+                  Clicca fuori dal pannello per chiudere
+                </span>
               </div>
             )}
 
-            {phase === 'done' && saved && (
-              <button
-                onClick={handleClose}
-                className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors cursor-pointer tracking-wider uppercase"
-              >
-                Chiudi e vai al Profilo
-              </button>
-            )}
+
           </div>
         )}
       </div>
