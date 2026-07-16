@@ -130,6 +130,9 @@ alter table public.pending_packs
   drop constraint if exists pending_packs_user_id_tier_key;
 
 alter table public.pending_packs
+  drop constraint if exists pending_packs_user_id_tier_concorso_id_key;
+
+alter table public.pending_packs
   add constraint pending_packs_user_id_tier_concorso_id_key
   unique (user_id, tier, concorso_id);
 
