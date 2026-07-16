@@ -81,6 +81,29 @@ export async function POST(request: Request) {
       
       const targetPacks = product.cards * quantity;
 
+      // Ensure the profile exists in public.profiles to satisfy the foreign key constraint
+      const { data: profileExists, error: profileCheckError } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+        
+      if (profileCheckError || !profileExists) {
+        console.log(`[DEMO MODE] Profile missing for user ${user.id}, creating it now...`);
+        const { error: profileInsertError } = await supabaseAdmin
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.email,
+            avatar_url: user.user_metadata?.avatar_url || '',
+          });
+          
+        if (profileInsertError) {
+          console.error('Error inserting missing profile:', profileInsertError);
+        }
+      }
+
       // 1. Fetch current quantity
       const { data, error: selectError } = await supabaseAdmin
         .from('pending_packs')
