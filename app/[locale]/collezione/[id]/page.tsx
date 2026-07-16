@@ -112,7 +112,7 @@ export default function CardDetailPage({
       `Contact: ${contact || 'Not provided'}\n\n` +
       `${message || defaultMessage}`
     );
-    return `mailto:info@kudjo.shop?subject=${subject}&body=${body}`;
+    return `mailto:kudjotcg@gmail.com?subject=${subject}&body=${body}`;
   };
 
   // 3D Tilt handlers for the large main details image

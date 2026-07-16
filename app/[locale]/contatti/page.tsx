@@ -122,7 +122,7 @@ export default function ContattiPage() {
 
               {/* Email direct link */}
               <a
-                href="mailto:info@kudjo.shop"
+                href="mailto:kudjotcg@gmail.com"
                 className="rounded-lg border border-neutral-500/25 bg-neutral-950/20 p-4 flex items-center justify-between hover:bg-neutral-950/30 transition-all group"
               >
                 <div className="flex items-center gap-3">
@@ -133,7 +133,7 @@ export default function ContattiPage() {
                   </div>
                   <div className="text-left">
                     <span className="block text-xs font-bold text-neutral-300 uppercase tracking-widest group-hover:text-bronze transition-colors">Email</span>
-                    <span className="text-[10px] text-neutral-500 font-mono">info@kudjo.shop</span>
+                    <span className="text-[10px] text-neutral-500 font-mono">kudjotcg@gmail.com</span>
                   </div>
                 </div>
                 <span className="text-neutral-600 group-hover:text-foreground transition-colors">→</span>

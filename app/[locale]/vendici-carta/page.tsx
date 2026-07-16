@@ -107,7 +107,7 @@ export default function VendiciCartaPage() {
     const body = encodeURIComponent(
       `Hello,\nhere are the detailed front/back photos for the card proposed by ${submittedName}.\nGame: ${game === 'pokemon' ? 'Pokémon' : 'One Piece'}\n`
     );
-    return `mailto:info@kudjo.shop?subject=${subject}&body=${body}`;
+    return `mailto:kudjotcg@gmail.com?subject=${subject}&body=${body}`;
   };
 
   return (
