@@ -7,14 +7,16 @@ import {
   kudjoCards,
   getUserCollection,
   getPendingPacks,
-  getTotalPendingPacks,
   MILESTONES,
   getCardById,
+  syncLocalToCloud,
   type Milestone,
 } from '@/lib/data/kudjo-cards-db';
-import { type KudjoCard as KudjoCardType, type KudjoCardRarita } from '@/lib/schema/kudjo-card';
+import { type KudjoCard as KudjoCardType, type KudjoCardRarita, type KudjoCardInstance, type KudjoPendingPack } from '@/lib/schema/kudjo-card';
 import KudjoCard from '@/app/components/KudjoCard';
 import PackOpeningModal from '@/app/components/PackOpeningModal';
+import { supabase } from '@/lib/supabase';
+import { type User } from '@supabase/supabase-js';
 
 // ─── Rarity filter options ─────────────────────────────────────────────────
 type FilterRarita = 'all' | KudjoCardRarita;
@@ -37,32 +39,99 @@ export default function ProfiloPage() {
   const locale = useLocale();
   const isIt = locale === 'it';
 
-  // ── State ──────────────────────────────────────────────────────────────
-  const [collection, setCollection]       = useState<ReturnType<typeof getUserCollection>>([]);
-  const [pendingPacks, setPendingPacks]   = useState<ReturnType<typeof getPendingPacks>>([]);
+  // ── Auth State ──────────────────────────────────────────────────────────
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+
+  // ── TCG Collection State ────────────────────────────────────────────────
+  const [collection, setCollection]       = useState<KudjoCardInstance[]>([]);
+  const [pendingPacks, setPendingPacks]   = useState<KudjoPendingPack[]>([]);
   const [totalPacks, setTotalPacks]       = useState(0);
   const [filterRarita, setFilterRarita]   = useState<FilterRarita>('all');
   const [selectedTier, setSelectedTier]   = useState<string>('');
   const [modalOpen, setModalOpen]         = useState(false);
   const [hydrated, setHydrated]           = useState(false);
 
-  const refreshState = () => {
-    const col   = getUserCollection();
-    const packs = getPendingPacks();
-    setCollection(col);
-    setPendingPacks(packs);
-    setTotalPacks(getTotalPendingPacks());
-    // Auto-select first available tier
-    if (packs.length > 0 && !selectedTier) {
-      setSelectedTier(packs[0].tier);
+  const refreshState = async () => {
+    try {
+      const col   = await getUserCollection();
+      const packs = await getPendingPacks();
+      setCollection(col);
+      setPendingPacks(packs);
+      const total = packs.reduce((sum, p) => sum + p.quantity, 0);
+      setTotalPacks(total);
+      // Auto-select first available tier if none is selected
+      if (packs.length > 0 && !selectedTier) {
+        setSelectedTier(packs[0].tier);
+      }
+    } catch (err) {
+      console.error('Error refreshing state:', err);
     }
   };
 
   useEffect(() => {
-    refreshState();
-    setHydrated(true);
+    const checkUserAndSync = async () => {
+      setLoadingAuth(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          // Sync localStorage data to Supabase cloud upon loading
+          await syncLocalToCloud(session.user.id);
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+      } finally {
+        setLoadingAuth(false);
+      }
+      
+      await refreshState();
+      setHydrated(true);
+    };
+
+    checkUserAndSync();
+
+    // Listen for auth state changes (login, logout, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        await syncLocalToCloud(session.user.id);
+      } else {
+        setUser(null);
+      }
+      await refreshState();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/' + locale + '/profilo',
+        },
+      });
+      if (error) throw error;
+    } catch (err) {
+      console.error('Google login error:', err);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+      await refreshState();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   // ── Derived data ───────────────────────────────────────────────────────
 
@@ -116,6 +185,77 @@ export default function ProfiloPage() {
       <div className="absolute top-[600px] right-1/4 h-[500px] w-[500px] rounded-full bg-bronze/3 blur-[150px] pointer-events-none" />
 
       <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16 space-y-16">
+
+        {/* ── PROFILE & AUTH CARD ── */}
+        <section className="rounded-2xl border border-white/5 bg-gradient-to-r from-[#121214]/80 to-[#1b1b1f]/40 p-6 backdrop-blur-sm flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
+          {/* Subtle light glow */}
+          <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-bronze/5 blur-[50px] pointer-events-none" />
+
+          {loadingAuth ? (
+            <div className="text-neutral-500 text-xs animate-pulse py-4 w-full text-center">
+              {isIt ? 'Verifica sessione...' : 'Checking session...'}
+            </div>
+          ) : user ? (
+            <div className="flex items-center justify-between w-full flex-col md:flex-row gap-4">
+              <div className="flex items-center gap-4">
+                {user.user_metadata?.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt={user.user_metadata.full_name || 'Avatar'}
+                    className="w-12 h-12 rounded-full border border-bronze/40 shadow-inner object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-lg text-neutral-400 font-bold">
+                    {user.email?.substring(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="text-left space-y-0.5">
+                  <div className="text-sm font-bold text-foreground">
+                    {user.user_metadata?.full_name || user.email}
+                  </div>
+                  <div className="text-[10px] text-emerald-400 font-bold tracking-widest uppercase flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    {isIt ? 'COLLEZIONE CLOUD ATTIVA' : 'CLOUD STORAGE ONLINE'}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="rounded border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-2 text-[10px] font-bold tracking-widest uppercase text-neutral-400 hover:text-foreground transition-all cursor-pointer font-sans"
+              >
+                {isIt ? 'Disconnetti' : 'Sign Out'}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between w-full flex-col md:flex-row gap-4">
+              <div className="text-left max-w-md space-y-1">
+                <div className="text-xs font-bold text-neutral-300 uppercase tracking-widest">
+                  {isIt ? 'SALVA IL TUO PROGRESSO' : 'SAVE YOUR PROGRESS'}
+                </div>
+                <p className="text-neutral-400 text-xs">
+                  {isIt
+                    ? 'Accedi con Google per sincronizzare la tua collezione digitale e le buste sul database cloud Supabase.'
+                    : 'Sign in with Google to synchronize your TCG collection and packs on Supabase secure cloud.'
+                  }
+                </p>
+              </div>
+              <button
+                onClick={handleGoogleLogin}
+                className="bg-white hover:bg-neutral-100 text-[#0f0e0c] py-3 px-6 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center gap-2.5 cursor-pointer shadow-lg font-sans"
+              >
+                {/* Google Logo Icon */}
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                </svg>
+                <span>{isIt ? 'Accedi con Google' : 'Sign in with Google'}</span>
+              </button>
+            </div>
+          )}
+        </section>
 
         {/* ── HERO ── */}
         <section>

@@ -191,23 +191,34 @@ export default function ConcorsoPage() {
   const incrementQty = () => setQuantity(prev => prev + 1);
   const decrementQty = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
-  // Digital pack purchase state
   const [purchaseNotification, setPurchaseNotification] = useState<string | null>(null);
   const [totalPendingPacks, setTotalPendingPacks] = useState(0);
 
   useEffect(() => {
-    setTotalPendingPacks(getTotalPendingPacks());
+    const loadPacks = async () => {
+      try {
+        const total = await getTotalPendingPacks();
+        setTotalPendingPacks(total);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadPacks();
   }, []);
 
-  const handleAddToCart = () => {
-    // Add digital packs to localStorage
-    addPendingPacks(selectedPack.id, selectedPack.cards * quantity);
-    setTotalPendingPacks(getTotalPendingPacks());
-    const msg = isIt
-      ? `✓ ${selectedPack.cards * quantity} bust${selectedPack.cards * quantity === 1 ? 'a' : 'e'} TCG digitali aggiunte al tuo profilo!`
-      : `✓ ${selectedPack.cards * quantity} digital TCG pack${selectedPack.cards * quantity === 1 ? '' : 's'} added to your profile!`;
-    setPurchaseNotification(msg);
-    setTimeout(() => setPurchaseNotification(null), 4000);
+  const handleAddToCart = async () => {
+    try {
+      await addPendingPacks(selectedPack.id, selectedPack.cards * quantity);
+      const total = await getTotalPendingPacks();
+      setTotalPendingPacks(total);
+      const msg = isIt
+        ? `✓ ${selectedPack.cards * quantity} bust${selectedPack.cards * quantity === 1 ? 'a' : 'e'} TCG digitali aggiunte al tuo profilo!`
+        : `✓ ${selectedPack.cards * quantity} digital TCG pack${selectedPack.cards * quantity === 1 ? '' : 's'} added to your profile!`;
+      setPurchaseNotification(msg);
+      setTimeout(() => setPurchaseNotification(null), 4000);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (

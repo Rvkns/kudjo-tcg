@@ -16,13 +16,22 @@ export default function Navbar() {
   const [pendingPacksCount, setPendingPacksCount] = useState(0);
 
   useEffect(() => {
-    setPendingPacksCount(getTotalPendingPacks());
-    // Listen for storage changes (when packs are added/removed)
-    const handler = () => setPendingPacksCount(getTotalPendingPacks());
-    window.addEventListener('storage', handler);
-    // Also poll every 2s to catch same-tab changes
-    const interval = setInterval(() => setPendingPacksCount(getTotalPendingPacks()), 2000);
-    return () => { window.removeEventListener('storage', handler); clearInterval(interval); };
+    const updateCount = async () => {
+      try {
+        const count = await getTotalPendingPacks();
+        setPendingPacksCount(count);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    updateCount();
+    window.addEventListener('storage', updateCount);
+    const interval = setInterval(updateCount, 3000);
+    return () => { 
+      window.removeEventListener('storage', updateCount); 
+      clearInterval(interval); 
+    };
   }, []);
 
   const toggleLocale = () => {

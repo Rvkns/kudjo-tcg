@@ -117,13 +117,16 @@ export function getCardById(id: string): KudjoCard | undefined {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// localStorage persistence
+// Hybrid Cloud/Local Persistence (Supabase + localStorage)
 // ─────────────────────────────────────────────────────────────────────────────
+import { supabase } from '../supabase';
 
 const COLLECTION_KEY = 'kudjo_digital_collection';
 const PACKS_KEY      = 'kudjo_pending_packs';
 
-export function getUserCollection(): KudjoCardInstance[] {
+// ── Private Local Storage Helpers ──────────────────────────────────────────
+
+function getLocalStorageCollection(): KudjoCardInstance[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(COLLECTION_KEY);
@@ -133,9 +136,9 @@ export function getUserCollection(): KudjoCardInstance[] {
   }
 }
 
-export function addCardsToCollection(cards: KudjoCard[], packTier: string): void {
+function addLocalStorageCardsToCollection(cards: KudjoCard[], packTier: string): void {
   if (typeof window === 'undefined') return;
-  const existing = getUserCollection();
+  const existing = getLocalStorageCollection();
   const now = new Date().toISOString();
   const newInstances: KudjoCardInstance[] = cards.map(c => ({
     cardId: c.id,
@@ -145,14 +148,12 @@ export function addCardsToCollection(cards: KudjoCard[], packTier: string): void
   localStorage.setItem(COLLECTION_KEY, JSON.stringify([...existing, ...newInstances]));
 }
 
-export function clearCollection(): void {
+function clearLocalStorageCollection(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(COLLECTION_KEY);
 }
 
-// ── Pending packs (purchased but not yet opened) ──────────────────────────
-
-export function getPendingPacks(): KudjoPendingPack[] {
+function getLocalStoragePendingPacks(): KudjoPendingPack[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(PACKS_KEY);
@@ -162,9 +163,9 @@ export function getPendingPacks(): KudjoPendingPack[] {
   }
 }
 
-export function addPendingPacks(tier: string, quantity: number): void {
+function addLocalStoragePendingPacks(tier: string, quantity: number): void {
   if (typeof window === 'undefined') return;
-  const existing = getPendingPacks();
+  const existing = getLocalStoragePendingPacks();
   const idx = existing.findIndex(p => p.tier === tier);
   if (idx >= 0) {
     existing[idx].quantity += quantity;
@@ -174,9 +175,9 @@ export function addPendingPacks(tier: string, quantity: number): void {
   localStorage.setItem(PACKS_KEY, JSON.stringify(existing));
 }
 
-export function consumeOnePack(tier: string): boolean {
+function consumeLocalStorageOnePack(tier: string): boolean {
   if (typeof window === 'undefined') return false;
-  const existing = getPendingPacks();
+  const existing = getLocalStoragePendingPacks();
   const idx = existing.findIndex(p => p.tier === tier);
   if (idx < 0 || existing[idx].quantity <= 0) return false;
   existing[idx].quantity -= 1;
@@ -185,8 +186,240 @@ export function consumeOnePack(tier: string): boolean {
   return true;
 }
 
-export function getTotalPendingPacks(): number {
-  return getPendingPacks().reduce((sum, p) => sum + p.quantity, 0);
+// ── Exported Async Hybrid APIs ─────────────────────────────────────────────
+
+export async function getUserCollection(): Promise<KudjoCardInstance[]> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data, error } = await supabase
+        .from('user_collection')
+        .select('card_id, found_at, pack_tier')
+        .eq('user_id', session.user.id);
+      
+      if (error) {
+        console.error('Error fetching collection from Supabase:', error);
+        return getLocalStorageCollection();
+      }
+      return (data || []).map(row => ({
+        cardId: row.card_id,
+        foundAt: row.found_at,
+        packTier: row.pack_tier,
+      }));
+    }
+  } catch (err) {
+    console.error('Supabase get session failed, falling back to localStorage:', err);
+  }
+  return getLocalStorageCollection();
+}
+
+export async function addCardsToCollection(cards: KudjoCard[], packTier: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const now = new Date().toISOString();
+      const rows = cards.map(c => ({
+        user_id: session.user.id,
+        card_id: c.id,
+        found_at: now,
+        pack_tier: packTier,
+      }));
+      const { error } = await supabase.from('user_collection').insert(rows);
+      if (error) {
+        console.error('Error adding cards to Supabase:', error);
+        addLocalStorageCardsToCollection(cards, packTier);
+      }
+      return;
+    }
+  } catch (err) {
+    console.error('Supabase save failed, falling back to localStorage:', err);
+  }
+  addLocalStorageCardsToCollection(cards, packTier);
+}
+
+export async function clearCollection(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { error } = await supabase
+        .from('user_collection')
+        .delete()
+        .eq('user_id', session.user.id);
+      if (error) console.error('Error clearing Supabase collection:', error);
+      return;
+    }
+  } catch (err) {
+    console.error('Supabase clear failed, falling back to localStorage:', err);
+  }
+  clearLocalStorageCollection();
+}
+
+export async function getPendingPacks(): Promise<KudjoPendingPack[]> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data, error } = await supabase
+        .from('pending_packs')
+        .select('tier, quantity')
+        .eq('user_id', session.user.id);
+      
+      if (error) {
+        console.error('Error fetching packs from Supabase:', error);
+        return getLocalStoragePendingPacks();
+      }
+      return (data || []).map(row => ({
+        tier: row.tier,
+        quantity: row.quantity,
+      }));
+    }
+  } catch (err) {
+    console.error('Supabase get packs failed, falling back to localStorage:', err);
+  }
+  return getLocalStoragePendingPacks();
+}
+
+export async function addPendingPacks(tier: string, quantity: number): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      // Upsert logic for adding quantity
+      const { data, error: selectError } = await supabase
+        .from('pending_packs')
+        .select('quantity')
+        .eq('user_id', session.user.id)
+        .eq('tier', tier)
+        .single();
+      
+      if (selectError && selectError.code !== 'PGRST116') {
+        console.error('Error fetching pack quantity:', selectError);
+        return;
+      }
+      
+      const newQty = (data?.quantity || 0) + quantity;
+      
+      const { error } = await supabase
+        .from('pending_packs')
+        .upsert(
+          { user_id: session.user.id, tier, quantity: newQty },
+          { onConflict: 'user_id,tier' }
+        );
+      
+      if (error) {
+        console.error('Error adding packs to Supabase:', error);
+        addLocalStoragePendingPacks(tier, quantity);
+      }
+      return;
+    }
+  } catch (err) {
+    console.error('Supabase add packs failed, falling back to localStorage:', err);
+  }
+  addLocalStoragePendingPacks(tier, quantity);
+}
+
+export async function consumeOnePack(tier: string): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data, error: selectError } = await supabase
+        .from('pending_packs')
+        .select('quantity')
+        .eq('user_id', session.user.id)
+        .eq('tier', tier)
+        .single();
+      
+      if (selectError || !data || data.quantity <= 0) {
+        return false;
+      }
+      
+      const newQty = data.quantity - 1;
+      
+      if (newQty === 0) {
+        const { error } = await supabase
+          .from('pending_packs')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('tier', tier);
+        return !error;
+      } else {
+        const { error } = await supabase
+          .from('pending_packs')
+          .update({ quantity: newQty })
+          .eq('user_id', session.user.id)
+          .eq('tier', tier);
+        return !error;
+      }
+    }
+  } catch (err) {
+    console.error('Supabase consume pack failed, falling back to localStorage:', err);
+  }
+  return consumeLocalStorageOnePack(tier);
+}
+
+export async function getTotalPendingPacks(): Promise<number> {
+  const packs = await getPendingPacks();
+  return packs.reduce((sum, p) => sum + p.quantity, 0);
+}
+
+// ── Cloud Sync Logic ────────────────────────────────────────────────────────
+
+export async function syncLocalToCloud(userId: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+  
+  // 1. Sync collection
+  const localCol = getLocalStorageCollection();
+  if (localCol.length > 0) {
+    const rows = localCol.map(inst => ({
+      user_id: userId,
+      card_id: inst.cardId,
+      found_at: inst.foundAt,
+      pack_tier: inst.packTier,
+    }));
+    
+    const { error } = await supabase.from('user_collection').insert(rows);
+    if (!error) {
+      clearLocalStorageCollection();
+    } else {
+      console.error('Error syncing local collection to Supabase:', error);
+    }
+  }
+  
+  // 2. Sync pending packs
+  const localPacks = getLocalStoragePendingPacks();
+  if (localPacks.length > 0) {
+    for (const pack of localPacks) {
+      const { data, error: selectError } = await supabase
+        .from('pending_packs')
+        .select('quantity')
+        .eq('user_id', userId)
+        .eq('tier', pack.tier)
+        .single();
+        
+      if (selectError && selectError.code !== 'PGRST116') {
+        console.error('Error checking cloud packs:', selectError);
+        continue;
+      }
+      
+      const newQty = (data?.quantity || 0) + pack.quantity;
+      
+      const { error: upsertError } = await supabase
+        .from('pending_packs')
+        .upsert(
+          { user_id: userId, tier: pack.tier, quantity: newQty },
+          { onConflict: 'user_id,tier' }
+        );
+        
+      if (upsertError) {
+        console.error('Error syncing packs to Supabase:', upsertError);
+      }
+    }
+    localStorage.removeItem(PACKS_KEY);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
