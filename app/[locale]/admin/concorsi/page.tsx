@@ -3,9 +3,8 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { supabase } from '@/lib/supabase';
 
 const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
@@ -67,7 +66,7 @@ export default function AdminConcorsiPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const email = session?.user?.email?.toLowerCase() ?? '';
       if (!ADMIN_EMAILS.includes(email)) {
-        router.replace(`/${locale}/`);
+        router.replace('/');
         return;
       }
       const tok = session?.access_token ?? '';
@@ -129,14 +128,14 @@ export default function AdminConcorsiPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href={`/${locale}/`} className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
             <span className="text-neutral-700">/</span>
-            <Link href={`/${locale}/admin`} className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
+            <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
             <span className="text-white font-semibold">Concorsi</span>
           </div>
           <Link
-            href={`/${locale}/admin/concorsi/nuovo`}
+            href="/admin/concorsi/nuovo"
             className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold tracking-wider uppercase px-4 py-2 rounded-lg transition-all duration-200"
           >
             + Nuovo Concorso
@@ -164,7 +163,7 @@ export default function AdminConcorsiPage() {
             <div className="text-5xl mb-4">🏆</div>
             <p className="text-neutral-400 text-sm mb-6">Nessun concorso trovato. Crea il primo concorso!</p>
             <Link
-              href={`/${locale}/admin/concorsi/nuovo`}
+              href="/admin/concorsi/nuovo"
               className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold tracking-wider uppercase px-6 py-3 rounded-lg transition-all"
             >
               + Crea Primo Concorso
@@ -217,7 +216,7 @@ export default function AdminConcorsiPage() {
 
                   <div className="flex flex-col gap-2 md:items-end">
                     <Link
-                      href={`/${locale}/admin/concorsi/${c.id}`}
+                      href={`/admin/concorsi/${c.id}`}
                       className="text-xs font-semibold text-amber-400 hover:text-amber-300 border border-amber-500/30 hover:border-amber-500/50 px-4 py-2 rounded-lg transition-all text-center"
                     >
                       ✏️ Gestisci

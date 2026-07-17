@@ -3,9 +3,9 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { supabase } from '@/lib/supabase';
 
 const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
@@ -93,7 +93,7 @@ export default function AdminConcorsoDetailPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const email = session?.user?.email?.toLowerCase() ?? '';
       if (!ADMIN_EMAILS.includes(email)) {
-        router.replace(`/${locale}/`);
+        router.replace('/');
         return;
       }
       const tok = session?.access_token ?? '';
@@ -178,11 +178,11 @@ export default function AdminConcorsoDetailPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href={`/${locale}/`} className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
             <span className="text-neutral-700">/</span>
-            <Link href={`/${locale}/admin`} className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
+            <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
-            <Link href={`/${locale}/admin/concorsi`} className="text-neutral-400 hover:text-white transition-colors">Concorsi</Link>
+            <Link href="/admin/concorsi" className="text-neutral-400 hover:text-white transition-colors">Concorsi</Link>
             <span className="text-neutral-700">/</span>
             <span className="text-white font-semibold truncate max-w-[180px]">{concorso.nome}</span>
           </div>
@@ -294,7 +294,7 @@ export default function AdminConcorsoDetailPage() {
           </div>
 
           <div className="flex gap-4">
-            <Link href={`/${locale}/admin/concorsi`}
+            <Link href="/admin/concorsi"
               className="flex-1 text-center py-3 border border-white/10 rounded-lg text-sm text-neutral-400 hover:border-white/20 transition-all">
               ← Torna alla Lista
             </Link>

@@ -43,7 +43,7 @@ export default function AdminPage() {
 
   const adminCards = [
     {
-      href: `/${locale}/admin/concorsi`,
+      href: '/admin/concorsi',
       icon: '🏆',
       title: 'Gestione Concorsi',
       description: 'Crea, attiva, concludi concorsi. Configura reset automatici e visualizza statistiche.',
@@ -82,7 +82,7 @@ export default function AdminPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href={`/${locale}/`} className="text-neutral-400 hover:text-white transition-colors text-sm">
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors text-sm">
               ← Sito
             </Link>
             <span className="text-neutral-700">/</span>
