@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     await supabaseAdmin.from('concorsi').delete().eq('id', DEMO_CONCORSO_ID);
   }
 
-  const insertData: Record<string, any> = {
+  const insertData: Record<string, unknown> = {
     nome: targetNome,
     descrizione: descrizione || (isDemo ? 'Concorso dimostrativo con dati di prova' : null),
     stato: targetStato,
