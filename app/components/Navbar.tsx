@@ -84,7 +84,6 @@ export default function Navbar() {
   const navLinks = [
     { href: '/collezione', label: t('collezione') },
     { href: '/concorso',   label: t('concorso')   },
-    { href: '/profilo',    label: t('profilo'), badge: pendingPacksCount > 0 ? pendingPacksCount : undefined },
     { href: '/vendici-carta', label: t('vendiciCarta') },
     { href: '/chi-siamo', label: t('chiSiamo') },
     { href: '/contatti',  label: t('contatti')  },
