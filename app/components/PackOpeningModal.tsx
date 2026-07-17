@@ -285,34 +285,49 @@ export default function PackOpeningModal({
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(223,174,11,0.06)_0%,transparent_70%)] animate-pulse pointer-events-none" />
             )}
 
-            {/* Cutter spark seam line overlay */}
-            {openingStep === 'zoom' && (
-              <div className="laser-line" />
-            )}
-
-            {/* 1. Pack Top Part (rips off) */}
+            {/* The Pack Wrapper (to align the cut line and scissor perfectly) */}
             {(openingStep === 'zoom' || openingStep === 'rip') && (
-              <div
-                className={`absolute w-52 h-72 z-30 pointer-events-none ${
-                  openingStep === 'rip' ? 'animate-rip-top' : 'scale-[1.12] transition-transform duration-400 ease-out'
-                }`}
-                style={{
-                  clipPath: 'polygon(0 0, 100% 0, 100% 16%, 85% 14%, 70% 17%, 50% 13%, 35% 16%, 20% 13%, 0 15%)',
-                  WebkitClipPath: 'polygon(0 0, 100% 0, 100% 16%, 85% 14%, 70% 17%, 50% 13%, 35% 16%, 20% 13%, 0 15%)',
-                }}
-              >
-                <img src={coverSrc} alt={packName} className="w-full h-full object-contain p-2" />
+              <div className="relative w-52 h-72 scale-[1.12] transition-transform duration-400 ease-out z-20">
+                {/* Laser Cut Line & Scissor */}
+                {openingStep === 'zoom' && (
+                  <>
+                    <div className="laser-line" />
+                    <div className="scissor-cut">✂️</div>
+                  </>
+                )}
+
+                {/* 1. Pack Top Part (rips off) */}
+                <div
+                  className={`absolute inset-0 z-30 pointer-events-none ${
+                    openingStep === 'rip' ? 'animate-rip-top' : ''
+                  }`}
+                  style={{
+                    clipPath: 'polygon(0 0, 100% 0, 100% 16%, 85% 14%, 70% 17%, 50% 13%, 35% 16%, 20% 13%, 0 15%)',
+                    WebkitClipPath: 'polygon(0 0, 100% 0, 100% 16%, 85% 14%, 70% 17%, 50% 13%, 35% 16%, 20% 13%, 0 15%)',
+                  }}
+                >
+                  <img src={coverSrc} alt={packName} className="w-full h-full object-contain p-2" />
+                </div>
+
+                {/* 2. Pack Bottom Pouch Part */}
+                <div
+                  className={`absolute inset-0 z-20 pointer-events-none ${
+                    openingStep === 'rip' ? 'animate-rip-bottom' : ''
+                  }`}
+                  style={{
+                    clipPath: 'polygon(0 15%, 20% 13%, 35% 16%, 50% 13%, 70% 17%, 85% 14%, 100% 16%, 100% 100%, 0 100%)',
+                    WebkitClipPath: 'polygon(0 15%, 20% 13%, 35% 16%, 50% 13%, 70% 17%, 85% 14%, 100% 16%, 100% 100%, 0 100%)',
+                  }}
+                >
+                  <img src={coverSrc} alt={packName} className="w-full h-full object-contain p-2" />
+                </div>
               </div>
             )}
 
-            {/* 2. Pack Bottom Pouch Part (shakes and fades out) */}
-            {(openingStep === 'zoom' || openingStep === 'rip' || openingStep === 'reveal') && (
+            {/* 2b. Bottom pouch part fadeout during card reveal */}
+            {openingStep === 'reveal' && (
               <div
-                className={`absolute w-52 h-72 z-20 pointer-events-none ${
-                  openingStep === 'rip' ? 'animate-rip-bottom' : ''
-                } ${
-                  openingStep === 'reveal' ? 'opacity-0 scale-90 translate-y-12 transition-all duration-1000' : 'scale-[1.12] transition-transform duration-400 ease-out'
-                }`}
+                className="absolute w-52 h-72 z-20 pointer-events-none opacity-0 scale-90 translate-y-12 transition-all duration-1000"
                 style={{
                   clipPath: 'polygon(0 15%, 20% 13%, 35% 16%, 50% 13%, 70% 17%, 85% 14%, 100% 16%, 100% 100%, 0 100%)',
                   WebkitClipPath: 'polygon(0 15%, 20% 13%, 35% 16%, 50% 13%, 70% 17%, 85% 14%, 100% 16%, 100% 100%, 0 100%)',
@@ -489,6 +504,31 @@ export default function PackOpeningModal({
           box-shadow: 0 0 10px #dfae0b, 0 0 20px #ffe066;
           z-index: 40;
           animation: laserSweep 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* Scissor Cut animations */
+        @keyframes scissorMove {
+          0% { left: -10%; transform: translateY(-50%) rotate(0deg) scale(1); }
+          15% { transform: translateY(-50%) rotate(-12deg) scale(1.1); }
+          30% { transform: translateY(-50%) rotate(12deg) scale(0.95); }
+          45% { transform: translateY(-50%) rotate(-12deg) scale(1.1); }
+          60% { transform: translateY(-50%) rotate(12deg) scale(0.95); }
+          75% { transform: translateY(-50%) rotate(-12deg) scale(1.1); }
+          90% { transform: translateY(-50%) rotate(12deg) scale(0.95); }
+          100% { left: 110%; transform: translateY(-50%) rotate(0deg) scale(1); }
+        }
+        .scissor-cut {
+          position: absolute;
+          top: 15.5%;
+          width: 32px;
+          height: 32px;
+          z-index: 50;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          pointer-events: none;
+          animation: scissorMove 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
         /* Tear Rip animations */
