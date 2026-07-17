@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { type KudjoCard } from '@/lib/schema/kudjo-card';
+import CardZoomModal from './CardZoomModal';
 
 interface KudjoCardProps {
   card: KudjoCard;
@@ -11,6 +12,8 @@ interface KudjoCardProps {
   size?: 'small' | 'normal' | 'large';
   /** Count duplicati da mostrare sul badge */
   duplicates?: number;
+  /** Se true, disabilita il click-to-zoom (es. durante animazioni) */
+  disableZoom?: boolean;
 }
 
 // ─── Configurazione visiva per elemento ────────────────────────────────────
@@ -80,9 +83,10 @@ function CardBack({ size }: { size: string }) {
 
 // ─── Main Card Component ────────────────────────────────────────────────────
 
-export default function KudjoCard({ card, faceDown = false, size = 'normal', duplicates }: KudjoCardProps) {
+export default function KudjoCard({ card, faceDown = false, size = 'normal', duplicates, disableZoom = false }: KudjoCardProps) {
   const [style, setStyle] = useState<React.CSSProperties>({});
   const [sheenStyle, setSheenStyle] = useState<React.CSSProperties>({});
+  const [zoomOpen, setZoomOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const cfg  = ELEMENTO_CONFIG[card.elemento] ?? ELEMENTO_CONFIG.fuoco;
@@ -139,6 +143,7 @@ export default function KudjoCard({ card, faceDown = false, size = 'normal', dup
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={() => { if (!faceDown && !disableZoom) setZoomOpen(true); }}
     >
       {/* Sheen overlay */}
       <div className="absolute inset-0 z-30 pointer-events-none rounded-lg mix-blend-color-dodge" style={sheenStyle} />
@@ -277,6 +282,20 @@ export default function KudjoCard({ card, faceDown = false, size = 'normal', dup
         <div className="absolute top-1 right-1 z-40 bg-black/80 text-[#dfae0b] font-bold rounded-full w-4 h-4 flex items-center justify-center text-[8px] border border-[#dfae0b]/40">
           ×{duplicates}
         </div>
+      )}
+
+      {/* Zoom hint on hover (only when zoomable) */}
+      {!faceDown && !disableZoom && (
+        <div className="absolute inset-0 z-50 flex items-end justify-center pb-2 opacity-0 hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-lg">
+          <span className="text-[7px] font-bold tracking-widest uppercase bg-black/70 text-white/60 px-2 py-0.5 rounded-full">
+            🔍 Ingrandisci
+          </span>
+        </div>
+      )}
+
+      {/* Card Zoom Modal */}
+      {zoomOpen && (
+        <CardZoomModal card={card} onClose={() => setZoomOpen(false)} />
       )}
     </div>
   );
