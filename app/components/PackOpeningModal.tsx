@@ -62,11 +62,11 @@ export default function PackOpeningModal({
     onClose();
   };
 
-  const handleStartOpening = useCallback(() => {
+  const handleStartOpening = useCallback(async () => {
     if (availablePacks <= 0 || phase !== 'idle') return;
 
-    // Consume one pack from localStorage
-    const ok = consumeOnePack(packTier);
+    // Consume one pack
+    const ok = await consumeOnePack(packTier);
     if (!ok) return;
 
     // Draw cards & save immediately to avoid data loss

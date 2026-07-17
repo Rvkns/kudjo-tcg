@@ -320,56 +320,7 @@ export async function addPendingPacks(tier: string, quantity: number): Promise<v
 }
 
 export async function consumeOnePack(tier: string): Promise<boolean> {
-  if (typeof window === 'undefined') return false;
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      // Fetch active concorso
-      const { data: activeContest } = await supabase
-        .from('concorsi')
-        .select('id')
-        .eq('stato', 'attivo')
-        .maybeSingle();
-      const concorsoId = activeContest?.id ?? null;
-
-      const packsQuery = supabase
-        .from('pending_packs')
-        .select('id, quantity')
-        .eq('user_id', session.user.id)
-        .eq('tier', tier);
-
-      if (concorsoId) {
-        packsQuery.eq('concorso_id', concorsoId);
-      } else {
-        packsQuery.is('concorso_id', null);
-      }
-
-      const { data, error: selectError } = await packsQuery.maybeSingle();
-      
-      if (selectError || !data || data.quantity <= 0) {
-        return false;
-      }
-      
-      const newQty = data.quantity - 1;
-      
-      if (newQty === 0) {
-        const { error } = await supabase
-          .from('pending_packs')
-          .delete()
-          .eq('id', data.id);
-        return !error;
-      } else {
-        const { error } = await supabase
-          .from('pending_packs')
-          .update({ quantity: newQty })
-          .eq('id', data.id);
-        return !error;
-      }
-    }
-  } catch (err) {
-    console.error('Supabase consume pack failed:', err);
-  }
-  return false;
+  return consumeMultiplePacks(tier, 1);
 }
 
 export async function consumeMultiplePacks(tier: string, qty: number): Promise<boolean> {
@@ -377,47 +328,64 @@ export async function consumeMultiplePacks(tier: string, qty: number): Promise<b
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      // Fetch active concorso
+      // 1. Fetch all pack rows of this tier for this user
+      const { data: rows, error: selectError } = await supabase
+        .from('pending_packs')
+        .select('id, quantity, concorso_id')
+        .eq('user_id', session.user.id)
+        .eq('tier', tier);
+      
+      if (selectError || !rows || rows.length === 0) {
+        return false;
+      }
+      
+      // Calculate total available quantity
+      const totalAvailable = rows.reduce((sum, r) => sum + r.quantity, 0);
+      if (totalAvailable < qty) {
+        return false;
+      }
+      
+      // Fetch active concorso to prioritize
       const { data: activeContest } = await supabase
         .from('concorsi')
         .select('id')
         .eq('stato', 'attivo')
         .maybeSingle();
       const concorsoId = activeContest?.id ?? null;
-
-      const packsQuery = supabase
-        .from('pending_packs')
-        .select('id, quantity')
-        .eq('user_id', session.user.id)
-        .eq('tier', tier);
-
-      if (concorsoId) {
-        packsQuery.eq('concorso_id', concorsoId);
-      } else {
-        packsQuery.is('concorso_id', null);
-      }
-
-      const { data, error: selectError } = await packsQuery.maybeSingle();
       
-      if (selectError || !data || data.quantity < qty) {
-        return false;
+      // Sort rows: active concorso first, then null concorso, then others
+      const sortedRows = [...rows].sort((a, b) => {
+        if (a.concorso_id === concorsoId) return -1;
+        if (b.concorso_id === concorsoId) return 1;
+        if (a.concorso_id === null) return -1;
+        if (b.concorso_id === null) return 1;
+        return 0;
+      });
+      
+      let remainingToConsume = qty;
+      
+      for (const row of sortedRows) {
+        if (remainingToConsume <= 0) break;
+        
+        const toConsume = Math.min(row.quantity, remainingToConsume);
+        const newQty = row.quantity - toConsume;
+        
+        if (newQty === 0) {
+          await supabase
+            .from('pending_packs')
+            .delete()
+            .eq('id', row.id);
+        } else {
+          await supabase
+            .from('pending_packs')
+            .update({ quantity: newQty })
+            .eq('id', row.id);
+        }
+        
+        remainingToConsume -= toConsume;
       }
       
-      const newQty = data.quantity - qty;
-      
-      if (newQty === 0) {
-        const { error } = await supabase
-          .from('pending_packs')
-          .delete()
-          .eq('id', data.id);
-        return !error;
-      } else {
-        const { error } = await supabase
-          .from('pending_packs')
-          .update({ quantity: newQty })
-          .eq('id', data.id);
-        return !error;
-      }
+      return remainingToConsume === 0;
     }
   } catch (err) {
     console.error('Supabase consume packs failed:', err);
