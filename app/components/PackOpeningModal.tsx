@@ -79,29 +79,29 @@ export default function PackOpeningModal({
     setPhase('opening');
     setOpeningStep('zoom');
 
-    // 1. Zoom in and show laser seam line cut (0ms - 400ms)
-    // 2. Cut & Rip top off (400ms - 1200ms)
+    // 1. Zoom in and show laser seam line cut (0ms - 800ms)
+    // 2. Cut & Rip top off (800ms - 1700ms)
     setTimeout(() => {
       setOpeningStep('rip');
-    }, 450);
+    }, 800);
 
-    // 3. Shoot out fanned cards from inside pack (1200ms)
+    // 3. Shoot out fanned cards from inside pack (1700ms)
     setTimeout(() => {
       setOpeningStep('reveal');
-    }, 1250);
+    }, 1700);
 
-    // 4. Flip cards one by one (1800ms - 2800ms)
+    // 4. Flip cards one by one (2400ms - 4500ms)
     cards.forEach((_, i) => {
       setTimeout(() => {
         setRevealedCount(i + 1);
-      }, 1900 + i * 320);
+      }, 2400 + i * 450);
     });
 
-    // 5. Complete and show grid layout (3600ms)
+    // 5. Complete and show grid layout (5200ms)
     setTimeout(() => {
       setPhase('done');
       setOpeningStep('done');
-    }, 3800);
+    }, 5200);
 
   }, [availablePacks, phase, packTier, onPackOpened]);
 
@@ -186,7 +186,7 @@ export default function PackOpeningModal({
       // Combine 3D rotation with position transforms
       transform: `translate3d(-50%, -50%, 0) translate3d(${offset.x}px, ${offset.y}px, 0) rotate(${offset.rot}deg) scale(${offset.scale}) rotateY(${isRevealed ? 0 : 180}deg)`,
       transformStyle: 'preserve-3d' as const,
-      transition: `transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.25) ${index * 0.08}s, opacity 0.5s ease ${index * 0.08}s`,
+      transition: `transform 1.1s cubic-bezier(0.175, 0.885, 0.32, 1.25) ${index * 0.12}s, opacity 0.6s ease ${index * 0.12}s`,
       zIndex: 15 + index,
       opacity: 1,
     };
@@ -338,10 +338,10 @@ export default function PackOpeningModal({
             )}
 
             {/* 3. Fanning Cards (emerge from inside pack bottom) */}
-            {(openingStep === 'reveal') && (
+            {drawnCards.length > 0 && (
               <div className="relative w-full h-full">
                 {drawnCards.map((card, i) => {
-                  const isFanned = true;
+                  const isFanned = openingStep === 'reveal';
                   const isRevealed = i < revealedCount;
                   const fanStyle = getFanStyle(i, isFanned, isRevealed);
 
@@ -503,7 +503,7 @@ export default function PackOpeningModal({
           background: linear-gradient(90deg, transparent, #ffe066 30%, #dfae0b 50%, #ffe066 70%, transparent);
           box-shadow: 0 0 10px #dfae0b, 0 0 20px #ffe066;
           z-index: 40;
-          animation: laserSweep 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          animation: laserSweep 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
         /* Scissor Cut animations */
@@ -528,7 +528,7 @@ export default function PackOpeningModal({
           justify-content: center;
           font-size: 24px;
           pointer-events: none;
-          animation: scissorMove 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          animation: scissorMove 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
         /* Tear Rip animations */
@@ -538,7 +538,7 @@ export default function PackOpeningModal({
           100% { transform: translate3d(120px, -240px, 0) rotate(42deg) scale(1.0); opacity: 0; }
         }
         .animate-rip-top {
-          animation: ripTop 1.1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          animation: ripTop 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
         @keyframes ripBottom {
@@ -547,7 +547,7 @@ export default function PackOpeningModal({
           30%, 60%, 90% { transform: translate3d(3px, -2px, 0) rotate(0.5deg) scale(1.12); }
         }
         .animate-rip-bottom {
-          animation: ripBottom 0.8s ease-in-out;
+          animation: ripBottom 1.1s ease-in-out;
         }
 
         /* Holographic flip shine flash */
