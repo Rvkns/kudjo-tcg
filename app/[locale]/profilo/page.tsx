@@ -11,6 +11,7 @@ import {
   getCardById,
   syncLocalToCloud,
   type Milestone,
+  getUserTickets,
 } from '@/lib/data/kudjo-cards-db';
 import { type KudjoCard as KudjoCardType, type KudjoCardRarita, type KudjoCardInstance, type KudjoPendingPack } from '@/lib/schema/kudjo-card';
 import KudjoCard from '@/app/components/KudjoCard';
@@ -47,6 +48,7 @@ export default function ProfiloPage() {
   const [collection, setCollection]       = useState<KudjoCardInstance[]>([]);
   const [pendingPacks, setPendingPacks]   = useState<KudjoPendingPack[]>([]);
   const [totalPacks, setTotalPacks]       = useState(0);
+  const [userTickets, setUserTickets]     = useState(0);
   const [filterRarita, setFilterRarita]   = useState<FilterRarita>('all');
   const [selectedTier, setSelectedTier]   = useState<string>('');
   const [modalOpen, setModalOpen]         = useState(false);
@@ -56,8 +58,10 @@ export default function ProfiloPage() {
     try {
       const col   = await getUserCollection();
       const packs = await getPendingPacks();
+      const tix   = await getUserTickets();
       setCollection(col);
       setPendingPacks(packs);
+      setUserTickets(tix);
       const total = packs.reduce((sum, p) => sum + p.quantity, 0);
       setTotalPacks(total);
       // Auto-select first available tier if none is selected
@@ -272,12 +276,30 @@ export default function ProfiloPage() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="rounded border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-2 text-[10px] font-bold tracking-widest uppercase text-neutral-400 hover:text-foreground transition-all cursor-pointer font-sans"
-              >
-                {isIt ? 'Disconnetti' : 'Sign Out'}
-              </button>
+              <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t border-white/5 pt-4 md:border-t-0 md:pt-0">
+                {/* Tickets Counter Badge */}
+                <Link
+                  href="/concorso"
+                  className="flex items-center gap-3 border border-bronze/35 bg-bronze/5 hover:bg-bronze/10 px-4 py-2 rounded-xl text-bronze transition-all shadow-md group select-none text-left"
+                >
+                  <span className="text-xl group-hover:scale-110 transition-transform duration-300">🎟️</span>
+                  <div>
+                    <div className="text-[8px] font-bold uppercase tracking-wider opacity-60">
+                      {isIt ? 'I tuoi ticket' : 'Your tickets'}
+                    </div>
+                    <div className="text-sm font-bold font-mono leading-none">
+                      {userTickets}
+                    </div>
+                  </div>
+                </Link>
+
+                <button
+                  onClick={handleLogout}
+                  className="rounded border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-2.5 text-[10px] font-bold tracking-widest uppercase text-neutral-400 hover:text-foreground transition-all cursor-pointer font-sans"
+                >
+                  {isIt ? 'Disconnetti' : 'Sign Out'}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-between w-full flex-col md:flex-row gap-4">

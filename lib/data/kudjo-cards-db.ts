@@ -512,3 +512,39 @@ export const MILESTONES: Milestone[] = [
   { id: 'm_47', threshold: 47, emoji: '🐉', labelIt: 'Dominatore',         labelEn: 'Dominator',       rewardIt: 'Accesso anticipato alle nuove uscite',    rewardEn: 'Early access to new releases' },
   { id: 'm_55', threshold: 55, emoji: '👑', labelIt: 'Campione Kudjo',     labelEn: 'Kudjo Champion',  rewardIt: 'Mystery Box fisica in omaggio',           rewardEn: 'Free physical Mystery Box' },
 ];
+
+export async function getUserTickets(): Promise<number> {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      // Get the active contest first
+      const { data: activeContest } = await supabase
+        .from('concorsi')
+        .select('id')
+        .eq('stato', 'attivo')
+        .maybeSingle();
+      
+      const query = supabase
+        .from('user_tickets')
+        .select('quantity')
+        .eq('user_id', session.user.id);
+      
+      if (activeContest) {
+        query.eq('concorso_id', activeContest.id);
+      } else {
+        query.is('concorso_id', null);
+      }
+      
+      const { data, error } = await query.maybeSingle();
+      if (error) {
+        console.error('Error fetching user tickets:', error);
+        return 0;
+      }
+      return data?.quantity ?? 0;
+    }
+  } catch (err) {
+    console.error('Supabase get tickets failed:', err);
+  }
+  return 0;
+}

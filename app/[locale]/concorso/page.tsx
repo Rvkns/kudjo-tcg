@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { getTotalPendingPacks } from '@/lib/data/kudjo-cards-db';
+import { getTotalPendingPacks, getUserTickets } from '@/lib/data/kudjo-cards-db';
 import { supabase } from '@/lib/supabase';
 import { type User } from '@supabase/supabase-js';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
@@ -196,6 +196,7 @@ export default function ConcorsoPage() {
 
   const [purchaseNotification, setPurchaseNotification] = useState<string | null>(null);
   const [totalPendingPacks, setTotalPendingPacks] = useState(0);
+  const [userTickets, setUserTickets] = useState(0);
   const [user, setUser] = useState<User | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
@@ -229,15 +230,19 @@ export default function ConcorsoPage() {
   }, []);
 
   useEffect(() => {
-    const loadPacks = async () => {
+    const loadPacksAndTickets = async () => {
       try {
-        const total = await getTotalPendingPacks();
+        const [total, tix] = await Promise.all([
+          getTotalPendingPacks(),
+          getUserTickets(),
+        ]);
         setTotalPendingPacks(total);
+        setUserTickets(tix);
       } catch (err) {
         console.error(err);
       }
     };
-    loadPacks();
+    loadPacksAndTickets();
   }, [user]);
 
   const handleGoogleLogin = async () => {
@@ -471,9 +476,26 @@ export default function ConcorsoPage() {
           {/* Right Column: Pack selector and Actions */}
           <div className="lg:col-span-5 flex flex-col gap-6 md:gap-8 bg-white/[0.01] border border-white/5 rounded-xl p-6 md:p-8 backdrop-blur-sm">
             <div>
-              {/* Tagline */}
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-bronze/35 bg-bronze/5 px-3 py-1 text-[8px] font-bold tracking-[0.2em] uppercase text-bronze mb-3">
-                📍 {isIt ? 'EDIZIONE LIMITATA' : 'LIMITED EDITION'}
+              <div className="flex items-center justify-between w-full mb-3">
+                {/* Tagline */}
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-bronze/35 bg-bronze/5 px-3 py-1 text-[8px] font-bold tracking-[0.2em] uppercase text-bronze">
+                  📍 {isIt ? 'EDIZIONE LIMITATA' : 'LIMITED EDITION'}
+                </div>
+
+                {/* Tickets Balance Badge */}
+                {user && (
+                  <div className="flex items-center gap-2 border border-bronze/35 bg-bronze/5 px-3 py-1.5 rounded-lg text-bronze text-left select-none">
+                    <span className="text-sm">🎟️</span>
+                    <div>
+                      <div className="text-[7px] font-bold uppercase tracking-wider opacity-60">
+                        {isIt ? 'I tuoi ticket' : 'Your tickets'}
+                      </div>
+                      <div className="text-xs font-bold font-mono leading-none">
+                        {userTickets}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <h1 className="font-display text-2xl md:text-3xl lg:text-4xl text-foreground font-light leading-snug">
