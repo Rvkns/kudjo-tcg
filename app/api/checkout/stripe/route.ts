@@ -43,26 +43,37 @@ async function creditPacksAndTickets(
   }
 
   const { data: existingPack } = await packsQuery.maybeSingle();
-  const currentQty = (existingPack as { quantity?: number } | null)?.quantity ?? 0;
-  const newQty = currentQty + packsToCredit;
 
-  const upsertPayload: Record<string, unknown> = {
-    user_id: userId,
-    tier,
-    quantity: newQty,
-    concorso_id: concorsoId,
-  };
+  let packsError;
+  if (existingPack) {
+    const updateQuery = supabaseAdmin
+      .from('pending_packs')
+      .update({ quantity: (existingPack.quantity ?? 0) + packsToCredit })
+      .eq('user_id', userId)
+      .eq('tier', tier);
 
-  const conflictTarget = concorsoId
-    ? 'user_id,tier,concorso_id'
-    : 'user_id,tier';
+    if (concorsoId) {
+      updateQuery.eq('concorso_id', concorsoId);
+    } else {
+      updateQuery.is('concorso_id', null);
+    }
 
-  const { error: packsError } = await supabaseAdmin
-    .from('pending_packs')
-    .upsert(upsertPayload, { onConflict: conflictTarget });
+    const { error } = await updateQuery;
+    packsError = error;
+  } else {
+    const { error } = await supabaseAdmin
+      .from('pending_packs')
+      .insert({
+        user_id: userId,
+        tier,
+        quantity: packsToCredit,
+        concorso_id: concorsoId,
+      });
+    packsError = error;
+  }
 
   if (packsError) {
-    console.error('[creditPacks] Error upserting packs:', packsError);
+    console.error('[creditPacks] Error updating/inserting packs:', packsError);
     throw new Error(`Database error (packs): ${packsError.message}`);
   }
 

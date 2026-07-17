@@ -252,13 +252,28 @@ export async function addPendingPacks(tier: string, quantity: number): Promise<v
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      // Upsert logic for adding quantity
-      const { data, error: selectError } = await supabase
+      // Fetch active concorso
+      const { data: activeContest } = await supabase
+        .from('concorsi')
+        .select('id')
+        .eq('stato', 'attivo')
+        .maybeSingle();
+      const concorsoId = activeContest?.id ?? null;
+
+      // Select matching user, tier, and concorsoId
+      const packsQuery = supabase
         .from('pending_packs')
         .select('quantity')
         .eq('user_id', session.user.id)
-        .eq('tier', tier)
-        .single();
+        .eq('tier', tier);
+
+      if (concorsoId) {
+        packsQuery.eq('concorso_id', concorsoId);
+      } else {
+        packsQuery.is('concorso_id', null);
+      }
+
+      const { data, error: selectError } = await packsQuery.maybeSingle();
       
       if (selectError && selectError.code !== 'PGRST116') {
         console.error('Error fetching pack quantity:', selectError);
@@ -267,12 +282,32 @@ export async function addPendingPacks(tier: string, quantity: number): Promise<v
       
       const newQty = (data?.quantity || 0) + quantity;
       
-      const { error } = await supabase
-        .from('pending_packs')
-        .upsert(
-          { user_id: session.user.id, tier, quantity: newQty },
-          { onConflict: 'user_id,tier' }
-        );
+      let error;
+      if (data) {
+        const updateQuery = supabase
+          .from('pending_packs')
+          .update({ quantity: newQty })
+          .eq('user_id', session.user.id)
+          .eq('tier', tier);
+
+        if (concorsoId) {
+          updateQuery.eq('concorso_id', concorsoId);
+        } else {
+          updateQuery.is('concorso_id', null);
+        }
+        const { error: updateError } = await updateQuery;
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('pending_packs')
+          .insert({
+            user_id: session.user.id,
+            tier,
+            quantity: newQty,
+            concorso_id: concorsoId,
+          });
+        error = insertError;
+      }
       
       if (error) {
         console.error('Error adding packs to Supabase:', error);
@@ -356,14 +391,29 @@ export async function syncLocalToCloud(userId: string): Promise<void> {
   // 2. Sync pending packs
   const localPacks = getLocalStoragePendingPacks();
   if (localPacks.length > 0) {
+    // Fetch active concorso
+    const { data: activeContest } = await supabase
+      .from('concorsi')
+      .select('id')
+      .eq('stato', 'attivo')
+      .maybeSingle();
+    const concorsoId = activeContest?.id ?? null;
+
     for (const pack of localPacks) {
-      const { data, error: selectError } = await supabase
+      const packsQuery = supabase
         .from('pending_packs')
         .select('quantity')
         .eq('user_id', userId)
-        .eq('tier', pack.tier)
-        .single();
-        
+        .eq('tier', pack.tier);
+
+      if (concorsoId) {
+        packsQuery.eq('concorso_id', concorsoId);
+      } else {
+        packsQuery.is('concorso_id', null);
+      }
+
+      const { data, error: selectError } = await packsQuery.maybeSingle();
+         
       if (selectError && selectError.code !== 'PGRST116') {
         console.error('Error checking cloud packs:', selectError);
         continue;
@@ -371,15 +421,35 @@ export async function syncLocalToCloud(userId: string): Promise<void> {
       
       const newQty = (data?.quantity || 0) + pack.quantity;
       
-      const { error: upsertError } = await supabase
-        .from('pending_packs')
-        .upsert(
-          { user_id: userId, tier: pack.tier, quantity: newQty },
-          { onConflict: 'user_id,tier' }
-        );
-        
-      if (upsertError) {
-        console.error('Error syncing packs to Supabase:', upsertError);
+      let error;
+      if (data) {
+        const updateQuery = supabase
+          .from('pending_packs')
+          .update({ quantity: newQty })
+          .eq('user_id', userId)
+          .eq('tier', pack.tier);
+
+        if (concorsoId) {
+          updateQuery.eq('concorso_id', concorsoId);
+        } else {
+          updateQuery.is('concorso_id', null);
+        }
+        const { error: updateError } = await updateQuery;
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('pending_packs')
+          .insert({
+            user_id: userId,
+            tier: pack.tier,
+            quantity: newQty,
+            concorso_id: concorsoId,
+          });
+        error = insertError;
+      }
+         
+      if (error) {
+        console.error('Error syncing packs to Supabase:', error);
       }
     }
     localStorage.removeItem(PACKS_KEY);

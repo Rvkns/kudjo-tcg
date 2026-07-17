@@ -64,19 +64,36 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Database select error' }, { status: 500 });
       }
 
-      const currentQty = (data as { quantity?: number } | null)?.quantity ?? 0;
-      const newQty = currentQty + quantity;
-      const conflictTarget = concorsoId ? 'user_id,tier,concorso_id' : 'user_id,tier';
+      let upsertError;
+      if (data) {
+        const updateQuery = supabaseAdmin
+          .from('pending_packs')
+          .update({ quantity: (data.quantity ?? 0) + quantity })
+          .eq('user_id', userId)
+          .eq('tier', tier);
 
-      const { error: upsertError } = await supabaseAdmin
-        .from('pending_packs')
-        .upsert(
-          { user_id: userId, tier, quantity: newQty, concorso_id: concorsoId },
-          { onConflict: conflictTarget }
-        );
+        if (concorsoId) {
+          updateQuery.eq('concorso_id', concorsoId);
+        } else {
+          updateQuery.is('concorso_id', null);
+        }
+
+        const { error } = await updateQuery;
+        upsertError = error;
+      } else {
+        const { error } = await supabaseAdmin
+          .from('pending_packs')
+          .insert({
+            user_id: userId,
+            tier,
+            quantity,
+            concorso_id: concorsoId,
+          });
+        upsertError = error;
+      }
 
       if (upsertError) {
-        console.error('[Webhook] Error upserting packs:', upsertError);
+        console.error('[Webhook] Error updating/inserting packs:', upsertError);
         return NextResponse.json({ error: 'Database upsert error' }, { status: 500 });
       }
 

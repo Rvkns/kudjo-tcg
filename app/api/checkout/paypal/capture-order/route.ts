@@ -80,19 +80,36 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'Database select error' }, { status: 500 });
         }
 
-        const currentQty = (data as { quantity?: number } | null)?.quantity ?? 0;
-        const newQty = currentQty + quantity;
-        const conflictTarget = resolvedConcorsoId ? 'user_id,tier,concorso_id' : 'user_id,tier';
+        let upsertError;
+        if (data) {
+          const updateQuery = supabaseAdmin
+            .from('pending_packs')
+            .update({ quantity: ((data as { quantity: number }).quantity ?? 0) + quantity })
+            .eq('user_id', userId)
+            .eq('tier', packTier);
 
-        const { error: upsertError } = await supabaseAdmin
-          .from('pending_packs')
-          .upsert(
-            { user_id: userId, tier: packTier, quantity: newQty, concorso_id: resolvedConcorsoId },
-            { onConflict: conflictTarget }
-          );
+          if (resolvedConcorsoId) {
+            updateQuery.eq('concorso_id', resolvedConcorsoId);
+          } else {
+            updateQuery.is('concorso_id', null);
+          }
+
+          const { error } = await updateQuery;
+          upsertError = error;
+        } else {
+          const { error } = await supabaseAdmin
+            .from('pending_packs')
+            .insert({
+              user_id: userId,
+              tier: packTier,
+              quantity,
+              concorso_id: resolvedConcorsoId,
+            });
+          upsertError = error;
+        }
 
         if (upsertError) {
-          console.error('[PayPal] Error upserting packs:', upsertError);
+          console.error('[PayPal] Error updating/inserting packs:', upsertError);
           return NextResponse.json({ error: 'Database upsert error' }, { status: 500 });
         }
 
