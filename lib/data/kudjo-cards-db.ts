@@ -324,12 +324,27 @@ export async function consumeOnePack(tier: string): Promise<boolean> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      const { data, error: selectError } = await supabase
+      // Fetch active concorso
+      const { data: activeContest } = await supabase
+        .from('concorsi')
+        .select('id')
+        .eq('stato', 'attivo')
+        .maybeSingle();
+      const concorsoId = activeContest?.id ?? null;
+
+      const packsQuery = supabase
         .from('pending_packs')
-        .select('quantity')
+        .select('id, quantity')
         .eq('user_id', session.user.id)
-        .eq('tier', tier)
-        .single();
+        .eq('tier', tier);
+
+      if (concorsoId) {
+        packsQuery.eq('concorso_id', concorsoId);
+      } else {
+        packsQuery.is('concorso_id', null);
+      }
+
+      const { data, error: selectError } = await packsQuery.maybeSingle();
       
       if (selectError || !data || data.quantity <= 0) {
         return false;
@@ -341,15 +356,13 @@ export async function consumeOnePack(tier: string): Promise<boolean> {
         const { error } = await supabase
           .from('pending_packs')
           .delete()
-          .eq('user_id', session.user.id)
-          .eq('tier', tier);
+          .eq('id', data.id);
         return !error;
       } else {
         const { error } = await supabase
           .from('pending_packs')
           .update({ quantity: newQty })
-          .eq('user_id', session.user.id)
-          .eq('tier', tier);
+          .eq('id', data.id);
         return !error;
       }
     }

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { type KudjoCard as KudjoCardType } from '@/lib/schema/kudjo-card';
 import { drawPackCards, addCardsToCollection, consumeOnePack } from '@/lib/data/kudjo-cards-db';
 import KudjoCard from './KudjoCard';
@@ -42,6 +43,12 @@ export default function PackOpeningModal({
   const [openingStep, setOpeningStep] = useState<OpeningStep>('idle');
   const [drawnCards, setDrawnCards] = useState<KudjoCardType[]>([]);
   const [revealedCount, setRevealedCount] = useState(0);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   const resetModal = useCallback(() => {
     setPhase('idle');
@@ -144,7 +151,7 @@ export default function PackOpeningModal({
     };
   };
 
-  return (
+  const modal = (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.94)', backdropFilter: 'blur(10px)' }}
@@ -371,8 +378,6 @@ export default function PackOpeningModal({
         )}
       </div>
 
-
-
       {/* Embedded Animations and Keyframes */}
       <style>{`
         /* Floating booster pack cover style */
@@ -448,4 +453,7 @@ export default function PackOpeningModal({
       `}</style>
     </div>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(modal, document.body);
 }
