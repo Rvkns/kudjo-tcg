@@ -40,22 +40,33 @@ export async function GET(request: Request) {
 }
 
 // ─── POST /api/admin/concorsi ────────────────────────────────────────────────
+const DEMO_CONCORSO_ID = 'de30ce57-c011-c011-c011-c011ec011ec0';
+
 export async function POST(request: Request) {
   const guard = await assertAdmin(request);
   if (guard instanceof NextResponse) return guard;
+  const userId = guard.userId;
 
   const body = await request.json();
-  const { nome, descrizione, stato, data_inizio, data_fine, reset_scheduled_at } = body;
+  const { nome, descrizione, stato, data_inizio, data_fine, reset_scheduled_at, isDemo } = body;
 
-  if (!nome) return NextResponse.json({ error: 'Il campo "nome" è obbligatorio' }, { status: 400 });
+  const targetNome = nome || (isDemo ? 'Concorso Demo TCG' : '');
+  if (!targetNome) return NextResponse.json({ error: 'Il campo "nome" è obbligatorio' }, { status: 400 });
+
+  const targetStato = isDemo ? 'attivo' : (stato || 'draft');
 
   // Only one concorso can be 'attivo' at a time
-  if (stato === 'attivo') {
-    const { data: existing } = await supabaseAdmin
+  if (targetStato === 'attivo') {
+    const query = supabaseAdmin
       .from('concorsi')
       .select('id')
-      .eq('stato', 'attivo')
-      .maybeSingle();
+      .eq('stato', 'attivo');
+
+    if (isDemo) {
+      query.neq('id', DEMO_CONCORSO_ID);
+    }
+
+    const { data: existing } = await query.maybeSingle();
 
     if (existing) {
       return NextResponse.json(
@@ -65,12 +76,89 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data, error } = await supabaseAdmin
+  if (isDemo) {
+    // Manually delete all related rows first because foreign key constraints do not have ON DELETE CASCADE in migrations
+    await supabaseAdmin.from('pending_packs').delete().eq('concorso_id', DEMO_CONCORSO_ID);
+    await supabaseAdmin.from('user_collection').delete().eq('concorso_id', DEMO_CONCORSO_ID);
+    await supabaseAdmin.from('user_tickets').delete().eq('concorso_id', DEMO_CONCORSO_ID);
+    await supabaseAdmin.from('collection_sets').delete().eq('concorso_id', DEMO_CONCORSO_ID);
+
+    // Now safely delete the demo contest
+    await supabaseAdmin.from('concorsi').delete().eq('id', DEMO_CONCORSO_ID);
+  }
+
+  const insertData: Record<string, any> = {
+    nome: targetNome,
+    descrizione: descrizione || (isDemo ? 'Concorso dimostrativo con dati di prova' : null),
+    stato: targetStato,
+    data_inizio: data_inizio || (isDemo ? new Date().toISOString() : null),
+    data_fine: data_fine || (isDemo ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null),
+    reset_scheduled_at
+  };
+
+  if (isDemo) {
+    insertData.id = DEMO_CONCORSO_ID;
+  }
+
+  const { data: concorso, error } = await supabaseAdmin
     .from('concorsi')
-    .insert({ nome, descrizione, stato: stato || 'draft', data_inizio, data_fine, reset_scheduled_at })
+    .insert(insertData)
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ concorso: data }, { status: 201 });
+
+  // ── Seeding Demo Data ──────────────────────────────────────────────────────
+  if (isDemo) {
+    console.log(`[Demo Setup] Seeding data for user ${userId} under contest ${DEMO_CONCORSO_ID}`);
+
+    // 1. Seed pending packs (10 per tier)
+    const tiers = ['bronze', 'silver', 'gold', 'platinum'];
+    const packsToInsert = tiers.map(tier => ({
+      user_id: userId,
+      tier,
+      quantity: 10,
+      concorso_id: DEMO_CONCORSO_ID
+    }));
+
+    const { error: packsError } = await supabaseAdmin
+      .from('pending_packs')
+      .insert(packsToInsert);
+
+    if (packsError) console.error('[Demo Setup] Error seeding pending packs:', packsError);
+
+    // 2. Seed tickets (500 tickets)
+    const { error: ticketsError } = await supabaseAdmin
+      .from('user_tickets')
+      .insert({
+        user_id: userId,
+        concorso_id: DEMO_CONCORSO_ID,
+        quantity: 500,
+        updated_at: new Date().toISOString()
+      });
+
+    if (ticketsError) console.error('[Demo Setup] Error seeding tickets:', ticketsError);
+
+    // 3. Seed collection cards (20 random cards)
+    const collectionToInsert = Array.from({ length: 20 }, (_, i) => {
+      const cardNum = Math.floor(Math.random() * 55) + 1;
+      const cardId = `kj_${String(cardNum).padStart(3, '0')}`;
+      const packTier = tiers[i % tiers.length]; // distribute among tiers
+      return {
+        user_id: userId,
+        card_id: cardId,
+        pack_tier: packTier,
+        found_at: new Date().toISOString(),
+        concorso_id: DEMO_CONCORSO_ID
+      };
+    });
+
+    const { error: colError } = await supabaseAdmin
+      .from('user_collection')
+      .insert(collectionToInsert);
+
+    if (colError) console.error('[Demo Setup] Error seeding user collection:', colError);
+  }
+
+  return NextResponse.json({ concorso }, { status: 201 });
 }

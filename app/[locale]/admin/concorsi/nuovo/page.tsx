@@ -12,6 +12,7 @@ const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 export default function NuovoConcorsoPage() {
   const locale = useLocale();
   const router = useRouter();
+  const isIt = locale === 'it';
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -23,6 +24,7 @@ export default function NuovoConcorsoPage() {
   const [dataInizio, setDataInizio] = useState('');
   const [dataFine, setDataFine] = useState('');
   const [resetScheduledAt, setResetScheduledAt] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -40,11 +42,18 @@ export default function NuovoConcorsoPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nome.trim()) { setError('Il nome del concorso è obbligatorio.'); return; }
+    const finalNome = isDemo ? (nome.trim() || 'Concorso Demo TCG') : nome.trim();
+    if (!finalNome) { setError('Il nome del concorso è obbligatorio.'); return; }
     setSaving(true);
     setError('');
 
-    const body: Record<string, unknown> = { nome: nome.trim(), descrizione: descrizione.trim() || null, stato };
+    const body: Record<string, unknown> = {
+      nome: finalNome,
+      descrizione: descrizione.trim() || null,
+      stato: isDemo ? 'attivo' : stato,
+      isDemo
+    };
+    
     if (dataInizio) body.data_inizio = new Date(dataInizio).toISOString();
     if (dataFine) body.data_fine = new Date(dataFine).toISOString();
     if (resetScheduledAt) body.reset_scheduled_at = new Date(resetScheduledAt).toISOString();
@@ -102,6 +111,46 @@ export default function NuovoConcorsoPage() {
             <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg p-4 text-sm">{error}</div>
           )}
 
+          {/* Modalità Demo Card */}
+          <div className={`relative border rounded-xl p-6 transition-all duration-300 ${
+            isDemo 
+              ? 'bg-amber-500/5 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.05)]' 
+              : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+          }`}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-widest flex items-center gap-2">
+                  <span>🧪</span> Modalità Demo / Test
+                </h2>
+                <p className="text-xs text-neutral-500 max-w-xl">
+                  {isIt 
+                    ? 'Abilitando questa opzione, il concorso verrà creato con un ID statico dedicato. Verranno generati automaticamente 500 ticket, 10 buste per ciascun tier e 20 carte di prova per il tuo profilo attuale.' 
+                    : 'Enabling this option creates the contest with a dedicated static ID and automatically seeds 500 tickets, 10 packs per tier, and 20 demo cards for your current profile.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const val = !isDemo;
+                  setIsDemo(val);
+                  if (val) {
+                    setStato('attivo'); // Auto-select active status for demo
+                    if (!nome) setNome('Concorso Demo TCG');
+                  }
+                }}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  isDemo ? 'bg-amber-500' : 'bg-neutral-800'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    isDemo ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* Nome */}
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-4">
             <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-widest">Informazioni Base</h2>
@@ -111,9 +160,9 @@ export default function NuovoConcorsoPage() {
                 type="text"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                placeholder="es. Concorso Estate 2026"
+                placeholder={isDemo ? 'Concorso Demo TCG' : 'es. Concorso Estate 2026'}
                 className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500/50 transition-colors"
-                required
+                required={!isDemo}
               />
             </div>
             <div>
@@ -126,73 +175,79 @@ export default function NuovoConcorsoPage() {
                 className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500/50 transition-colors resize-none"
               />
             </div>
-            <div>
-              <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">Stato Iniziale</label>
-              <div className="flex gap-3">
-                {(['draft', 'attivo'] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setStato(s)}
-                    className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${
-                      stato === s
-                        ? s === 'attivo'
-                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                          : 'bg-neutral-700/40 border-neutral-500/50 text-neutral-300'
-                        : 'bg-transparent border-white/5 text-neutral-500 hover:border-white/20'
-                    }`}
-                  >
-                    {s === 'draft' ? '📋 Bozza' : '🟢 Attivo'}
-                  </button>
-                ))}
+            {!isDemo && (
+              <div>
+                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">Stato Iniziale</label>
+                <div className="flex gap-3">
+                  {(['draft', 'attivo'] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setStato(s)}
+                      className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${
+                        stato === s
+                          ? s === 'attivo'
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                            : 'bg-neutral-700/40 border-neutral-500/50 text-neutral-300'
+                          : 'bg-transparent border-white/5 text-neutral-500 hover:border-white/20'
+                      }`}
+                    >
+                      {s === 'draft' ? '📋 Bozza' : '🟢 Attivo'}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Date */}
-          <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-4">
-            <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-widest">Date</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">Data Inizio</label>
-                <input
-                  type="datetime-local"
-                  value={dataInizio}
-                  onChange={(e) => setDataInizio(e.target.value)}
-                  className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">Data Fine</label>
-                <input
-                  type="datetime-local"
-                  value={dataFine}
-                  onChange={(e) => setDataFine(e.target.value)}
-                  className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
-                />
+          {!isDemo && (
+            <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-4">
+              <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-widest">Date</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">Data Inizio</label>
+                  <input
+                    type="datetime-local"
+                    value={dataInizio}
+                    onChange={(e) => setDataInizio(e.target.value)}
+                    className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">Data Fine</label>
+                  <input
+                    type="datetime-local"
+                    value={dataFine}
+                    onChange={(e) => setDataFine(e.target.value)}
+                    className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Reset automatico */}
-          <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-6 space-y-4">
-            <div>
-              <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-1">⏰ Reset Automatico</h2>
-              <p className="text-xs text-neutral-500">
-                Imposta la data/ora in cui il cron job (ogni 15 minuti) dovrà resettare automaticamente il concorso.
-                Lascia vuoto per gestire il reset manualmente.
-              </p>
+          {!isDemo && (
+            <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-6 space-y-4">
+              <div>
+                <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-1">⏰ Reset Automatico</h2>
+                <p className="text-xs text-neutral-500">
+                  Imposta la data/ora in cui il cron job (ogni 15 minuti) dovrà resettare automaticamente il concorso.
+                  Lascia vuoto per gestire il reset manualmente.
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">Data Reset Automatico</label>
+                <input
+                  type="datetime-local"
+                  value={resetScheduledAt}
+                  onChange={(e) => setResetScheduledAt(e.target.value)}
+                  className="w-full bg-[#111] border border-amber-500/20 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">Data Reset Automatico</label>
-              <input
-                type="datetime-local"
-                value={resetScheduledAt}
-                onChange={(e) => setResetScheduledAt(e.target.value)}
-                className="w-full bg-[#111] border border-amber-500/20 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Submit */}
           <div className="flex gap-4">
