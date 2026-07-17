@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { type KudjoCard as KudjoCardType } from '@/lib/schema/kudjo-card';
-import { drawPackCards, addCardsToCollection, consumeOnePack } from '@/lib/data/kudjo-cards-db';
+import { drawPackCards, addCardsToCollection, consumeOnePack, consumeMultiplePacks } from '@/lib/data/kudjo-cards-db';
 import KudjoCard from './KudjoCard';
 
 interface PackOpeningModalProps {
@@ -104,6 +104,47 @@ export default function PackOpeningModal({
     }, 3800);
 
   }, [availablePacks, phase, packTier, onPackOpened]);
+
+  const handleOpenAll = useCallback(async () => {
+    if (availablePacks <= 0 || phase !== 'idle') return;
+
+    // Consume all packs
+    const ok = await consumeMultiplePacks(packTier, availablePacks);
+    if (!ok) return;
+
+    // Draw all cards
+    const allCards: KudjoCardType[] = [];
+    for (let i = 0; i < availablePacks; i++) {
+      allCards.push(...drawPackCards());
+    }
+
+    // Save all to database collection
+    await addCardsToCollection(allCards, packTier);
+    onPackOpened(); // Refresh parent collection
+
+    setDrawnCards(allCards);
+    setPhase('opening');
+    setOpeningStep('reveal'); // Trigger fanned layout immediately
+    setRevealedCount(allCards.length); // All cards flipped
+
+    // Transition to done summary after a quick transition animation
+    setTimeout(() => {
+      setPhase('done');
+      setOpeningStep('done');
+    }, 1100);
+  }, [availablePacks, phase, packTier, onPackOpened]);
+
+  // Group drawn cards by ID for multiple packs summary layout
+  const groupedDrawnCards = useMemo(() => {
+    const map: Record<string, { card: KudjoCardType; count: number }> = {};
+    for (const card of drawnCards) {
+      if (!map[card.id]) {
+        map[card.id] = { card, count: 0 };
+      }
+      map[card.id].count += 1;
+    }
+    return Object.values(map).sort((a, b) => a.card.numero - b.card.numero);
+  }, [drawnCards]);
 
   const handleOpenAnother = () => {
     resetModal();
@@ -209,12 +250,27 @@ export default function PackOpeningModal({
               />
             </div>
 
-            <div className="text-center space-y-2 max-w-sm">
-              <p className="text-neutral-400 text-xs">
-                Contiene <strong className="text-foreground">5 carte</strong> casuali del <strong className="text-bronze">Kudjo Original Set I</strong>.
-              </p>
-              <p className="text-[10px] text-neutral-500 uppercase tracking-wider animate-pulse">
-                👇 Clicca o tocca sul pacchetto per iniziare lo strappo
+            <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-2">
+              <button
+                onClick={handleStartOpening}
+                className="w-full bg-[#e11b22] hover:bg-red-700 text-white py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer shadow-lg font-sans"
+              >
+                Apri 1 Busta Singola
+              </button>
+
+              {availablePacks > 1 && (
+                <button
+                  onClick={handleOpenAll}
+                  className="w-full bg-transparent hover:bg-white/5 border border-bronze/40 text-bronze py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer font-sans"
+                >
+                  ⚡ Apri Tutte le Buste ({availablePacks})
+                </button>
+              )}
+            </div>
+
+            <div className="text-center space-y-1">
+              <p className="text-neutral-500 text-[10px] uppercase tracking-wider">
+                Contiene 5 carte casuali · Kudjo Set I
               </p>
             </div>
           </div>
@@ -318,32 +374,61 @@ export default function PackOpeningModal({
             </div>
 
             {/* Static cards grid after anim sequence finishes */}
-            <div className="flex items-center justify-center gap-4 flex-wrap min-h-[240px] py-4">
-              {drawnCards.map((card, i) => (
-                <div
-                  key={`done-${card.id}-${i}`}
-                  className="animate-card-bounce"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                >
-                  <KudjoCard card={card} size="normal" faceDown={false} />
-                </div>
-              ))}
+            <div className="flex items-center justify-center gap-4 flex-wrap min-h-[240px] max-h-[380px] overflow-y-auto w-full py-4 pr-1 scrollbar-thin scrollbar-thumb-neutral-800 scrollbar-track-transparent">
+              {drawnCards.length <= 5 ? (
+                drawnCards.map((card, i) => (
+                  <div
+                    key={`done-${card.id}-${i}`}
+                    className="animate-card-bounce"
+                    style={{ animationDelay: `${i * 0.08}s` }}
+                  >
+                    <KudjoCard card={card} size="normal" faceDown={false} />
+                  </div>
+                ))
+              ) : (
+                groupedDrawnCards.map((item, i) => (
+                  <div
+                    key={`done-grouped-${item.card.id}-${i}`}
+                    className="animate-card-bounce"
+                    style={{ animationDelay: `${Math.min(1.0, i * 0.04)}s` }}
+                  >
+                    <KudjoCard card={item.card} size="normal" faceDown={false} duplicates={item.count} />
+                  </div>
+                ))
+              )}
             </div>
 
-            {/* Rarity descriptions */}
-            <div className="flex items-center gap-3 flex-wrap justify-center">
-              {drawnCards.map((card, i) => {
-                const rCfg = RARITY_LABELS[card.rarita];
-                return (
-                  <div
-                    key={`badge-${i}`}
-                    className="text-[8px] font-bold tracking-wider uppercase px-2.5 py-1 rounded border"
-                    style={{ color: rCfg.color, borderColor: rCfg.color + '35', background: rCfg.color + '0a' }}
-                  >
-                    {card.nome} · {rCfg.it}
+            {/* Rarity descriptions / Box opening summary */}
+            <div className="flex items-center gap-2 flex-wrap justify-center text-xs tracking-wider">
+              {drawnCards.length <= 5 ? (
+                drawnCards.map((card, i) => {
+                  const rCfg = RARITY_LABELS[card.rarita];
+                  return (
+                    <div
+                      key={`badge-${i}`}
+                      className="text-[8px] font-bold tracking-wider uppercase px-2.5 py-1 rounded border"
+                      style={{ color: rCfg.color, borderColor: rCfg.color + '35', background: rCfg.color + '0a' }}
+                    >
+                      {card.nome} · {rCfg.it}
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  <div className="text-neutral-400 font-bold uppercase tracking-widest text-[8px] px-2.5 py-1 bg-white/5 border border-white/10 rounded">
+                    📦 BUSTE APERTE: {drawnCards.length / 5} ({drawnCards.length} CARTE)
                   </div>
-                );
-              })}
+                  <div className="text-[#dfae0b] font-bold uppercase tracking-widest text-[8px] px-2.5 py-1 bg-[#dfae0b]/10 border border-[#dfae0b]/20 rounded">
+                    ★ RARE: {drawnCards.filter(c => c.rarita === 'raro').length}
+                  </div>
+                  <div className="text-[#7ab8e8] font-bold uppercase tracking-widest text-[8px] px-2.5 py-1 bg-[#7ab8e8]/10 border border-[#7ab8e8]/20 rounded">
+                    ★ NON COMUNI: {drawnCards.filter(c => c.rarita === 'non_comune').length}
+                  </div>
+                  <div className="text-neutral-400 font-bold uppercase tracking-widest text-[8px] px-2.5 py-1 bg-neutral-800/20 border border-neutral-700/25 rounded">
+                    ★ COMUNI: {drawnCards.filter(c => c.rarita === 'comune').length}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Bottom action panel */}

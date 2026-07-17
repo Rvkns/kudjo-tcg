@@ -372,6 +372,59 @@ export async function consumeOnePack(tier: string): Promise<boolean> {
   return false;
 }
 
+export async function consumeMultiplePacks(tier: string, qty: number): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      // Fetch active concorso
+      const { data: activeContest } = await supabase
+        .from('concorsi')
+        .select('id')
+        .eq('stato', 'attivo')
+        .maybeSingle();
+      const concorsoId = activeContest?.id ?? null;
+
+      const packsQuery = supabase
+        .from('pending_packs')
+        .select('id, quantity')
+        .eq('user_id', session.user.id)
+        .eq('tier', tier);
+
+      if (concorsoId) {
+        packsQuery.eq('concorso_id', concorsoId);
+      } else {
+        packsQuery.is('concorso_id', null);
+      }
+
+      const { data, error: selectError } = await packsQuery.maybeSingle();
+      
+      if (selectError || !data || data.quantity < qty) {
+        return false;
+      }
+      
+      const newQty = data.quantity - qty;
+      
+      if (newQty === 0) {
+        const { error } = await supabase
+          .from('pending_packs')
+          .delete()
+          .eq('id', data.id);
+        return !error;
+      } else {
+        const { error } = await supabase
+          .from('pending_packs')
+          .update({ quantity: newQty })
+          .eq('id', data.id);
+        return !error;
+      }
+    }
+  } catch (err) {
+    console.error('Supabase consume packs failed:', err);
+  }
+  return false;
+}
+
 export async function getTotalPendingPacks(): Promise<number> {
   const packs = await getPendingPacks();
   return packs.reduce((sum, p) => sum + p.quantity, 0);
