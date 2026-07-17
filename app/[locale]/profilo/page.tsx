@@ -552,13 +552,13 @@ export default function ProfiloPage() {
       </div>
 
       {/* Pack Opening Modal */}
-      {modalOpen && selectedPackData && (
+      {modalOpen && selectedTier && (
         <PackOpeningModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           packTier={selectedTier}
           packName={selectedPackName}
-          availablePacks={selectedPackData.quantity}
+          availablePacks={selectedPackData?.quantity || 0}
           onPackOpened={() => refreshState()}
         />
       )}
