@@ -235,8 +235,8 @@ export default function CardZoomModal({ card, onClose }: CardZoomModalProps) {
           flex-shrink: 0;
           border-radius: 14px;
           overflow: hidden;
-          width: 240px;
-          height: 336px;
+          width: 312px;
+          height: 437px;
         }
 
         .kudjo-zoom-holo {
@@ -266,8 +266,8 @@ export default function CardZoomModal({ card, onClose }: CardZoomModalProps) {
           justify-content: space-between;
           padding: 10px 14px 0;
         }
-        .kudjo-zoom-num   { font-family: monospace; font-size: 10px; opacity: 0.65; }
-        .kudjo-zoom-stars { font-size: 9px; font-weight: bold; padding: 1px 5px; border-radius: 3px; letter-spacing: 1px; }
+        .kudjo-zoom-num   { font-family: monospace; font-size: 13px; opacity: 0.65; }
+        .kudjo-zoom-stars { font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 3px; letter-spacing: 1px; }
 
         .kudjo-zoom-art {
           margin: 8px 12px 0;
@@ -286,32 +286,32 @@ export default function CardZoomModal({ card, onClose }: CardZoomModalProps) {
           height: 100%;
           opacity: 0.1;
         }
-        .kudjo-zoom-icon { font-size: 56px; position: relative; z-index: 1; }
+        .kudjo-zoom-icon { font-size: 72px; position: relative; z-index: 1; }
         .kudjo-zoom-pwr  {
           position: absolute;
-          bottom: 6px;
-          right: 8px;
+          bottom: 8px;
+          right: 10px;
           font-family: monospace;
-          font-size: 11px;
+          font-size: 14px;
           font-weight: bold;
         }
 
         .kudjo-zoom-name-block { padding: 10px 14px 0; }
         .kudjo-zoom-name {
           font-family: var(--font-fraunces, serif);
-          font-size: 13px;
+          font-size: 17px;
           font-weight: 600;
           color: #f2ede4;
           line-height: 1.2;
         }
-        .kudjo-zoom-sub  { font-size: 8px; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.6; margin-top: 2px; }
+        .kudjo-zoom-sub  { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.6; margin-top: 3px; }
 
         .kudjo-zoom-divider { margin: 8px 14px 0; height: 0.5px; }
 
         .kudjo-zoom-desc {
-          padding: 6px 14px 0;
+          padding: 8px 16px 0;
           flex: 1;
-          font-size: 8.5px;
+          font-size: 11px;
           line-height: 1.5;
           color: #c4b89a;
           opacity: 0.8;
