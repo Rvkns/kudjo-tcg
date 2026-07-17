@@ -339,7 +339,7 @@ export default function PackOpeningModal({
 
             {/* 3. Fanning Cards (emerge from inside pack bottom) */}
             {drawnCards.length > 0 && (
-              <div className="relative w-full h-full">
+              <div className="absolute inset-0 pointer-events-none">
                 {drawnCards.map((card, i) => {
                   const isFanned = openingStep === 'reveal';
                   const isRevealed = i < revealedCount;
