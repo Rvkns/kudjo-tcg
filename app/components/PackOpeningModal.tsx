@@ -412,7 +412,7 @@ export default function PackOpeningModal({
                 </p>
                 <h2 className="text-xl font-display font-light text-white leading-tight">{zoomedCard.nome}</h2>
                 <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-0.5">
-                  {zoomedCard.tipo} · Kudjo Set I
+                  {zoomedCard.elemento} · Kudjo Set I
                 </p>
               </div>
 
