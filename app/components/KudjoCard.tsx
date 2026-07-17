@@ -143,7 +143,7 @@ export default function KudjoCard({ card, faceDown = false, size = 'normal', dup
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      onClick={() => { if (!faceDown && !disableZoom) setZoomOpen(true); }}
+      onClick={() => { if (!disableZoom) setZoomOpen(true); }}
     >
       {/* Sheen overlay */}
       <div className="absolute inset-0 z-30 pointer-events-none rounded-lg mix-blend-color-dodge" style={sheenStyle} />
@@ -285,7 +285,7 @@ export default function KudjoCard({ card, faceDown = false, size = 'normal', dup
       )}
 
       {/* Zoom hint on hover (only when zoomable) */}
-      {!faceDown && !disableZoom && (
+      {!disableZoom && (
         <div className="absolute inset-0 z-50 flex items-end justify-center pb-2 opacity-0 hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-lg">
           <span className="text-[7px] font-bold tracking-widest uppercase bg-black/70 text-white/60 px-2 py-0.5 rounded-full">
             🔍 Ingrandisci
@@ -295,7 +295,7 @@ export default function KudjoCard({ card, faceDown = false, size = 'normal', dup
 
       {/* Card Zoom Modal */}
       {zoomOpen && (
-        <CardZoomModal card={card} onClose={() => setZoomOpen(false)} />
+        <CardZoomModal card={card} obtained={!faceDown} duplicates={duplicates} onClose={() => setZoomOpen(false)} />
       )}
     </div>
   );

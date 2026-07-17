@@ -23,10 +23,12 @@ const RARITA_CONFIG: Record<string, { label: string; color: string; border: stri
 
 interface CardZoomModalProps {
   card: KudjoCard;
+  obtained?: boolean;
+  duplicates?: number;
   onClose: () => void;
 }
 
-export default function CardZoomModal({ card, onClose }: CardZoomModalProps) {
+export default function CardZoomModal({ card, obtained = true, duplicates = 0, onClose }: CardZoomModalProps) {
   const cfg  = ELEMENTO_CONFIG[card.elemento] ?? ELEMENTO_CONFIG.fuoco;
   const rCfg = RARITA_CONFIG[card.rarita]     ?? RARITA_CONFIG.comune;
   const isRaro = card.rarita === 'raro';
@@ -146,9 +148,21 @@ export default function CardZoomModal({ card, onClose }: CardZoomModalProps) {
 
         {/* ── Info panel ── */}
         <div className="kudjo-zoom-info">
-          <div className="kudjo-zoom-rarity-badge"
-            style={{ color: rCfg.color, borderColor: rCfg.color + '50', background: rCfg.color + '15' }}>
-            {'★'.repeat(rCfg.stars)}&nbsp;&nbsp;{rCfg.label}
+          <div className="flex flex-wrap gap-2">
+            <div className="kudjo-zoom-rarity-badge"
+              style={{ color: rCfg.color, borderColor: rCfg.color + '50', background: rCfg.color + '15' }}>
+              {'★'.repeat(rCfg.stars)}&nbsp;&nbsp;{rCfg.label}
+            </div>
+
+            {!obtained ? (
+              <div className="kudjo-zoom-status-badge locked">
+                🔒 MANCANTE
+              </div>
+            ) : (
+              <div className="kudjo-zoom-status-badge obtained">
+                {duplicates > 1 ? `✓ OTTENUTA (x${duplicates})` : '✓ OTTENUTA'}
+              </div>
+            )}
           </div>
 
           <div>
@@ -350,6 +364,28 @@ export default function CardZoomModal({ card, onClose }: CardZoomModalProps) {
           border-radius: 999px;
           border: 1px solid;
           align-self: flex-start;
+        }
+
+        .kudjo-zoom-status-badge {
+          display: inline-flex;
+          align-items: center;
+          font-size: 9px;
+          font-weight: bold;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          padding: 5px 12px;
+          border-radius: 999px;
+          border: 1px solid;
+        }
+        .kudjo-zoom-status-badge.locked {
+          color: #ef4444;
+          border-color: rgba(239, 68, 68, 0.3);
+          background: rgba(239, 68, 68, 0.1);
+        }
+        .kudjo-zoom-status-badge.obtained {
+          color: #10b981;
+          border-color: rgba(16, 185, 129, 0.3);
+          background: rgba(16, 185, 129, 0.1);
         }
 
         .kudjo-zoom-title {

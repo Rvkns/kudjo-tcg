@@ -417,35 +417,35 @@ export default function ProfiloPage() {
               return (
                 <div
                   key={m.id}
-                  className={`relative rounded-xl border p-4 transition-all ${
+                  className={`relative rounded-xl border p-5 transition-all ${
                     unlocked
                       ? 'border-bronze/40 bg-bronze/5 shadow-[0_0_15px_rgba(223,174,11,0.08)]'
                       : 'border-white/5 bg-white/[0.01]'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <span className={`text-2xl ${unlocked ? '' : 'opacity-30'}`}>{m.emoji}</span>
+                  <div className="flex items-start gap-4">
+                    <span className={`text-3xl ${unlocked ? '' : 'opacity-30'}`}>{m.emoji}</span>
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className={`text-xs font-bold tracking-wider uppercase ${unlocked ? 'text-bronze' : 'text-neutral-500'}`}>
+                        <span className={`text-sm sm:text-base font-bold tracking-wider uppercase ${unlocked ? 'text-bronze' : 'text-neutral-500'}`}>
                           {isIt ? m.labelIt : m.labelEn}
                         </span>
                         {unlocked ? (
-                          <span className="text-[8px] font-bold tracking-widest bg-bronze/20 text-bronze px-2 py-0.5 rounded border border-bronze/30">
+                          <span className="text-[9px] sm:text-[10px] font-bold tracking-widest bg-bronze/20 text-bronze px-2 py-0.5 rounded border border-bronze/30">
                             {t('milestoneUnlocked')}
                           </span>
                         ) : (
-                          <span className="text-[8px] text-neutral-600 font-mono">
+                          <span className="text-[9px] sm:text-[10px] text-neutral-500 font-mono">
                             {remaining > 0 ? t('milestoneLocked').replace('{n}', String(remaining)) : ''}
                           </span>
                         )}
                       </div>
-                      <p className={`text-[10px] mt-1 ${unlocked ? 'text-neutral-300' : 'text-neutral-600'}`}>
+                      <p className={`text-xs sm:text-sm mt-1.5 leading-relaxed ${unlocked ? 'text-neutral-300' : 'text-neutral-500'}`}>
                         🎁 {isIt ? m.rewardIt : m.rewardEn}
                       </p>
                       {/* Mini progress bar */}
                       {!unlocked && (
-                        <div className="mt-2 h-1 w-full rounded-full bg-white/5 overflow-hidden">
+                        <div className="mt-3 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
                           <div
                             className="h-full rounded-full bg-neutral-600"
                             style={{ width: `${Math.min(100, (uniqueCardIds.length / m.threshold) * 100)}%` }}
