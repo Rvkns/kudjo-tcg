@@ -3,9 +3,8 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { supabase } from '@/lib/supabase';
 
 const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
@@ -23,7 +22,7 @@ export default function AdminPage() {
       const email = session?.user?.email?.toLowerCase() ?? '';
       setUserEmail(email);
       if (!email || !ADMIN_EMAILS.includes(email)) {
-        router.replace(`/${locale}/`);
+        router.replace('/');
         return;
       }
       setIsAdmin(true);
