@@ -42,6 +42,7 @@ export default function PackOpeningModal({
   const [openingStep, setOpeningStep] = useState<OpeningStep>('idle');
   const [drawnCards, setDrawnCards] = useState<KudjoCardType[]>([]);
   const [revealedCount, setRevealedCount] = useState(0);
+  const [zoomedCard, setZoomedCard] = useState<KudjoCardType | null>(null);
 
   const resetModal = useCallback(() => {
     setPhase('idle');
@@ -52,6 +53,7 @@ export default function PackOpeningModal({
 
   const handleClose = () => {
     resetModal();
+    setZoomedCard(null);
     onClose();
   };
 
@@ -313,10 +315,12 @@ export default function PackOpeningModal({
             {/* Static cards grid after anim sequence finishes */}
             <div className="flex items-center justify-center gap-4 flex-wrap min-h-[240px] py-4">
               {drawnCards.map((card, i) => (
-                <div 
+                <div
                   key={`done-${card.id}-${i}`}
-                  className="animate-card-bounce"
+                  className="animate-card-bounce cursor-zoom-in"
                   style={{ animationDelay: `${i * 0.1}s` }}
+                  onClick={(e) => { e.stopPropagation(); setZoomedCard(card); }}
+                  title="Clicca per ingrandire"
                 >
                   <KudjoCard card={card} size="normal" faceDown={false} />
                 </div>
@@ -370,6 +374,58 @@ export default function PackOpeningModal({
           </div>
         )}
       </div>
+
+      {/* ── CARD ZOOM LIGHTBOX ── */}
+      {zoomedCard && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-6"
+          style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(16px)' }}
+          onClick={() => setZoomedCard(null)}
+        >
+          <div
+            className="relative flex flex-col md:flex-row items-center gap-10 animate-zoom-in"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setZoomedCard(null)}
+              className="absolute -top-4 -right-4 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-neutral-400 hover:text-white transition-all cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Enlarged card */}
+            <div className="scale-[1.7] md:scale-[2.0] origin-center flex-shrink-0">
+              <KudjoCard card={zoomedCard} size="normal" faceDown={false} />
+            </div>
+
+            {/* Card detail panel */}
+            <div className="flex flex-col gap-4 max-w-[220px] mt-28 md:mt-0 text-left">
+              <div>
+                <p
+                  className="text-[9px] font-bold tracking-[0.25em] uppercase mb-1"
+                  style={{ color: RARITY_LABELS[zoomedCard.rarita]?.color ?? '#888' }}
+                >
+                  {RARITY_LABELS[zoomedCard.rarita]?.it} · #{String(zoomedCard.numero).padStart(3, '0')}
+                </p>
+                <h2 className="text-xl font-display font-light text-white leading-tight">{zoomedCard.nome}</h2>
+                <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-0.5">
+                  {zoomedCard.tipo} · Kudjo Set I
+                </p>
+              </div>
+
+              <button
+                onClick={() => setZoomedCard(null)}
+                className="mt-2 text-[10px] text-neutral-500 hover:text-white uppercase tracking-widest transition-colors cursor-pointer text-left"
+              >
+                ← Chiudi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Embedded Animations and Keyframes */}
       <style>{`
@@ -433,6 +489,15 @@ export default function PackOpeningModal({
         .animate-card-bounce {
           animation: cardEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
           opacity: 0;
+        }
+
+        /* Card zoom lightbox entrance */
+        @keyframes zoomIn {
+          0% { opacity: 0; transform: scale(0.82); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-zoom-in {
+          animation: zoomIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
       `}</style>
     </div>
