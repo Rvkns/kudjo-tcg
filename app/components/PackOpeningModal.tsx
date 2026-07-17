@@ -124,14 +124,20 @@ export default function PackOpeningModal({
 
     setDrawnCards(allCards);
     setPhase('opening');
-    setOpeningStep('reveal'); // Trigger fanned layout immediately
-    setRevealedCount(allCards.length); // All cards flipped
+    setOpeningStep('zoom');
+    setRevealedCount(allCards.length); // mark all cards as flipped
 
-    // Transition to done summary after a quick transition animation
+    // 1. Zoom in and show laser seam line cut (0ms - 800ms)
+    // 2. Cut & Rip top off (800ms - 2200ms)
+    setTimeout(() => {
+      setOpeningStep('rip');
+    }, 800);
+
+    // 3. Transition to done summary after packet rip finishes
     setTimeout(() => {
       setPhase('done');
       setOpeningStep('done');
-    }, 1100);
+    }, 2200);
   }, [availablePacks, phase, packTier, onPackOpened]);
 
   // Group drawn cards by ID for multiple packs summary layout
@@ -338,7 +344,7 @@ export default function PackOpeningModal({
             )}
 
             {/* 3. Fanning Cards (emerge from inside pack bottom) */}
-            {drawnCards.length > 0 && (
+            {drawnCards.length > 0 && drawnCards.length <= 5 && (
               <div className="absolute inset-0 pointer-events-none">
                 {drawnCards.map((card, i) => {
                   const isFanned = openingStep === 'reveal';
