@@ -81,7 +81,7 @@ export default function Navbar() {
 
   const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
 
-  const navLinks = [
+  const navLinks: { href: string; label: string }[] = [
     { href: '/collezione', label: t('collezione') },
     { href: '/concorso',   label: t('concorso')   },
     { href: '/vendici-carta', label: t('vendiciCarta') },
@@ -115,11 +115,6 @@ export default function Navbar() {
                 className={`relative transition-colors duration-300 hover:text-foreground flex items-center gap-1.5 ${isActive ? 'text-bronze' : ''}`}
               >
                 {link.label}
-                {'badge' in link && link.badge ? (
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#e11b22] text-white text-[8px] font-bold">
-                    {link.badge}
-                  </span>
-                ) : null}
               </Link>
             );
           })}
@@ -309,11 +304,6 @@ export default function Navbar() {
                   className={`flex items-center gap-2 transition-colors py-2 duration-300 hover:text-foreground ${isActive ? 'text-bronze' : ''}`}
                 >
                   {link.label}
-                  {'badge' in link && link.badge ? (
-                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#e11b22] text-white text-[8px] font-bold">
-                      {link.badge}
-                    </span>
-                  ) : null}
                 </Link>
               );
             })}
