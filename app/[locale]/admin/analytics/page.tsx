@@ -189,41 +189,47 @@ export default function AdminAnalyticsDashboardPage() {
         )}
 
         {/* 1. EXECUTIVE KPI SUMMARY CARDS */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="bg-gradient-to-br from-amber-500/10 to-amber-900/5 border border-amber-500/20 rounded-xl p-4 space-y-1">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="bg-gradient-to-br from-amber-500/10 to-amber-900/5 border border-amber-500/20 rounded-xl p-3.5 space-y-1">
             <div className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Fatturato Stimato</div>
-            <div className="text-xl font-extrabold text-white">€{kpis.estimated_revenue.toLocaleString()}</div>
+            <div className="text-lg font-extrabold text-white">€{kpis.estimated_revenue.toLocaleString()}</div>
             <div className="text-[9px] text-neutral-500">Da vendite buste TCG</div>
           </div>
 
-          <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-900/5 border border-cyan-500/20 rounded-xl p-4 space-y-1">
+          <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-900/5 border border-cyan-500/20 rounded-xl p-3.5 space-y-1">
             <div className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">Buste Acquistate</div>
-            <div className="text-xl font-extrabold text-white">{kpis.total_packs_count}</div>
+            <div className="text-lg font-extrabold text-white">{kpis.total_packs_count}</div>
             <div className="text-[9px] text-neutral-500">Buste totali vendute</div>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-500/10 to-blue-900/5 border border-blue-500/20 rounded-xl p-4 space-y-1">
+          <div className="bg-gradient-to-br from-blue-500/10 to-blue-900/5 border border-blue-500/20 rounded-xl p-3.5 space-y-1">
             <div className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Utenti Registrati</div>
-            <div className="text-xl font-extrabold text-white">{kpis.total_users_count}</div>
+            <div className="text-lg font-extrabold text-white">{kpis.total_users_count}</div>
             <div className="text-[9px] text-neutral-500">Account piattaforma</div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500/10 to-purple-900/5 border border-purple-500/20 rounded-xl p-4 space-y-1">
+          <div className="bg-gradient-to-br from-purple-500/10 to-purple-900/5 border border-purple-500/20 rounded-xl p-3.5 space-y-1">
             <div className="text-[10px] text-purple-400 font-bold uppercase tracking-wider">Carte Trovate</div>
-            <div className="text-xl font-extrabold text-white">{kpis.total_cards_pulled}</div>
+            <div className="text-lg font-extrabold text-white">{kpis.total_cards_pulled}</div>
             <div className="text-[9px] text-neutral-500">Presenti nelle collezioni</div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-500/10 to-red-900/5 border border-red-500/20 rounded-xl p-4 space-y-1">
+          <div className="bg-gradient-to-br from-red-500/10 to-red-900/5 border border-red-500/20 rounded-xl p-3.5 space-y-1">
             <div className="text-[10px] text-red-400 font-bold uppercase tracking-wider">Ticket Distribuiti</div>
-            <div className="text-xl font-extrabold text-white">{kpis.total_tickets}</div>
+            <div className="text-lg font-extrabold text-white">{kpis.total_tickets}</div>
             <div className="text-[9px] text-neutral-500">Chances per Riffa</div>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-900/5 border border-emerald-500/20 rounded-xl p-4 space-y-1">
+          <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-900/5 border border-emerald-500/20 rounded-xl p-3.5 space-y-1">
             <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Sconti Sbloccati</div>
-            <div className="text-xl font-extrabold text-white">{kpis.total_discounts_count}</div>
-            <div className="text-[9px] text-neutral-500">Media sconto: {kpis.avg_discount_percent}%</div>
+            <div className="text-lg font-extrabold text-white">{kpis.total_discounts_count}</div>
+            <div className="text-[9px] text-neutral-500">Media: {kpis.avg_discount_percent}%</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-indigo-500/10 to-indigo-900/5 border border-indigo-500/20 rounded-xl p-3.5 space-y-1">
+            <div className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Risposte Sondaggi</div>
+            <div className="text-lg font-extrabold text-white">{kpis.total_survey_responses}</div>
+            <div className="text-[9px] text-neutral-500">Feedback raccolti</div>
           </div>
         </div>
 
