@@ -54,6 +54,48 @@ export default function ProfiloPage() {
   const [modalOpen, setModalOpen]         = useState(false);
   const [hydrated, setHydrated]           = useState(false);
 
+  interface UserCollectionSetProgress {
+    id: string;
+    concorso_id: string;
+    concorso_nome: string;
+    concorso_stato: string;
+    nome: string;
+    descrizione: string | null;
+    sconto_percentuale: number;
+    card_ids: string[];
+    owned_card_ids: string[];
+    missing_card_ids: string[];
+    owned_count: number;
+    total_count: number;
+    progress_percentage: number;
+    is_completed: boolean;
+    claimed_discount: {
+      code: string;
+      sconto_percentuale: number;
+      created_at: string;
+    } | null;
+  }
+
+  const [collectionSets, setCollectionSets] = useState<UserCollectionSetProgress[]>([]);
+  const [claimingSetId, setClaimingSetId]   = useState<string | null>(null);
+  const [copiedCode, setCopiedCode]         = useState<string | null>(null);
+
+  const fetchCollectionSets = async (tok?: string) => {
+    try {
+      const accessToken = tok || (await supabase.auth.getSession()).data.session?.access_token;
+      if (!accessToken) return;
+      const res = await fetch('/api/collection-sets/user-progress', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const json = await res.json();
+      if (json.sets) {
+        setCollectionSets(json.sets);
+      }
+    } catch (err) {
+      console.error('Error fetching collection sets:', err);
+    }
+  };
+
   const refreshState = async () => {
     try {
       const col   = await getUserCollection();
@@ -68,9 +110,42 @@ export default function ProfiloPage() {
       if (packs.length > 0 && !selectedTier) {
         setSelectedTier(packs[0].tier);
       }
+      await fetchCollectionSets();
     } catch (err) {
       console.error('Error refreshing state:', err);
     }
+  };
+
+  const handleClaimDiscount = async (setId: string) => {
+    setClaimingSetId(setId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const res = await fetch('/api/collection-sets/claim-discount', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ collection_set_id: setId })
+      });
+      const json = await res.json();
+      setClaimingSetId(null);
+      if (json.error) {
+        alert(json.error);
+        return;
+      }
+      await fetchCollectionSets(session.access_token);
+    } catch (err) {
+      setClaimingSetId(null);
+      console.error('Error claiming discount:', err);
+    }
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 3000);
   };
 
   useEffect(() => {
@@ -481,6 +556,141 @@ export default function ProfiloPage() {
             })}
           </div>
         </section>
+
+        {/* ── COLLECTION SETS & SCONTI ── */}
+        {collectionSets.length > 0 && (
+          <section>
+            <div className="mb-4">
+              <h2 className="font-display text-xl text-foreground font-light mb-1">
+                {isIt ? 'Set da Completare & Sconti' : 'Collection Sets & Discounts'}
+              </h2>
+              <p className="text-neutral-500 text-xs">
+                {isIt
+                  ? 'Completa i set di carte richiesti per sbloccare codici sconto permanenti per i tuoi prossimi acquisti.'
+                  : 'Complete card sets to unlock permanent discount codes for future purchases.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {collectionSets.map((set) => {
+                return (
+                  <div
+                    key={set.id}
+                    className={`rounded-xl border p-6 flex flex-col justify-between transition-all relative overflow-hidden ${
+                      set.claimed_discount
+                        ? 'border-emerald-500/40 bg-emerald-500/5'
+                        : set.is_completed
+                        ? 'border-blue-500/40 bg-blue-500/5'
+                        : 'border-white/5 bg-white/[0.01]'
+                    }`}
+                  >
+                    <div className="space-y-4">
+                      {/* Set Header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider block mb-1">
+                            {set.concorso_nome}
+                          </span>
+                          <h3 className="text-lg font-bold text-white">{set.nome}</h3>
+                        </div>
+                        <span className="shrink-0 bg-blue-500/20 border border-blue-500/40 text-blue-400 font-bold text-xs px-2.5 py-1 rounded-full">
+                          -{set.sconto_percentuale}% {isIt ? 'Sconto' : 'Discount'}
+                        </span>
+                      </div>
+
+                      {set.descrizione && (
+                        <p className="text-xs text-neutral-400 leading-relaxed">{set.descrizione}</p>
+                      )}
+
+                      {/* Progress bar */}
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-semibold">
+                          <span className="text-neutral-400">{isIt ? 'Progresso Set' : 'Set Progress'}</span>
+                          <span className={set.is_completed ? 'text-blue-400' : 'text-neutral-300'}>
+                            {set.owned_count}/{set.total_count} ({set.progress_percentage}%)
+                          </span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${set.progress_percentage}%`,
+                              background: set.claimed_discount
+                                ? 'linear-gradient(90deg, #10b981, #059669)'
+                                : 'linear-gradient(90deg, #3b82f6, #2563eb)'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Required Cards Badges */}
+                      <div className="pt-2">
+                        <div className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold mb-2">
+                          {isIt ? 'Carte nel Set:' : 'Required Cards:'}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                          {set.card_ids.map((cardId) => {
+                            const isOwned = set.owned_card_ids.includes(cardId);
+                            const cardInfo = getCardById(cardId);
+                            const cardName = cardInfo?.nome || cardId;
+                            return (
+                              <span
+                                key={cardId}
+                                className={`text-[10px] px-2 py-0.5 rounded border transition-all ${
+                                  isOwned
+                                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/40 font-semibold'
+                                    : 'bg-white/[0.02] text-neutral-500 border-white/5'
+                                }`}
+                              >
+                                {isOwned ? '✓ ' : '✕ '}{cardName}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Claim / Code Footer */}
+                    <div className="border-t border-white/5 pt-4 mt-5">
+                      {set.claimed_discount ? (
+                        <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-3 flex items-center justify-between gap-2">
+                          <div>
+                            <div className="text-[9px] uppercase tracking-wider font-semibold text-emerald-400">
+                              {isIt ? 'Codice Sconto Attivo:' : 'Active Discount Code:'}
+                            </div>
+                            <div className="font-mono text-sm font-bold text-white">{set.claimed_discount.code}</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyCode(set.claimed_discount!.code)}
+                            className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded transition-all cursor-pointer"
+                          >
+                            {copiedCode === set.claimed_discount.code ? (isIt ? 'Copiato! ✓' : 'Copied! ✓') : (isIt ? 'Copia' : 'Copy')}
+                          </button>
+                        </div>
+                      ) : set.is_completed ? (
+                        <button
+                          type="button"
+                          onClick={() => handleClaimDiscount(set.id)}
+                          disabled={claimingSetId === set.id}
+                          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider text-xs py-3 rounded-lg shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          {claimingSetId === set.id
+                            ? (isIt ? 'Riscatto in corso...' : 'Claiming...')
+                            : (isIt ? `🎉 Riscatta Sconto ${set.sconto_percentuale}%` : `🎉 Claim ${set.sconto_percentuale}% Discount`)}
+                        </button>
+                      ) : (
+                        <div className="text-center text-xs text-neutral-500 py-1 font-mono">
+                          🔒 {isIt ? `Trova ancora ${set.missing_card_ids.length} carte per sbloccare` : `Find ${set.missing_card_ids.length} more cards to unlock`}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ── DIGITAL COLLECTION ── */}
         <section>

@@ -59,12 +59,12 @@ export default function AdminPage() {
       badge: 'Sezione attiva',
     },
     {
-      href: '#',
+      href: '/admin/collection-sets',
       icon: '🎴',
       title: 'Collection Sets',
       description: 'Configura le collezioni da completare per sbloccare sconti agli utenti.',
       color: 'from-blue-500/10 to-blue-900/5 border-blue-500/20 hover:border-blue-500/40',
-      badge: 'Prossimamente',
+      badge: 'Sezione attiva',
     },
     {
       href: '/admin/riffa',
