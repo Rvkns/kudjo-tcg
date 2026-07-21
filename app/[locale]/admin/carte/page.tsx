@@ -7,6 +7,8 @@ import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
+import KudjoCard from '@/app/components/KudjoCard';
+import { KudjoCardElemento } from '@/lib/schema/kudjo-card';
 
 const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
@@ -297,63 +299,80 @@ export default function AdminCartePage() {
 
             {/* Cards Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {filteredCards.map((c) => (
-                <div
-                  key={c.id}
-                  className="bg-white/[0.02] border border-white/5 hover:border-cyan-500/40 rounded-xl p-3 flex flex-col justify-between transition-all group"
-                >
-                  <div className="space-y-2">
-                    <div className="relative aspect-[3/4] w-full rounded-lg bg-neutral-900 overflow-hidden border border-white/5">
-                      <Image
-                        src={c.immagine_url || `/cards/${c.id}.png`}
-                        alt={c.nome}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        unoptimized
-                      />
-                      <span className="absolute top-1.5 left-1.5 bg-black/80 text-white font-mono text-[9px] px-1.5 py-0.5 rounded border border-white/10 font-bold">
-                        #{c.numero}
-                      </span>
-                    </div>
+              {filteredCards.map((c) => {
+                const kudjoCardObj = {
+                  id: c.id,
+                  numero: c.numero,
+                  nome: c.nome,
+                  elemento: (c.elemento.toLowerCase() as KudjoCardElemento) || 'fuoco',
+                  rarita: c.rarita,
+                  descrizione: c.descrizione || '',
+                  potere: c.potere,
+                };
+                return (
+                  <div
+                    key={c.id}
+                    className="bg-white/[0.02] border border-white/5 hover:border-cyan-500/40 rounded-xl p-3 flex flex-col justify-between transition-all group"
+                  >
+                    <div className="space-y-2 flex flex-col items-center">
+                      {c.immagine_url ? (
+                        <div className="relative aspect-[3/4] w-full rounded-lg bg-neutral-900 overflow-hidden border border-white/5">
+                          <Image
+                            src={c.immagine_url}
+                            alt={c.nome}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            unoptimized
+                          />
+                          <span className="absolute top-1.5 left-1.5 bg-black/80 text-white font-mono text-[9px] px-1.5 py-0.5 rounded border border-white/10 font-bold">
+                            #{c.numero}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="scale-90 origin-top flex justify-center py-1">
+                          <KudjoCard card={kudjoCardObj} size="small" disableZoom />
+                        </div>
+                      )}
 
-                    <div>
-                      <h3 className="text-xs font-bold text-white truncate">{c.nome}</h3>
-                      <div className="flex items-center justify-between mt-1 text-[10px]">
-                        <span className="text-neutral-400">
-                          {ELEMENT_ICONS[c.elemento] || '✨'} {c.elemento}
+                      <div className="w-full">
+                        <h3 className="text-xs font-bold text-white truncate">{c.nome}</h3>
+                        <div className="flex items-center justify-between mt-1 text-[10px]">
+                          <span className="text-neutral-400">
+                            {ELEMENT_ICONS[c.elemento] || '✨'} {c.elemento}
+                          </span>
+                          <span className="font-mono text-cyan-400 font-bold">PWR: {c.potere}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between w-full pt-1">
+                        <span className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border ${RARITY_BADGES[c.rarita]}`}>
+                          {c.rarita.replace('_', ' ')}
                         </span>
-                        <span className="font-mono text-cyan-400 font-bold">PWR: {c.potere}</span>
+                        {c.is_custom && (
+                          <span className="text-[8px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded font-mono">Custom</span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1">
-                      <span className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border ${RARITY_BADGES[c.rarita]}`}>
-                        {c.rarita.replace('_', ' ')}
-                      </span>
+                    <div className="pt-3 border-t border-white/5 mt-3 flex items-center justify-between gap-2">
+                      <Link
+                        href={`/admin/carte/${c.id}`}
+                        className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors"
+                      >
+                        ✏️ Modifica
+                      </Link>
                       {c.is_custom && (
-                        <span className="text-[8px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded font-mono">Custom</span>
+                        <button
+                          onClick={() => handleDeleteCard(c.id, c.nome)}
+                          className="text-[10px] text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                        >
+                          🗑️ Elimina
+                        </button>
                       )}
                     </div>
                   </div>
-
-                  <div className="pt-3 border-t border-white/5 mt-3 flex items-center justify-between gap-2">
-                    <Link
-                      href={`/admin/carte/${c.id}`}
-                      className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors"
-                    >
-                      ✏️ Modifica
-                    </Link>
-                    {c.is_custom && (
-                      <button
-                        onClick={() => handleDeleteCard(c.id, c.nome)}
-                        className="text-[10px] text-red-400 hover:text-red-300 transition-colors cursor-pointer"
-                      >
-                        🗑️ Elimina
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

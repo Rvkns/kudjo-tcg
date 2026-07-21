@@ -7,6 +7,8 @@ import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
+import KudjoCard from '@/app/components/KudjoCard';
+import { KudjoCardElemento } from '@/lib/schema/kudjo-card';
 
 const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
@@ -252,21 +254,37 @@ export default function AdminNuovaCartaPage() {
           {/* Live Preview Card */}
           <div className="space-y-4">
             <div className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Anteprima Carta</div>
-            <div className="bg-white/[0.02] border border-cyan-500/30 rounded-xl p-4 space-y-3">
-              <div className="relative aspect-[3/4] w-full rounded-lg bg-neutral-900 overflow-hidden border border-white/10">
-                <Image
-                  src={immagineUrl || `/cards/kj_${String(numero).padStart(3, '0')}.png`}
-                  alt={nome || 'Carta'}
-                  fill
-                  className="object-cover"
-                  unoptimized
+            <div className="bg-white/[0.02] border border-cyan-500/30 rounded-xl p-4 space-y-3 flex flex-col items-center">
+              {immagineUrl ? (
+                <div className="relative aspect-[3/4] w-full rounded-lg bg-neutral-900 overflow-hidden border border-white/10">
+                  <Image
+                    src={immagineUrl}
+                    alt={nome || 'Carta'}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                  <span className="absolute top-2 left-2 bg-black/80 text-white font-mono text-xs px-2 py-0.5 rounded border border-white/10 font-bold">
+                    #{numero}
+                  </span>
+                </div>
+              ) : (
+                <KudjoCard
+                  card={{
+                    id: `kj_${String(numero).padStart(3, '0')}`,
+                    numero,
+                    nome: nome || 'Nuova Carta',
+                    elemento: (elemento.toLowerCase() as KudjoCardElemento) || 'fuoco',
+                    rarita,
+                    descrizione: descrizione || '',
+                    potere,
+                  }}
+                  size="normal"
+                  disableZoom
                 />
-                <span className="absolute top-2 left-2 bg-black/80 text-white font-mono text-xs px-2 py-0.5 rounded border border-white/10 font-bold">
-                  #{numero}
-                </span>
-              </div>
+              )}
 
-              <div>
+              <div className="w-full">
                 <h3 className="text-sm font-bold text-white">{nome || 'Nome Carta'}</h3>
                 <div className="flex items-center justify-between mt-1 text-xs">
                   <span className="text-neutral-400">{elemento}</span>
@@ -274,7 +292,7 @@ export default function AdminNuovaCartaPage() {
                 </div>
               </div>
 
-              <div className="text-xs text-neutral-400 leading-relaxed border-t border-white/5 pt-2">
+              <div className="text-xs text-neutral-400 leading-relaxed border-t border-white/5 pt-2 w-full">
                 {descrizione || 'Nessuna descrizione inserita.'}
               </div>
             </div>
