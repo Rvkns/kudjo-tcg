@@ -75,12 +75,12 @@ export default function AdminPage() {
       badge: 'Sezione attiva',
     },
     {
-      href: '#',
+      href: '/admin/sconti',
       icon: '💸',
       title: 'Sconti Utenti',
       description: 'Visualizza e gestisci gli sconti permanenti degli utenti.',
       color: 'from-emerald-500/10 to-emerald-900/5 border-emerald-500/20 hover:border-emerald-500/40',
-      badge: 'Prossimamente',
+      badge: 'Sezione attiva',
     },
   ];
 
