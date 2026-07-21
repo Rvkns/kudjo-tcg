@@ -98,6 +98,14 @@ export default function AdminPage() {
       color: 'from-emerald-500/10 to-emerald-900/5 border-emerald-500/20 hover:border-emerald-500/40',
       badge: 'Sezione attiva',
     },
+    {
+      href: '/admin/wiki',
+      icon: '📖',
+      title: 'Guida & Admin Wiki',
+      description: 'Manuale d\'uso completo per la gestione di carte reali, buste, concorsi, sondaggi e sconti.',
+      color: 'from-amber-500/10 to-cyan-900/5 border-cyan-500/30 hover:border-amber-500/50',
+      badge: 'Manuale Operativo',
+    },
   ];
 
   return (
