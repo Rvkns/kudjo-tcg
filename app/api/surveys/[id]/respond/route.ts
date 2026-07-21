@@ -67,9 +67,15 @@ export async function POST(request: Request, props: { params: Params }) {
       return NextResponse.json({ error: rError.message }, { status: 500 });
     }
 
+    interface AnswerInput {
+      question_id: string;
+      answer_text: string | null;
+    }
+
     // 2. Insert individual answers
     if (answers.length > 0) {
-      const answersToInsert = answers.map((ans: any) => ({
+      const typedAnswers = answers as AnswerInput[];
+      const answersToInsert = typedAnswers.map((ans) => ({
         response_id: response.id,
         question_id: ans.question_id,
         answer_text: ans.answer_text ? String(ans.answer_text).trim() : null

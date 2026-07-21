@@ -60,8 +60,9 @@ export default function AdminSondaggiPage() {
         return;
       }
       setSurveys(json.surveys ?? []);
-    } catch (err: any) {
-      setFetchError(err.message || 'Errore nel recupero dei sondaggi.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setFetchError(msg || 'Errore nel recupero dei sondaggi.');
     }
   }, []);
 
@@ -96,8 +97,9 @@ export default function AdminSondaggiPage() {
         return;
       }
       await fetchSurveys(token);
-    } catch (err: any) {
-      alert(`Errore: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`Errore: ${msg}`);
     }
   };
 
@@ -115,8 +117,9 @@ export default function AdminSondaggiPage() {
         return;
       }
       await fetchSurveys(token);
-    } catch (err: any) {
-      alert(`Errore: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`Errore: ${msg}`);
     }
   };
 

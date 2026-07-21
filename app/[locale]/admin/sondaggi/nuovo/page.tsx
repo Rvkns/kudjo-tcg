@@ -154,9 +154,10 @@ export default function NuovoSondaggioPage() {
       }
 
       router.push('/admin/sondaggi');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSaving(false);
-      setError(err.message || "Errore durante il salvataggio.");
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "Errore durante il salvataggio.");
     }
   };
 

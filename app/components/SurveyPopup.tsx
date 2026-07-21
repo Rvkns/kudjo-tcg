@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { supabase } from '@/lib/supabase';
+import { type User } from '@supabase/supabase-js';
 
 interface Question {
   id: string;
@@ -21,7 +22,7 @@ interface Survey {
 
 export default function SurveyPopup() {
   const t = useTranslations('Surveys');
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [activeSurvey, setActiveSurvey] = useState<Survey | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -153,7 +154,7 @@ export default function SurveyPopup() {
         // Hide popup permanently for this survey
         sessionStorage.setItem(`kudjo-survey-dismissed-${activeSurvey.id}`, 'true');
       }
-    } catch (err: any) {
+    } catch {
       setSubmitting(false);
       setErrorMsg(t('errorSubmit'));
     }

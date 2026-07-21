@@ -62,7 +62,6 @@ export default function SurveyResultsPage(props: { params: Params }) {
   const { id } = use(props.params);
   const locale = useLocale();
   const router = useRouter();
-  const [token, setToken] = useState('');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState('');
@@ -81,7 +80,6 @@ export default function SurveyResultsPage(props: { params: Params }) {
         return;
       }
       const tok = session?.access_token ?? '';
-      setToken(tok);
       setIsAdmin(true);
 
       try {
@@ -99,8 +97,9 @@ export default function SurveyResultsPage(props: { params: Params }) {
         setQuestions(json.questions);
         setResponses(json.responses);
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message || 'Errore nel recupero del sondaggio.');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg || 'Errore nel recupero del sondaggio.');
         setLoading(false);
       }
     };

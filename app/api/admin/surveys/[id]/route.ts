@@ -67,7 +67,21 @@ export async function GET(request: Request, props: { params: Params }) {
     }
 
     // 4. Fetch answers
-    let responses: any[] = [];
+    interface AnswerItem {
+      id: string;
+      response_id: string;
+      question_id: string;
+      answer_text: string | null;
+    }
+
+    interface SurveyResponseItem {
+      id: string;
+      created_at: string;
+      user: { email: string; full_name: string };
+      answers: Record<string, string>;
+    }
+
+    let responses: SurveyResponseItem[] = [];
     if (responsesRaw && responsesRaw.length > 0) {
       const responseIds = responsesRaw.map(r => r.id);
       const { data: answersRaw, error: aError } = await supabaseAdmin
@@ -80,15 +94,23 @@ export async function GET(request: Request, props: { params: Params }) {
       }
 
       // Group answers by response ID
-      const answersByResponse: Record<string, any[]> = {};
-      (answersRaw || []).forEach(ans => {
+      const answersByResponse: Record<string, AnswerItem[]> = {};
+      const typedAnswersRaw = (answersRaw || []) as unknown as AnswerItem[];
+      typedAnswersRaw.forEach(ans => {
         if (!answersByResponse[ans.response_id]) {
           answersByResponse[ans.response_id] = [];
         }
         answersByResponse[ans.response_id].push(ans);
       });
 
-      responses = responsesRaw.map((r: any) => {
+      const typedResponsesRaw = responsesRaw as unknown as {
+        id: string;
+        created_at: string;
+        user_id: string;
+        profiles: { email: string; full_name: string } | null;
+      }[];
+
+      responses = typedResponsesRaw.map((r) => {
         const answersMap: Record<string, string> = {};
         (answersByResponse[r.id] || []).forEach(ans => {
           answersMap[ans.question_id] = ans.answer_text || '';
@@ -123,7 +145,7 @@ export async function PATCH(request: Request, props: { params: Params }) {
     const body = await request.json();
     const { title, description, status } = body;
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (status !== undefined) updateData.status = status;

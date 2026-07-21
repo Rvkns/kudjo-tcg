@@ -36,9 +36,26 @@ export async function GET(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const surveys = (data || []).map((s: any) => {
+  interface SurveyRow {
+    id: string;
+    title: string;
+    description: string | null;
+    status: 'draft' | 'published' | 'archived';
+    created_at: string;
+    updated_at: string;
+    survey_responses: { count: number }[] | { count: number } | null;
+  }
+
+  const surveys = (data as unknown as SurveyRow[] || []).map((s) => {
     // Extract count from array
-    const countVal = s.survey_responses?.[0]?.count ?? s.survey_responses?.count ?? 0;
+    let countVal = 0;
+    if (s.survey_responses) {
+      if (Array.isArray(s.survey_responses)) {
+        countVal = s.survey_responses[0]?.count ?? 0;
+      } else if (typeof s.survey_responses === 'object') {
+        countVal = (s.survey_responses as { count: number }).count ?? 0;
+      }
+    }
     return {
       id: s.id,
       title: s.title,
@@ -81,9 +98,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: sError.message }, { status: 500 });
     }
 
+    interface InputQuestion {
+      question_text: string;
+      question_type: 'open' | 'multiple_choice';
+      options?: string[] | null;
+    }
+
     // 2. Insert questions if any
     if (questions && Array.isArray(questions) && questions.length > 0) {
-      const questionsToInsert = questions.map((q: any, idx: number) => ({
+      const typedQuestions = questions as InputQuestion[];
+      const questionsToInsert = typedQuestions.map((q, idx) => ({
         survey_id: survey.id,
         question_text: q.question_text,
         question_type: q.question_type,
