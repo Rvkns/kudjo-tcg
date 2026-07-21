@@ -55,6 +55,16 @@ interface AnalyticsData {
     unique_cards: number;
     total_cards: number;
   }[];
+  surveys_summary?: {
+    published_count: number;
+    total_responses: number;
+    surveys_list: {
+      id: string;
+      title: string;
+      status: string;
+      response_count: number;
+    }[];
+  };
 }
 
 const RARITY_COLORS: Record<string, string> = {
@@ -144,7 +154,7 @@ export default function AdminAnalyticsDashboardPage() {
     );
   }
 
-  const { kpis, tier_breakdown, hourly_distribution, card_analytics, top_collectors } = data;
+  const { kpis, tier_breakdown, hourly_distribution, card_analytics, top_collectors, surveys_summary } = data;
 
   return (
     <div className="min-h-screen bg-[#0b0b0c] text-white font-sans">
@@ -458,6 +468,75 @@ export default function AdminAnalyticsDashboardPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* 5. SURVEYS & COMMUNITY FEEDBACK ANALYTICS */}
+        <div className="bg-[#121214] border border-indigo-500/20 rounded-xl p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+            <div>
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <span className="text-indigo-400">📊</span> Analisi Sondaggi & Feedback Community
+              </h2>
+              <p className="text-xs text-neutral-400 mt-1">
+                Panoramica sui sondaggi pubblicati e le risposte fornite dagli utenti. Clicca su un sondaggio per accedere all&apos;analisi dettagliata domanda per domanda.
+              </p>
+            </div>
+            <Link
+              href="/admin/sondaggi"
+              className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg transition-all shadow-md shrink-0 flex items-center gap-1.5"
+            >
+              <span>📋</span> Gestione Sondaggi
+            </Link>
+          </div>
+
+          {!surveys_summary || !surveys_summary.surveys_list || surveys_summary.surveys_list.length === 0 ? (
+            <div className="text-center py-8 text-neutral-500 text-xs italic">
+              Nessun sondaggio creato al momento.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {surveys_summary.surveys_list.map((s) => {
+                const statusColors: Record<string, string> = {
+                  published: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                  draft: 'bg-neutral-700/40 text-neutral-400 border-neutral-600/30',
+                  archived: 'bg-neutral-800/40 text-neutral-500 border-neutral-700/30',
+                };
+                const statusLabels: Record<string, string> = {
+                  published: 'Pubblicato',
+                  draft: 'Bozza',
+                  archived: 'Archiviato',
+                };
+                return (
+                  <div
+                    key={s.id}
+                    className="p-4 rounded-lg border border-white/5 bg-white/[0.01] hover:border-indigo-500/30 transition-all flex flex-col justify-between space-y-3"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-sm font-semibold text-white line-clamp-2">{s.title}</h3>
+                        <span className={`text-[9px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded-full shrink-0 ${statusColors[s.status] || ''}`}>
+                          {statusLabels[s.status] || s.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-neutral-400 flex items-center justify-between border-t border-white/5 pt-2">
+                        <span>Risposte Raccolte:</span>
+                        <strong className="text-indigo-400 font-bold">{s.response_count} utenti</strong>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <Link
+                        href={`/admin/sondaggi/${s.id}`}
+                        className="w-full inline-block text-center text-xs font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 py-2 rounded-md transition-colors"
+                      >
+                        📊 Analisi Risposte Dettagliate →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

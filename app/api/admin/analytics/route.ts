@@ -171,6 +171,39 @@ export async function GET(request: Request) {
     const totalUsersCount = usersRes.count ?? 0;
     const totalSurveyResponses = surveysRes.count ?? 0;
 
+    // 4. Fetch Surveys details & responses count
+    const { data: surveysListRaw } = await supabaseAdmin
+      .from('surveys')
+      .select('id, title, status, created_at, survey_responses(count)')
+      .order('created_at', { ascending: false });
+
+    interface DBSurveyRow {
+      id: string;
+      title: string;
+      status: string;
+      created_at: string;
+      survey_responses: { count: number }[] | { count: number } | null;
+    }
+
+    const surveysList = (surveysListRaw as unknown as DBSurveyRow[] || []).map(s => {
+      let countVal = 0;
+      if (s.survey_responses) {
+        if (Array.isArray(s.survey_responses)) {
+          countVal = s.survey_responses[0]?.count ?? 0;
+        } else if (typeof s.survey_responses === 'object') {
+          countVal = (s.survey_responses as { count: number }).count ?? 0;
+        }
+      }
+      return {
+        id: s.id,
+        title: s.title,
+        status: s.status,
+        response_count: countVal,
+      };
+    });
+
+    const publishedSurveysCount = surveysList.filter(s => s.status === 'published').length;
+
     return NextResponse.json({
       kpis: {
         estimated_revenue: estimatedRevenue,
@@ -196,6 +229,11 @@ export async function GET(request: Request) {
         element_distribution: elementDistribution,
       },
       top_collectors: topCollectors,
+      surveys_summary: {
+        published_count: publishedSurveysCount,
+        total_responses: totalSurveyResponses,
+        surveys_list: surveysList,
+      },
     });
 
   } catch (err: unknown) {
