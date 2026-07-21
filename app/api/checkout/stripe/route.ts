@@ -121,9 +121,15 @@ export async function POST(request: Request) {
     }
 
     const { packId, quantity } = await request.json();
+    const { getUnifiedPackTiers } = await import('@/lib/data/dynamic-pack-tiers');
+    const packTiers = await getUnifiedPackTiers();
+    const dynamicTier = packTiers[packId];
     const product = PRODUCTS[packId];
-    if (!product) return NextResponse.json({ error: 'Invalid pack ID' }, { status: 400 });
+    if (!product && !dynamicTier) return NextResponse.json({ error: 'Invalid pack ID' }, { status: 400 });
     if (!quantity || quantity < 1) return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 });
+
+    const unitPrice = dynamicTier ? dynamicTier.prezzo_eur : (product?.price ?? 5.00);
+    const packTitle = dynamicTier ? dynamicTier.nome : (product?.name ?? packId);
 
     const origin = request.headers.get('origin') || 'http://localhost:3000';
 
@@ -157,10 +163,10 @@ export async function POST(request: Request) {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: `Kudjo TCG: ${product.name}`,
+              name: `Kudjo TCG: ${packTitle}`,
               description: `${packsToCredit} buste digitali${concorso ? ` — ${concorso.nome}` : ''}`,
             },
-            unit_amount: Math.round(product.price * 100),
+            unit_amount: Math.round(unitPrice * 100),
           },
           quantity,
         },

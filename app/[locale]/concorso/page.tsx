@@ -35,49 +35,62 @@ export default function ConcorsoPage() {
   const locale = useLocale();
   const isIt = locale === 'it';
 
+  const [dynamicPackTiers, setDynamicPackTiers] = useState<Record<string, { prezzo_eur: number; nome: string }> | null>(null);
+
+  useEffect(() => {
+    fetch('/api/pack-tiers')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.packTiers) {
+          setDynamicPackTiers(data.packTiers);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
   // Packages list memoized to prevent warnings
   const packages = useMemo<PackageOption[]>(() => [
     {
       id: 'bronze',
-      name: 'BRONZE #1',
+      name: dynamicPackTiers?.bronze?.nome || 'BRONZE #1',
       cards: 1,
       tickets: 10,
       bonus: 0,
-      price: 5.00,
+      price: dynamicPackTiers?.bronze?.prezzo_eur ?? 5.00,
       image: '/images/concorso/bronze_pack_tcg.png',
       labelText: isIt ? '1 BUSTA TCG + 10 TICKET OMAGGIO' : '1 TCG PACK + 10 FREE TICKETS',
     },
     {
       id: 'silver',
-      name: 'SILVER #2',
+      name: dynamicPackTiers?.silver?.nome || 'SILVER #2',
       cards: 6,
       tickets: 50,
       bonus: 5,
-      price: 25.00,
+      price: dynamicPackTiers?.silver?.prezzo_eur ?? 25.00,
       image: '/images/concorso/silver_pack_tcg.png',
       labelText: isIt ? '6 BUSTE TCG + 55 TICKET OMAGGIO' : '6 TCG PACKS + 55 FREE TICKETS',
     },
     {
       id: 'gold',
-      name: 'GOLD #3',
+      name: dynamicPackTiers?.gold?.nome || 'GOLD #3',
       cards: 13,
       tickets: 100,
       bonus: 15,
-      price: 50.00,
+      price: dynamicPackTiers?.gold?.prezzo_eur ?? 50.00,
       image: '/images/concorso/gold_pack_tcg.png',
       labelText: isIt ? '13 BUSTE TCG + 115 TICKET OMAGGIO' : '13 TCG PACKS + 115 FREE TICKETS',
     },
     {
       id: 'platinum',
-      name: 'PLATINUM #4',
+      name: dynamicPackTiers?.platinum?.nome || 'PLATINUM #4',
       cards: 27,
       tickets: 200,
       bonus: 45,
-      price: 100.00,
+      price: dynamicPackTiers?.platinum?.prezzo_eur ?? 100.00,
       image: '/images/concorso/platinum_pack_tcg.png',
       labelText: isIt ? '27 BUSTE TCG + 245 TICKET OMAGGIO' : '27 TCG PACKS + 245 FREE TICKETS',
     },
-  ], [isIt]);
+  ], [isIt, dynamicPackTiers]);
 
   // Recommended products list
   const recommendedProducts = [

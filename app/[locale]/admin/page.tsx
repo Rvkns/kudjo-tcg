@@ -51,6 +51,14 @@ export default function AdminPage() {
       badge: 'Panoramica Generale',
     },
     {
+      href: '/admin/carte',
+      icon: '🃏',
+      title: 'Gestione Carte & Pacchetti',
+      description: 'Aggiungi nuove carte TCG, modifica descrizioni/grafica ed aggiorna i prezzi dei pacchetti.',
+      color: 'from-cyan-500/10 to-emerald-900/5 border-cyan-500/20 hover:border-cyan-500/40',
+      badge: 'Sezione attiva',
+    },
+    {
       href: '/admin/concorsi',
       icon: '🏆',
       title: 'Gestione Concorsi',
