@@ -260,5 +260,20 @@
     "saved": "Cards Saved!",
     "openAnother": "Open Another",
     "closeGoProfile": "Close and go to Profile"
+  },
+  "Surveys": {
+    "popupTitle": "Survey Available",
+    "popupDesc": "We would love to get your feedback to improve Kudjo!",
+    "startBtn": "Start",
+    "laterBtn": "Later",
+    "modalTitle": "Kudjo Survey",
+    "submitBtn": "Submit Answers",
+    "submitting": "Submitting...",
+    "successTitle": "Thank You!",
+    "successDesc": "Your responses have been saved successfully.",
+    "closeBtn": "Close",
+    "openQuestionPlaceholder": "Write your answer here...",
+    "errorSubmit": "Error submitting. Please try again.",
+    "requiredField": "All questions are required."
   }
 }

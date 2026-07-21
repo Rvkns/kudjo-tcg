@@ -7,6 +7,7 @@ import { routing } from '@/i18n/routing';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CookieBanner from '../components/CookieBanner';
+import SurveyPopup from '../components/SurveyPopup';
 import '../globals.css';
 
 const fraunces = Fraunces({
@@ -53,6 +54,7 @@ export default async function LocaleLayout({
           </main>
           <Footer />
           <CookieBanner />
+          <SurveyPopup />
         </NextIntlClientProvider>
       </body>
     </html>

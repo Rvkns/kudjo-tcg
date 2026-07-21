@@ -260,5 +260,20 @@
     "saved": "Carte Salvate!",
     "openAnother": "Apri un'altra",
     "closeGoProfile": "Chiudi e vai al Profilo"
+  },
+  "Surveys": {
+    "popupTitle": "Sondaggio Disponibile",
+    "popupDesc": "Ci piacerebbe conoscere la tua opinione per migliorare Kudjo!",
+    "startBtn": "Inizia",
+    "laterBtn": "Più tardi",
+    "modalTitle": "Sondaggio Kudjo",
+    "submitBtn": "Invia Risposte",
+    "submitting": "Invio...",
+    "successTitle": "Grazie!",
+    "successDesc": "Le tue risposte sono state salvate con successo.",
+    "closeBtn": "Chiudi",
+    "openQuestionPlaceholder": "Scrivi la tua risposta qui...",
+    "errorSubmit": "Errore durante l'invio. Riprova.",
+    "requiredField": "Tutte le domande sono obbligatorie."
   }
 }

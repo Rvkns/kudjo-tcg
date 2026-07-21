@@ -51,6 +51,14 @@ export default function AdminPage() {
       badge: 'Sezione principale',
     },
     {
+      href: '/admin/sondaggi',
+      icon: '📊',
+      title: 'Gestione Sondaggi',
+      description: 'Crea, pubblica e archivia sondaggi per raccogliere feedback dagli utenti. Visualizza le risposte.',
+      color: 'from-purple-500/10 to-purple-900/5 border-purple-500/20 hover:border-purple-500/40',
+      badge: 'Sezione attiva',
+    },
+    {
       href: '#',
       icon: '🎴',
       title: 'Collection Sets',
