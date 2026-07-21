@@ -12,7 +12,30 @@ import { KudjoCardElemento } from '@/lib/schema/kudjo-card';
 
 const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
-interface CardItem {
+interface RealMarketplaceItem {
+  id: string;
+  item: {
+    id: string;
+    prezzo: number;
+    condizione_raw: string;
+    gradata: boolean;
+    grading_company?: string;
+    voto?: string;
+    foto: string[];
+    stato: string;
+    nota_storia: string;
+  };
+  card: {
+    nome: string;
+    tipo_carta: string;
+  };
+  set: {
+    gioco: string;
+    nome: string;
+  };
+}
+
+interface DigitalCardItem {
   id: string;
   numero: number;
   nome: string;
@@ -57,10 +80,14 @@ export default function AdminCartePage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [token, setToken] = useState('');
-  const [activeTab, setActiveTab] = useState<'carte' | 'pacchetti'>('carte');
+  const [activeTab, setActiveTab] = useState<'reali' | 'digitali' | 'pacchetti'>('reali');
 
-  // Cards State
-  const [cards, setCards] = useState<CardItem[]>([]);
+  // Real Marketplace Cards State
+  const [realItems, setRealItems] = useState<RealMarketplaceItem[]>([]);
+  const [realSearch, setRealSearch] = useState('');
+
+  // Digital Cards State
+  const [digitalCards, setDigitalCards] = useState<DigitalCardItem[]>([]);
   const [cardSearch, setCardSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState('all');
   const [elementFilter, setElementFilter] = useState('all');
@@ -72,7 +99,21 @@ export default function AdminCartePage() {
 
   const [fetchError, setFetchError] = useState('');
 
-  const fetchCards = useCallback(async (tok: string) => {
+  const fetchRealItems = useCallback(async (tok: string) => {
+    try {
+      const res = await fetch('/api/admin/marketplace-items', {
+        headers: { Authorization: `Bearer ${tok}` },
+      });
+      const json = await res.json();
+      if (json.items) {
+        setRealItems(json.items);
+      }
+    } catch (err: unknown) {
+      console.error(err);
+    }
+  }, []);
+
+  const fetchDigitalCards = useCallback(async (tok: string) => {
     try {
       const res = await fetch('/api/admin/cards', {
         headers: { Authorization: `Bearer ${tok}` },
@@ -83,7 +124,7 @@ export default function AdminCartePage() {
         return;
       }
       if (json.cards) {
-        setCards(json.cards);
+        setDigitalCards(json.cards);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -117,14 +158,34 @@ export default function AdminCartePage() {
       setToken(tok);
       setIsAdmin(true);
 
-      await Promise.all([fetchCards(tok), fetchPackTiers(tok)]);
+      await Promise.all([fetchRealItems(tok), fetchDigitalCards(tok), fetchPackTiers(tok)]);
       setLoading(false);
     };
     init();
-  }, [locale, router, fetchCards, fetchPackTiers]);
+  }, [locale, router, fetchRealItems, fetchDigitalCards, fetchPackTiers]);
 
-  const handleDeleteCard = async (cardId: string, cardName: string) => {
-    if (!confirm(`Sei sicuro di voler eliminare la carta "${cardName}" (${cardId})?`)) return;
+  const handleDeleteRealItem = async (itemId: string, itemTitle: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare la carta in vendita "${itemTitle}" (${itemId})?`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/marketplace-items/${itemId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json.error) {
+        alert(`Errore: ${json.error}`);
+        return;
+      }
+      await fetchRealItems(token);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`Errore: ${msg}`);
+    }
+  };
+
+  const handleDeleteDigitalCard = async (cardId: string, cardName: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare la carta digitale "${cardName}" (${cardId})?`)) return;
 
     try {
       const res = await fetch(`/api/admin/cards/${cardId}`, {
@@ -136,7 +197,7 @@ export default function AdminCartePage() {
         alert(`Errore: ${json.error}`);
         return;
       }
-      await fetchCards(token);
+      await fetchDigitalCards(token);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       alert(`Errore: ${msg}`);
@@ -174,8 +235,19 @@ export default function AdminCartePage() {
     }
   };
 
-  const filteredCards = useMemo(() => {
-    return cards.filter((c) => {
+  const filteredRealItems = useMemo(() => {
+    if (!realSearch.trim()) return realItems;
+    const q = realSearch.toLowerCase();
+    return realItems.filter(
+      (r) =>
+        r.card.nome.toLowerCase().includes(q) ||
+        r.set.nome.toLowerCase().includes(q) ||
+        r.set.gioco.toLowerCase().includes(q)
+    );
+  }, [realItems, realSearch]);
+
+  const filteredDigitalCards = useMemo(() => {
+    return digitalCards.filter((c) => {
       const matchesSearch =
         c.nome.toLowerCase().includes(cardSearch.toLowerCase()) ||
         String(c.numero).includes(cardSearch) ||
@@ -184,7 +256,7 @@ export default function AdminCartePage() {
       const matchesElement = elementFilter === 'all' || c.elemento.toLowerCase() === elementFilter.toLowerCase();
       return matchesSearch && matchesRarity && matchesElement;
     });
-  }, [cards, cardSearch, rarityFilter, elementFilter]);
+  }, [digitalCards, cardSearch, rarityFilter, elementFilter]);
 
   if (loading) {
     return (
@@ -211,9 +283,9 @@ export default function AdminCartePage() {
 
           <Link
             href="/admin/carte/nuova"
-            className="text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg transition-all shadow-md flex items-center gap-1.5"
+            className="text-xs font-bold bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-lg transition-all shadow-md flex items-center gap-1.5"
           >
-            <span>＋</span> Nuova Carta TCG
+            <span>＋</span> Nuova Carta (Reale o Digitale)
           </Link>
         </div>
       </div>
@@ -221,10 +293,10 @@ export default function AdminCartePage() {
       <div className="max-w-7xl mx-auto px-6 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-light text-white mb-1">
-            Gestione <span className="text-cyan-400 font-semibold">Carte TCG & Prezzi Buste</span>
+            Gestione <span className="text-amber-400 font-semibold">Carte TCG, Prezzi & Store</span>
           </h1>
           <p className="text-neutral-500 text-sm">
-            Inserisci o aggiorna le carte del gioco, le descrizioni, la grafica ed i prezzi in Euro dei 4 pacchetti di buste digitali.
+            Gestisci le carte reali in vendita nella Collezione con prezzo in Euro e foto reali, oltre al catalogo delle carte digitali ed i prezzi delle buste.
           </p>
         </div>
 
@@ -235,31 +307,126 @@ export default function AdminCartePage() {
         {/* Navigation Tabs */}
         <div className="flex border-b border-white/5 mb-8">
           <button
-            onClick={() => setActiveTab('carte')}
-            className={`px-6 py-3 text-sm font-semibold tracking-wider uppercase border-b-2 transition-all cursor-pointer ${
-              activeTab === 'carte'
+            onClick={() => setActiveTab('reali')}
+            className={`px-6 py-3 text-sm font-semibold tracking-wider uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === 'reali'
+                ? 'border-amber-500 text-amber-400'
+                : 'border-transparent text-neutral-400 hover:text-neutral-200'
+            }`}
+          >
+            <span>💎</span> Carte Reali in Vendita nello Store ({realItems.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('digitali')}
+            className={`px-6 py-3 text-sm font-semibold tracking-wider uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === 'digitali'
                 ? 'border-cyan-500 text-cyan-400'
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            🃏 Catalogo Carte Kudjo ({cards.length})
+            <span>🃏</span> Buste Digitali TCG ({digitalCards.length})
           </button>
+
           <button
             onClick={() => setActiveTab('pacchetti')}
-            className={`px-6 py-3 text-sm font-semibold tracking-wider uppercase border-b-2 transition-all cursor-pointer ${
+            className={`px-6 py-3 text-sm font-semibold tracking-wider uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'pacchetti'
                 ? 'border-cyan-500 text-cyan-400'
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            📦 Prezzi Pacchetti Buste (4 Tier)
+            <span>📦</span> Prezzi Pacchetti (4 Tier)
           </button>
         </div>
 
-        {/* TAB 1: CARDS MANAGEMENT */}
-        {activeTab === 'carte' && (
+        {/* TAB 1: REAL MARKETPLACE CARDS FOR SALE */}
+        {activeTab === 'reali' && (
           <div className="space-y-6">
-            {/* Filters */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <input
+                type="text"
+                value={realSearch}
+                onChange={(e) => setRealSearch(e.target.value)}
+                placeholder="Cerca carta per nome, set o gioco (es. Charizard, Pokémon, OP-05)..."
+                className="w-full sm:w-96 bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500/50"
+              />
+
+              <Link
+                href="/admin/carte/nuova"
+                className="text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
+              >
+                <span>＋</span> Inserisci Carta Reale da Vendere
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredRealItems.map((r) => (
+                <div
+                  key={r.id}
+                  className="bg-white/[0.02] border border-white/5 hover:border-amber-500/40 rounded-xl p-4 flex flex-col justify-between transition-all group"
+                >
+                  <div className="space-y-3">
+                    {/* Photo cover */}
+                    <div className="relative aspect-[3/4] w-full rounded-lg bg-neutral-900 overflow-hidden border border-white/10">
+                      <Image
+                        src={r.item.foto && r.item.foto.length > 0 ? r.item.foto[0] : '/images/cards/placeholder_front.jpg'}
+                        alt={r.card.nome}
+                        fill
+                        className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                        unoptimized
+                      />
+                      {r.item.gradata && (
+                        <span className="absolute top-2 right-2 bg-amber-500 text-black text-[10px] font-extrabold px-2 py-0.5 rounded shadow">
+                          {r.item.grading_company} {r.item.voto}
+                        </span>
+                      )}
+                      <span className="absolute bottom-2 left-2 bg-black/80 text-white text-[9px] px-2 py-0.5 rounded uppercase font-semibold border border-white/10">
+                        {r.set.gioco}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-white truncate">{r.card.nome}</h3>
+                      <div className="text-xs text-neutral-400 mt-0.5 truncate">{r.set.nome}</div>
+                      <div className="text-lg font-extrabold text-amber-400 mt-2">€{r.item.prezzo}</div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] border-t border-white/5 pt-2">
+                      <span className="text-neutral-400">
+                        Stato: <strong className="text-white capitalize">{r.item.stato}</strong>
+                      </span>
+                      <span className="text-neutral-500">
+                        {r.item.gradata ? `Gradata ${r.item.grading_company}` : `Raw ${r.item.condizione_raw}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/5 mt-4 flex items-center justify-between gap-2">
+                    <Link
+                      href={`/collezione/${r.id}`}
+                      target="_blank"
+                      className="text-[11px] text-neutral-400 hover:text-white transition-colors"
+                    >
+                      👁️ Vedi nello Store
+                    </Link>
+
+                    <button
+                      onClick={() => handleDeleteRealItem(r.id, r.card.nome)}
+                      className="text-[11px] text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                    >
+                      🗑️ Elimina
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: DIGITAL TCG CARDS */}
+        {activeTab === 'digitali' && (
+          <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <input
                 type="text"
@@ -297,9 +464,8 @@ export default function AdminCartePage() {
               </select>
             </div>
 
-            {/* Cards Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {filteredCards.map((c) => {
+              {filteredDigitalCards.map((c) => {
                 const kudjoCardObj = {
                   id: c.id,
                   numero: c.numero,
@@ -363,7 +529,7 @@ export default function AdminCartePage() {
                       </Link>
                       {c.is_custom && (
                         <button
-                          onClick={() => handleDeleteCard(c.id, c.nome)}
+                          onClick={() => handleDeleteDigitalCard(c.id, c.nome)}
                           className="text-[10px] text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                         >
                           🗑️ Elimina
@@ -377,7 +543,7 @@ export default function AdminCartePage() {
           </div>
         )}
 
-        {/* TAB 2: PACK TIERS PRICING MANAGEMENT */}
+        {/* TAB 3: PACK TIERS PRICING MANAGEMENT */}
         {activeTab === 'pacchetti' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

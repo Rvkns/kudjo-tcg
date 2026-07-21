@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
-import { getItemById } from '@/lib/data/mock-db';
+import { getItemById, PopulatedItem } from '@/lib/data/mock-db';
 import { SOGLIA_PREZZO_PUBBLICO } from '@/lib/config';
 
 export default function CardDetailPage({
@@ -18,8 +18,22 @@ export default function CardDetailPage({
   const tCommon = useTranslations('Common');
   const tCol = useTranslations('Collection');
 
+  const [dynamicItem, setDynamicItem] = useState<PopulatedItem | null>(null);
+
+  React.useEffect(() => {
+    fetch('/api/marketplace/items')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.items) {
+          const found = data.items.find((i: PopulatedItem) => i.id === id);
+          if (found) setDynamicItem(found);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, [id]);
+
   // Retrieve item
-  const populatedItem = useMemo(() => getItemById(id), [id]);
+  const populatedItem = useMemo(() => dynamicItem ?? getItemById(id), [id, dynamicItem]);
 
   // Form States
   const [name, setName] = useState('');

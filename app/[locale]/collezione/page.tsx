@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
   getPopulatedItems,
+  PopulatedItem,
   mockSets,
 } from '@/lib/data/mock-db';
 import HoloCard from '@/app/components/HoloCard';
@@ -39,8 +40,21 @@ export default function CollectionPage() {
     return count;
   }, [search, game, selectedSetId, condition, graded, status]);
 
-  // All populated items loaded directly
-  const allItems = useMemo(() => getPopulatedItems(), []);
+  const [dynamicItems, setDynamicItems] = useState<PopulatedItem[] | null>(null);
+
+  React.useEffect(() => {
+    fetch('/api/marketplace/items')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.items) {
+          setDynamicItems(data.items);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  // All populated items loaded dynamically or statically
+  const allItems = useMemo(() => dynamicItems ?? getPopulatedItems(), [dynamicItems]);
 
   // Filter Sets matching current Game
   const filteredSets = useMemo(() => {
