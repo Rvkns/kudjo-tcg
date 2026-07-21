@@ -67,12 +67,12 @@ export default function AdminPage() {
       badge: 'Prossimamente',
     },
     {
-      href: '#',
+      href: '/admin/riffa',
       icon: '🎫',
       title: 'Ticket & Riffa',
       description: 'Visualizza la distribuzione dei ticket e gestisci il sorteggio finale.',
       color: 'from-red-500/10 to-red-900/5 border-red-500/20 hover:border-red-500/40',
-      badge: 'Prossimamente',
+      badge: 'Sezione attiva',
     },
     {
       href: '#',

@@ -182,6 +182,39 @@ export default function ConcorsoPage() {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
+  // Past winners state
+  interface ConcorsoWinners {
+    id: string;
+    nome: string;
+    descrizione: string | null;
+    data_fine: string | null;
+    winners: {
+      id: string;
+      prize: string;
+      draw_index: number;
+      ticket_count: number;
+      user_name: string;
+      user_email: string;
+    }[];
+  }
+
+  const [pastWinners, setPastWinners] = useState<ConcorsoWinners[]>([]);
+
+  useEffect(() => {
+    const fetchWinners = async () => {
+      try {
+        const res = await fetch('/api/concorso/winners');
+        const json = await res.json();
+        if (json.concorsi) {
+          setPastWinners(json.concorsi);
+        }
+      } catch (err) {
+        console.error('Error fetching winners:', err);
+      }
+    };
+    fetchWinners();
+  }, []);
+
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newsletterEmail.trim()) {
@@ -845,6 +878,50 @@ export default function ConcorsoPage() {
             ))}
           </div>
         </section>
+
+        {/* Past Draw Results section */}
+        {pastWinners.length > 0 && (
+          <section className="mt-24 lg:mt-32 border-t border-white/5 pt-16">
+            <div className="mb-10 md:mb-12">
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-bronze block mb-2">
+                {isIt ? 'ESTRAZIONI COMPLETATE' : 'COMPLETED DRAWINGS'}
+              </span>
+              <h2 className="font-display text-2xl md:text-3xl text-foreground font-light">
+                {isIt ? 'Risultati Estrazioni Riffa' : 'Raffle Drawing Results'}
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {pastWinners.map((c) => (
+                <div key={c.id} className="rounded-xl border border-white/5 bg-[#121214] p-6 shadow-xl relative overflow-hidden">
+                  <div className="absolute right-4 top-4 text-[10px] text-neutral-500 font-mono">
+                    {c.data_fine ? new Date(c.data_fine).toLocaleDateString(isIt ? 'it-IT' : 'en-US') : ''}
+                  </div>
+                  
+                  <h3 className="text-lg font-semibold text-white mb-2 pr-16">{c.nome}</h3>
+                  {c.descrizione && (
+                    <p className="text-xs text-neutral-400 mb-5">{c.descrizione}</p>
+                  )}
+
+                  <div className="space-y-3 border-t border-white/5 pt-4">
+                    {c.winners.map((w) => (
+                      <div key={w.id} className="flex justify-between items-center text-xs p-2.5 rounded bg-white/[0.01] border border-white/5">
+                        <div>
+                          <div className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider">{w.prize}</div>
+                          <div className="text-white font-bold">{w.user_name}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-bronze font-semibold">{w.ticket_count} ticket</div>
+                          <div className="text-[9px] text-neutral-500 font-mono">{w.user_email}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Newsletter Subscription Banner */}
         <section className="mt-28 md:mt-36 rounded-xl border border-white/5 bg-gradient-to-r from-red-950/20 via-neutral-900/40 to-neutral-900/40 p-8 md:p-12 relative overflow-hidden backdrop-blur-sm shadow-2xl">
