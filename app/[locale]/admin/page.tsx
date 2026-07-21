@@ -43,6 +43,14 @@ export default function AdminPage() {
 
   const adminCards = [
     {
+      href: '/admin/analytics',
+      icon: '📈',
+      title: 'Analytics & KPI Dashboard',
+      description: 'Panoramica e dettaglio di fatturato, acquisti per orario, pull rate carte, utenti e conversioni.',
+      color: 'from-cyan-500/10 to-blue-900/5 border-cyan-500/20 hover:border-cyan-500/40',
+      badge: 'Panoramica Generale',
+    },
+    {
       href: '/admin/concorsi',
       icon: '🏆',
       title: 'Gestione Concorsi',
