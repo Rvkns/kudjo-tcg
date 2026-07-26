@@ -275,5 +275,28 @@
     "openQuestionPlaceholder": "Scrivi la tua risposta qui...",
     "errorSubmit": "Errore durante l'invio. Riprova.",
     "requiredField": "Tutte le domande sono obbligatorie."
+  },
+  "Cart": {
+    "title": "Il Tuo Carrello",
+    "empty": "Il carrello è vuoto",
+    "emptyDesc": "Esplora i nostri pacchetti promozionali o la collezione di carte per iniziare il tuo ordine.",
+    "explorePacks": "Esplora Pacchetti",
+    "exploreCollection": "Esplora Collezione",
+    "itemCount": "{n} articoli",
+    "total": "Totale",
+    "subtotal": "Subtotale",
+    "freeTicketsEarned": "{n} Ticket Omaggio inclusi!",
+    "checkoutStripe": "Paga con Carta (Stripe)",
+    "checkoutPage": "Vai al Dettaglio Carrello",
+    "clearCart": "Svuota carrello",
+    "addedNotification": "Articolo aggiunto al carrello!",
+    "unitPrice": "cad.",
+    "digitalPacksBadge": "Busta Digitale",
+    "cardBadge": "Carta Singola",
+    "accessoryBadge": "Accessorio Store",
+    "loginRequired": "Accedi con Google per completare il checkout del carrello.",
+    "loginBtn": "Accedi con Google",
+    "checkoutError": "Errore durante il checkout: {error}",
+    "processing": "Elaborazione in corso..."
   }
 }

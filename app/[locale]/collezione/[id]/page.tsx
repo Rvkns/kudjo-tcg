@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { getItemById, PopulatedItem } from '@/lib/data/mock-db';
 import { SOGLIA_PREZZO_PUBBLICO } from '@/lib/config';
+import { useCart } from '@/app/context/CartContext';
 
 export default function CardDetailPage({
   params,
@@ -17,6 +18,7 @@ export default function CardDetailPage({
   const t = useTranslations('Detail');
   const tCommon = useTranslations('Common');
   const tCol = useTranslations('Collection');
+  const { addItem } = useCart();
 
   const [dynamicItem, setDynamicItem] = useState<PopulatedItem | null>(null);
 
@@ -312,13 +314,39 @@ export default function CardDetailPage({
               </h1>
 
               {/* Price Tag */}
-              <div className="flex items-baseline gap-4 mt-2">
-                <span className="text-sm text-neutral-500">
-                  {tCommon('languages.it') === 'Italiano' ? 'Quotazione Stima:' : 'Estimated Value:'}
-                </span>
-                <span className={`font-mono text-2xl font-semibold tracking-tight ${item.prezzo >= SOGLIA_PREZZO_PUBBLICO ? 'text-bronze italic text-lg' : 'text-foreground'}`}>
-                  {formattedPrice}
-                </span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2 border-b border-white/5 pb-4">
+                <div className="flex items-baseline gap-4">
+                  <span className="text-sm text-neutral-500">
+                    {tCommon('languages.it') === 'Italiano' ? 'Quotazione Stima:' : 'Estimated Value:'}
+                  </span>
+                  <span className={`font-mono text-2xl font-semibold tracking-tight ${item.prezzo >= SOGLIA_PREZZO_PUBBLICO ? 'text-bronze italic text-lg' : 'text-foreground'}`}>
+                    {formattedPrice}
+                  </span>
+                </div>
+
+                {/* Add to Cart button for card */}
+                {item.stato === 'disponibile' && item.prezzo < SOGLIA_PREZZO_PUBBLICO && (
+                  <button
+                    onClick={() => {
+                      addItem({
+                        id: `card_${item.id}`,
+                        type: 'card',
+                        name: card.nome,
+                        price: item.prezzo,
+                        quantity: 1,
+                        image: currentPhoto,
+                        details: {
+                          subtitle: `${set.nome} · ${card.numero_raccolta}`,
+                          condition: item.condizione_raw,
+                          rarity: card.rarita,
+                        },
+                      });
+                    }}
+                    className="bg-bronze hover:bg-opacity-90 text-[#0b0b0c] px-6 py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(156,122,82,0.2)]"
+                  >
+                    <span>🛒 {tCommon('languages.it') === 'Italiano' ? 'Aggiungi Carta al Carrello' : 'Add Card to Cart'}</span>
+                  </button>
+                )}
               </div>
             </div>
 

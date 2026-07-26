@@ -8,7 +8,7 @@ import { getTotalPendingPacks, getUserTickets } from '@/lib/data/kudjo-cards-db'
 import { supabase } from '@/lib/supabase';
 import { type User } from '@supabase/supabase-js';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
-
+import { useCart } from '@/app/context/CartContext';
 
 interface PackageOption {
   id: string;
@@ -34,6 +34,7 @@ export default function ConcorsoPage() {
   const t = useTranslations('Concorso');
   const locale = useLocale();
   const isIt = locale === 'it';
+  const { addItem } = useCart();
 
   const [dynamicPackTiers, setDynamicPackTiers] = useState<Record<string, { prezzo_eur: number; nome: string }> | null>(null);
 
@@ -628,6 +629,28 @@ export default function ConcorsoPage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 mt-2">
+              {/* Add to Cart button */}
+              <button
+                onClick={() => {
+                  addItem({
+                    id: `pack_${selectedPack.id}`,
+                    type: 'pack',
+                    name: selectedPack.name,
+                    price: selectedPack.price,
+                    quantity: quantity,
+                    image: selectedPack.image,
+                    packTier: selectedPack.id,
+                    tickets: selectedPack.tickets + selectedPack.bonus,
+                    details: {
+                      subtitle: selectedPack.labelText,
+                    },
+                  });
+                }}
+                className="w-full bg-bronze hover:bg-opacity-90 text-[#0b0b0c] py-4 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(156,122,82,0.25)] font-sans"
+              >
+                <span>🛒 {isIt ? 'Aggiungi al Carrello' : 'Add to Cart'}</span>
+              </button>
+
               {loadingAuth ? (
                 <div className="text-neutral-500 text-xs animate-pulse text-center py-4">
                   {isIt ? 'Verifica sessione...' : 'Checking session...'}
@@ -638,9 +661,9 @@ export default function ConcorsoPage() {
                   <button
                     onClick={handleStripeCheckout}
                     disabled={loadingStripe}
-                    className="w-full bg-[#e11b22] hover:bg-red-700 disabled:opacity-50 text-white py-4 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(225,27,34,0.15)] group font-sans"
+                    className="w-full bg-[#e11b22] hover:bg-red-700 disabled:opacity-50 text-white py-3.5 rounded-lg text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(225,27,34,0.15)] group font-sans"
                   >
-                    <span>{loadingStripe ? (isIt ? 'Elaborazione...' : 'Processing...') : (isIt ? 'Paga con Carta (Stripe)' : 'Pay with Card (Stripe)')}</span>
+                    <span>{loadingStripe ? (isIt ? 'Elaborazione...' : 'Processing...') : (isIt ? 'Acquista Ora (Stripe)' : 'Buy Now (Stripe)')}</span>
                     <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
                   </button>
 
@@ -886,6 +909,27 @@ export default function ConcorsoPage() {
                       €{prod.price.toFixed(2).replace('.', ',')}
                     </span>
                   </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addItem({
+                        id: `product_${prod.id}`,
+                        type: 'product',
+                        name: prod.name,
+                        price: prod.price,
+                        quantity: 1,
+                        image: prod.image,
+                        details: {
+                          brand: prod.brand,
+                          subtitle: prod.brand,
+                        },
+                      });
+                    }}
+                    className="mt-3 w-full rounded bg-white/5 hover:bg-bronze hover:text-[#0b0b0c] border border-white/10 text-neutral-300 py-2 text-[10px] font-bold tracking-widest uppercase transition-all duration-200 cursor-pointer text-center"
+                  >
+                    🛒 {isIt ? 'Aggiungi al carrello' : 'Add to cart'}
+                  </button>
                 </div>
               </div>
             ))}

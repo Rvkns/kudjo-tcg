@@ -120,16 +120,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized: invalid session' }, { status: 401 });
     }
 
-    const { packId, quantity } = await request.json();
+    const body = await request.json();
     const { getUnifiedPackTiers } = await import('@/lib/data/dynamic-pack-tiers');
     const packTiers = await getUnifiedPackTiers();
-    const dynamicTier = packTiers[packId];
-    const product = PRODUCTS[packId];
-    if (!product && !dynamicTier) return NextResponse.json({ error: 'Invalid pack ID' }, { status: 400 });
-    if (!quantity || quantity < 1) return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 });
-
-    const unitPrice = dynamicTier ? dynamicTier.prezzo_eur : (product?.price ?? 5.00);
-    const packTitle = dynamicTier ? dynamicTier.nome : (product?.name ?? packId);
 
     const origin = request.headers.get('origin') || 'http://localhost:3000';
 
@@ -141,7 +134,69 @@ export async function POST(request: Request) {
       console.warn('[Stripe] No active concorso found. Packs will be credited without contest association.');
     }
 
-    const packsToCredit = product.cards * quantity;
+    // Check if payload is CartItems array or single pack purchase
+    const isCartCheckout = Array.isArray(body.cartItems) && body.cartItems.length > 0;
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    const packItemsToCredit: Array<{ tier: string; cardsToCredit: number }> = [];
+
+    if (isCartCheckout) {
+      for (const item of body.cartItems) {
+        if (!item.name || !item.price || !item.quantity || item.quantity < 1) continue;
+
+        lineItems.push({
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `Kudjo TCG: ${item.name}`,
+              description: item.details?.subtitle || `${item.type.toUpperCase()} - Kudjo Showcase`,
+            },
+            unit_amount: Math.round(item.price * 100),
+          },
+          quantity: item.quantity,
+        });
+
+        // Determine if item is a digital pack to credit
+        const tier = item.packTier || (item.type === 'pack' ? item.id.replace('pack_', '') : null);
+        if (tier) {
+          const dynamicTier = packTiers[tier];
+          const product = PRODUCTS[tier];
+          const cardsPerPack = dynamicTier ? (tier === 'bronze' ? 1 : tier === 'silver' ? 6 : tier === 'gold' ? 13 : 27) : (product?.cards ?? 1);
+          const totalCardsToCredit = cardsPerPack * item.quantity;
+          packItemsToCredit.push({ tier, cardsToCredit: totalCardsToCredit });
+        }
+      }
+
+      if (lineItems.length === 0) {
+        return NextResponse.json({ error: 'No valid items in cart' }, { status: 400 });
+      }
+    } else {
+      // Legacy single pack checkout
+      const { packId, quantity } = body;
+      const dynamicTier = packTiers[packId];
+      const product = PRODUCTS[packId];
+      if (!product && !dynamicTier) return NextResponse.json({ error: 'Invalid pack ID' }, { status: 400 });
+      if (!quantity || quantity < 1) return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 });
+
+      const unitPrice = dynamicTier ? dynamicTier.prezzo_eur : (product?.price ?? 5.00);
+      const packTitle = dynamicTier ? dynamicTier.nome : (product?.name ?? packId);
+      const cardsPerPack = product?.cards ?? 1;
+      const packsToCredit = cardsPerPack * quantity;
+
+      lineItems.push({
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: `Kudjo TCG: ${packTitle}`,
+            description: `${packsToCredit} buste digitali${concorso ? ` — ${concorso.nome}` : ''}`,
+          },
+          unit_amount: Math.round(unitPrice * 100),
+        },
+        quantity,
+      });
+
+      packItemsToCredit.push({ tier: packId, cardsToCredit: packsToCredit });
+    }
 
     // ── Demo Mode ────────────────────────────────────────────────────────────
     const isDemoMode =
@@ -151,34 +206,23 @@ export async function POST(request: Request) {
 
     if (isDemoMode) {
       console.log(`[DEMO MODE] Simulating Stripe checkout for user ${user.id}, concorso ${concorsoId}`);
-      await creditPacksAndTickets(user.id, packId, packsToCredit, concorsoId);
+      for (const item of packItemsToCredit) {
+        await creditPacksAndTickets(user.id, item.tier, item.cardsToCredit, concorsoId);
+      }
       return NextResponse.json({ url: `${origin}/it/profilo?success=true&demo=true` });
     }
 
     // ── Real Stripe Session ──────────────────────────────────────────────────
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: `Kudjo TCG: ${packTitle}`,
-              description: `${packsToCredit} buste digitali${concorso ? ` — ${concorso.nome}` : ''}`,
-            },
-            unit_amount: Math.round(unitPrice * 100),
-          },
-          quantity,
-        },
-      ],
+      line_items: lineItems,
       mode: 'payment',
       success_url: `${origin}/it/profilo?success=true`,
-      cancel_url: `${origin}/it/concorso?cancelled=true`,
+      cancel_url: `${origin}/it/carrello?cancelled=true`,
       metadata: {
         userId: user.id,
-        packTier: packId,
-        packQuantity: packsToCredit.toString(),
         concorsoId: concorsoId ?? '',
+        packCreditsJson: JSON.stringify(packItemsToCredit),
       },
     });
 

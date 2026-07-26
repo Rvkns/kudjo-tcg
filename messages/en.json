@@ -275,5 +275,28 @@
     "openQuestionPlaceholder": "Write your answer here...",
     "errorSubmit": "Error submitting. Please try again.",
     "requiredField": "All questions are required."
+  },
+  "Cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "emptyDesc": "Explore our promo packages or card collection to start your order.",
+    "explorePacks": "Explore Packs",
+    "exploreCollection": "Explore Collection",
+    "itemCount": "{n} items",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "freeTicketsEarned": "{n} Free Tickets included!",
+    "checkoutStripe": "Pay with Card (Stripe)",
+    "checkoutPage": "Go to Cart Details",
+    "clearCart": "Clear cart",
+    "addedNotification": "Item added to cart!",
+    "unitPrice": "each",
+    "digitalPacksBadge": "Digital Booster",
+    "cardBadge": "Single Card",
+    "accessoryBadge": "Store Accessory",
+    "loginRequired": "Sign in with Google to complete your cart checkout.",
+    "loginBtn": "Sign in with Google",
+    "checkoutError": "Checkout error: {error}",
+    "processing": "Processing..."
   }
 }

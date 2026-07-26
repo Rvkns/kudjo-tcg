@@ -8,6 +8,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CookieBanner from '../components/CookieBanner';
 import SurveyPopup from '../components/SurveyPopup';
+import CartDrawer from '../components/CartDrawer';
+import { CartProvider } from '../context/CartContext';
 import '../globals.css';
 
 const fraunces = Fraunces({
@@ -48,13 +50,16 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${fraunces.variable} ${inter.variable}`}>
       <body className="bg-background text-foreground font-sans antialiased flex flex-col min-h-screen">
         <NextIntlClientProvider messages={messages}>
-          <Navbar />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-          <CookieBanner />
-          <SurveyPopup />
+          <CartProvider>
+            <Navbar />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+            <CookieBanner />
+            <SurveyPopup />
+            <CartDrawer />
+          </CartProvider>
         </NextIntlClientProvider>
       </body>
     </html>

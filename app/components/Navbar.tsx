@@ -8,6 +8,7 @@ import { getTotalPendingPacks } from '@/lib/data/kudjo-cards-db';
 import { supabase } from '@/lib/supabase';
 import { type User } from '@supabase/supabase-js';
 import Image from 'next/image';
+import { useCart } from '@/app/context/CartContext';
 
 const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
@@ -17,6 +18,7 @@ export default function Navbar() {
   const currentLocale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const { totalItems, openCart } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingPacksCount, setPendingPacksCount] = useState(0);
   const [user, setUser] = useState<User | null>(null);
@@ -132,6 +134,22 @@ export default function Navbar() {
             <span className={currentLocale === 'en' ? 'text-bronze font-bold' : ''}>EN</span>
           </button>
 
+          {/* Shopping Cart Button */}
+          <button
+            onClick={openCart}
+            className="relative flex items-center justify-center w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:border-bronze/50 hover:bg-bronze/10 text-neutral-300 hover:text-bronze transition-all cursor-pointer"
+            aria-label="Carrello"
+          >
+            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#e11b22] text-[9px] font-bold text-white shadow-md animate-pulse">
+                {totalItems}
+              </span>
+            )}
+          </button>
+
           {/* Premium Call to Action */}
           <Link
             href="/collezione"
@@ -230,6 +248,22 @@ export default function Navbar() {
             className="font-mono text-xs tracking-widest uppercase text-neutral-400 border border-white/5 px-2 py-0.5 rounded bg-white/5 cursor-pointer"
           >
             {currentLocale === 'it' ? 'EN' : 'IT'}
+          </button>
+
+          {/* Cart Button Mobile */}
+          <button
+            onClick={openCart}
+            className="relative flex items-center justify-center w-8 h-8 rounded-full border border-white/10 bg-white/5 text-neutral-300 cursor-pointer"
+            aria-label="Carrello"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e11b22] text-[8px] font-bold text-white">
+                {totalItems}
+              </span>
+            )}
           </button>
 
           {/* Mobile avatar */}
