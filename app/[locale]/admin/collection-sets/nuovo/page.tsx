@@ -1,14 +1,13 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 import { kudjoCards } from '@/lib/data/kudjo-cards-db';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface Concorso {
   id: string;
@@ -37,13 +36,12 @@ export default function AdminNuovoCollectionSetPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
 
       // Fetch available concorsi
@@ -94,7 +92,7 @@ export default function AdminNuovoCollectionSetPage() {
       return;
     }
     if (!nome.trim()) {
-      setErrorMsg('Il nome del Collection Set è obbligatorio.');
+      setErrorMsg('Il nome del Collection Set Ã¨ obbligatorio.');
       return;
     }
     if (selectedCardIds.length === 0) {
@@ -150,7 +148,7 @@ export default function AdminNuovoCollectionSetPage() {
       {/* Top bar */}
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-3 text-sm">
-          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
           <span className="text-neutral-700">/</span>
           <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
           <span className="text-neutral-700">/</span>
@@ -243,7 +241,7 @@ export default function AdminNuovoCollectionSetPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
               <div>
                 <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                  <span>🃏</span> Selezione Carte del Set ({selectedCardIds.length} selezionate)
+                  <span>ðŸƒ</span> Selezione Carte del Set ({selectedCardIds.length} selezionate)
                 </h2>
                 <p className="text-xs text-neutral-500 mt-1">Clicca sulle carte per aggiungerle o rimuoverle dal set.</p>
               </div>
@@ -254,14 +252,14 @@ export default function AdminNuovoCollectionSetPage() {
                   onClick={handleSelectAllInFilter}
                   className="text-xs text-blue-400 hover:text-blue-300 border border-blue-500/20 px-3 py-1.5 rounded transition-all cursor-pointer"
                 >
-                  ✓ Seleziona Filtrate
+                  âœ“ Seleziona Filtrate
                 </button>
                 <button
                   type="button"
                   onClick={handleDeselectAllInFilter}
                   className="text-xs text-neutral-400 hover:text-white border border-white/10 px-3 py-1.5 rounded transition-all cursor-pointer"
                 >
-                  ✕ Deseleziona Filtrate
+                  âœ• Deseleziona Filtrate
                 </button>
               </div>
             </div>
@@ -300,7 +298,7 @@ export default function AdminNuovoCollectionSetPage() {
                   >
                     {isSelected && (
                       <div className="absolute top-2 right-2 bg-blue-600 text-white w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center">
-                        ✓
+                        âœ“
                       </div>
                     )}
                     <div className="text-[10px] font-mono text-neutral-500 mb-1">#{card.numero}</div>

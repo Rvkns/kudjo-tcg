@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface DiscountItem {
   id: string;
@@ -55,13 +54,12 @@ export default function AdminScontiDashboardPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
       setIsAdmin(true);
       await fetchDiscounts(tok);
@@ -71,7 +69,7 @@ export default function AdminScontiDashboardPage() {
   }, [locale, router, fetchDiscounts]);
 
   const handleRevoke = async (id: string, code: string, userEmail: string) => {
-    if (!confirm(`Sei sicuro di voler revocare lo sconto "${code}" dell'utente "${userEmail}"?\n\nIl codice verrà rimosso ed eliminerà la possibilità dell'utente di usufruirne.`)) {
+    if (!confirm(`Sei sicuro di voler revocare lo sconto "${code}" dell'utente "${userEmail}"?\n\nIl codice verrÃ  rimosso ed eliminerÃ  la possibilitÃ  dell'utente di usufruirne.`)) {
       return;
     }
 
@@ -140,7 +138,7 @@ export default function AdminScontiDashboardPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -150,7 +148,7 @@ export default function AdminScontiDashboardPage() {
             href="/admin/sconti/assegna"
             className="text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition-all shadow-md flex items-center gap-1.5"
           >
-            <span>＋</span> Assegna Sconto Manuale
+            <span>ï¼‹</span> Assegna Sconto Manuale
           </Link>
         </div>
       </div>
@@ -196,7 +194,7 @@ export default function AdminScontiDashboardPage() {
 
         {filteredDiscounts.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-xl">
-            <div className="text-5xl mb-4">💸</div>
+            <div className="text-5xl mb-4">ðŸ’¸</div>
             <p className="text-neutral-400 text-sm mb-4">
               {search.trim() ? 'Nessun codice sconto corrisponde alla ricerca.' : 'Nessun codice sconto utente registrato.'}
             </p>
@@ -212,7 +210,7 @@ export default function AdminScontiDashboardPage() {
                     <th className="py-4 px-6 font-semibold">Valore</th>
                     <th className="py-4 px-6 font-semibold">Origine Sconto</th>
                     <th className="py-4 px-6 font-semibold">Data Creazione</th>
-                    <th className="py-4 px-6 font-semibold text-right">Azióne</th>
+                    <th className="py-4 px-6 font-semibold text-right">AziÃ³ne</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -233,7 +231,7 @@ export default function AdminScontiDashboardPage() {
                             className="text-[10px] text-neutral-400 hover:text-white transition-colors cursor-pointer"
                             title="Copia codice"
                           >
-                            {copiedCode === d.code ? '✓ Copiato' : '📋'}
+                            {copiedCode === d.code ? 'âœ“ Copiato' : 'ðŸ“‹'}
                           </button>
                         </div>
                       </td>
@@ -257,7 +255,7 @@ export default function AdminScontiDashboardPage() {
                           disabled={revokingId === d.id}
                           className="text-xs text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-50"
                         >
-                          {revokingId === d.id ? 'Revoca...' : '🚫 Revoca'}
+                          {revokingId === d.id ? 'Revoca...' : 'ðŸš« Revoca'}
                         </button>
                       </td>
                     </tr>

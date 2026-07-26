@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin, getActiveConcorso, TICKET_PER_TIER } from '@/lib/supabase-admin';
+import { getUnifiedMarketplaceItemByIdRaw } from '@/lib/data/dynamic-marketplace';
+import { MERCH_PRODUCTS } from '@/lib/data/merch-products';
+import { SOGLIA_PREZZO_PUBBLICO } from '@/lib/config';
+import type { PackTier } from '@/lib/data/dynamic-pack-tiers';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_vercel_build_prerender');
 
@@ -11,6 +15,72 @@ const PRODUCTS: Record<string, { name: string; price: number; cards: number }> =
   gold:     { name: 'GOLD #3',     price: 50.00, cards: 13 },
   platinum: { name: 'PLATINUM #4', price: 100.00, cards: 27 },
 };
+
+const MAX_CART_QUANTITY = 99;
+
+interface IncomingCartItem {
+  id?: string;
+  type?: string;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  packTier?: string;
+  details?: { subtitle?: string };
+}
+
+/**
+ * Resolves the authoritative price/name for a cart line item server-side.
+ * The client-supplied `price` is NEVER trusted for billing — only used (elsewhere)
+ * for display. Returns null when the item is unknown, unavailable, or (for
+ * showcase cards) priced above SOGLIA_PREZZO_PUBBLICO, which is "Su richiesta"
+ * only and must never be self-checked-out.
+ */
+async function resolveCanonicalCartItem(
+  item: IncomingCartItem,
+  packTiers: Record<string, PackTier>
+): Promise<{ price: number; name: string; description: string } | null> {
+  if (!item.id || !item.type) return null;
+
+  if (item.type === 'pack') {
+    const tierKey = item.packTier || item.id.replace(/^pack_/, '');
+    const dynamicTier = packTiers[tierKey];
+    const product = PRODUCTS[tierKey];
+    if (!dynamicTier && !product) return null;
+    return {
+      price: dynamicTier ? dynamicTier.prezzo_eur : product!.price,
+      name: dynamicTier ? dynamicTier.nome : product!.name,
+      description: item.details?.subtitle || 'Digital Pack - Kudjo Showcase',
+    };
+  }
+
+  if (item.type === 'card') {
+    const itemId = item.id.replace(/^card_/, '');
+    // Raw (unmasked) lookup — we need the real price to bill correctly and to
+    // enforce the SOGLIA_PREZZO_PUBBLICO check below.
+    const populated = await getUnifiedMarketplaceItemByIdRaw(itemId);
+    if (!populated) return null;
+    if (populated.item.stato !== 'disponibile') return null;
+    if (populated.item.prezzo >= SOGLIA_PREZZO_PUBBLICO) return null;
+    return {
+      price: populated.item.prezzo,
+      name: populated.card.nome,
+      description: `${populated.set.nome} · ${populated.card.numero_raccolta}`,
+    };
+  }
+
+  if (item.type === 'product') {
+    const productId = item.id.replace(/^product_/, '');
+    const merch = MERCH_PRODUCTS[productId];
+    if (!merch) return null;
+    return {
+      price: merch.price,
+      name: merch.name,
+      description: `${merch.brand} - Kudjo Showcase`,
+    };
+  }
+
+  return null;
+}
 
 async function creditPacksAndTickets(
   userId: string,
@@ -141,19 +211,36 @@ export async function POST(request: Request) {
     const packItemsToCredit: Array<{ tier: string; cardsToCredit: number }> = [];
 
     if (isCartCheckout) {
-      for (const item of body.cartItems) {
-        if (!item.name || !item.price || !item.quantity || item.quantity < 1) continue;
+      for (const item of body.cartItems as IncomingCartItem[]) {
+        if (
+          !item.id ||
+          !item.type ||
+          !Number.isInteger(item.quantity) ||
+          (item.quantity ?? 0) < 1 ||
+          (item.quantity ?? 0) > MAX_CART_QUANTITY
+        ) {
+          return NextResponse.json({ error: 'Articolo del carrello non valido.' }, { status: 400 });
+        }
+
+        // Authoritative price/name — never trust item.price/item.name from the client.
+        const resolved = await resolveCanonicalCartItem(item, packTiers);
+        if (!resolved) {
+          return NextResponse.json(
+            { error: `Articolo non disponibile per il checkout: ${item.name || item.id}` },
+            { status: 400 }
+          );
+        }
 
         lineItems.push({
           price_data: {
             currency: 'eur',
             product_data: {
-              name: `Kudjo TCG: ${item.name}`,
-              description: item.details?.subtitle || `${item.type.toUpperCase()} - Kudjo Showcase`,
+              name: `Kudjo TCG: ${resolved.name}`,
+              description: resolved.description,
             },
-            unit_amount: Math.round(item.price * 100),
+            unit_amount: Math.round(resolved.price * 100),
           },
-          quantity: item.quantity,
+          quantity: item.quantity!,
         });
 
         // Determine if item is a digital pack to credit
@@ -162,7 +249,7 @@ export async function POST(request: Request) {
           const dynamicTier = packTiers[tier];
           const product = PRODUCTS[tier];
           const cardsPerPack = dynamicTier ? (tier === 'bronze' ? 1 : tier === 'silver' ? 6 : tier === 'gold' ? 13 : 27) : (product?.cards ?? 1);
-          const totalCardsToCredit = cardsPerPack * item.quantity;
+          const totalCardsToCredit = cardsPerPack * item.quantity!;
           packItemsToCredit.push({ tier, cardsToCredit: totalCardsToCredit });
         }
       }
@@ -176,7 +263,9 @@ export async function POST(request: Request) {
       const dynamicTier = packTiers[packId];
       const product = PRODUCTS[packId];
       if (!product && !dynamicTier) return NextResponse.json({ error: 'Invalid pack ID' }, { status: 400 });
-      if (!quantity || quantity < 1) return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 });
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_CART_QUANTITY) {
+        return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 });
+      }
 
       const unitPrice = dynamicTier ? dynamicTier.prezzo_eur : (product?.price ?? 5.00);
       const packTitle = dynamicTier ? dynamicTier.nome : (product?.name ?? packId);

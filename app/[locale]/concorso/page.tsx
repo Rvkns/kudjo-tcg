@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { type User } from '@supabase/supabase-js';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { useCart } from '@/app/context/CartContext';
+import { MERCH_PRODUCTS } from '@/lib/data/merch-products';
 
 interface PackageOption {
   id: string;
@@ -93,12 +94,14 @@ export default function ConcorsoPage() {
     },
   ], [isIt, dynamicPackTiers]);
 
-  // Recommended products list
+  // Recommended products list — prices are read from the canonical MERCH_PRODUCTS
+  // catalog (lib/data/merch-products.ts), the same source the checkout API validates
+  // against, so the displayed price can never drift from what gets charged.
   const recommendedProducts = [
     {
       id: 'sleeves_pokemon',
       name: isIt ? 'Sleeves Protettive (Pokémon)' : 'Protective Sleeves (Pokémon)',
-      price: 9.90,
+      price: MERCH_PRODUCTS.sleeves_pokemon.price,
       image: 'P', // Custom SVG visual styling
       color: 'from-blue-600/20 to-blue-900/40 border-blue-500/20',
       brand: 'Pokémon',
@@ -106,7 +109,7 @@ export default function ConcorsoPage() {
     {
       id: 'sleeves_one_piece',
       name: isIt ? 'Sleeves Protettive (One Piece)' : 'Protective Sleeves (One Piece)',
-      price: 9.90,
+      price: MERCH_PRODUCTS.sleeves_one_piece.price,
       image: 'OP',
       color: 'from-red-600/20 to-red-900/40 border-red-500/20',
       brand: 'One Piece',
@@ -114,7 +117,7 @@ export default function ConcorsoPage() {
     {
       id: 'deck_box_premium',
       name: isIt ? 'Portamazzo Premium (Deck Box)' : 'Premium Deck Box',
-      price: 14.90,
+      price: MERCH_PRODUCTS.deck_box_premium.price,
       image: 'D',
       color: 'from-neutral-700/20 to-neutral-900/40 border-neutral-600/20',
       brand: 'Kudjo',
@@ -122,7 +125,7 @@ export default function ConcorsoPage() {
     {
       id: 'album_collezione',
       name: isIt ? 'Raccoglitore 9-Pocket (Binder)' : '9-Pocket Binder Portfolio',
-      price: 24.90,
+      price: MERCH_PRODUCTS.album_collezione.price,
       image: 'B',
       color: 'from-amber-600/20 to-amber-900/40 border-amber-500/20',
       brand: 'Kudjo',

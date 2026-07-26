@@ -8,6 +8,7 @@ import {
   PopulatedItem,
   mockSets,
 } from '@/lib/data/mock-db';
+import { maskPublicPrices } from '@/lib/data/price-mask';
 import HoloCard from '@/app/components/HoloCard';
 import CustomSelect from '@/app/components/CustomSelect';
 import { type Gioco } from '@/lib/schema/gioco';
@@ -53,8 +54,12 @@ export default function CollectionPage() {
       .catch((err) => console.error(err));
   }, []);
 
-  // All populated items loaded dynamically or statically
-  const allItems = useMemo(() => dynamicItems ?? getPopulatedItems(), [dynamicItems]);
+  // All populated items loaded dynamically or statically. The static fallback is
+  // masked because it ships inside the client JS bundle (see lib/data/price-mask.ts).
+  const allItems = useMemo(
+    () => dynamicItems ?? maskPublicPrices(getPopulatedItems()),
+    [dynamicItems]
+  );
 
   // Filter Sets matching current Game
   const filteredSets = useMemo(() => {

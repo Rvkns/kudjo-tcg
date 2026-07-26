@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface Survey {
   id: string;
@@ -26,13 +25,13 @@ const STATO_COLORS: Record<string, string> = {
 };
 
 const STATO_LABELS: Record<string, string> = {
-  draft: '📋 Bozza',
-  published: '🟢 Pubblicato',
-  archived: '⛔ Archiviato',
+  draft: 'ðŸ“‹ Bozza',
+  published: 'ðŸŸ¢ Pubblicato',
+  archived: 'â›” Archiviato',
 };
 
 function fmt(dt: string | null) {
-  if (!dt) return '—';
+  if (!dt) return 'â€”';
   return new Date(dt).toLocaleDateString('it-IT', {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -68,13 +67,12 @@ export default function AdminSondaggiPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
       setIsAdmin(true);
       await fetchSurveys(tok);
@@ -84,7 +82,7 @@ export default function AdminSondaggiPage() {
   }, [locale, router, fetchSurveys]);
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Sei sicuro di voler eliminare il sondaggio "${title}"?\n\nQuesta operazione cancellerà permanentemente tutte le domande e le risposte raccolte.`)) return;
+    if (!confirm(`Sei sicuro di voler eliminare il sondaggio "${title}"?\n\nQuesta operazione cancellerÃ  permanentemente tutte le domande e le risposte raccolte.`)) return;
 
     try {
       const res = await fetch(`/api/admin/surveys/${id}`, {
@@ -139,7 +137,7 @@ export default function AdminSondaggiPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -166,7 +164,7 @@ export default function AdminSondaggiPage() {
 
         {surveys.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-xl">
-            <div className="text-5xl mb-4">📊</div>
+            <div className="text-5xl mb-4">ðŸ“Š</div>
             <p className="text-neutral-400 text-sm mb-6">Nessun sondaggio trovato. Crea il primo sondaggio per i tuoi utenti!</p>
             <Link
               href="/admin/sondaggi/nuovo"
@@ -219,7 +217,7 @@ export default function AdminSondaggiPage() {
                       href={`/admin/sondaggi/${s.id}`}
                       className="text-xs font-semibold text-purple-400 hover:text-purple-300 border border-purple-500/30 hover:border-purple-500/50 px-4 py-2 rounded-lg transition-all text-center"
                     >
-                      📈 Risposte & Statistiche
+                      ðŸ“ˆ Risposte & Statistiche
                     </Link>
 
                     <button
@@ -232,14 +230,14 @@ export default function AdminSondaggiPage() {
                           : 'text-neutral-500 border-neutral-700/30 hover:border-neutral-600/50'
                       }`}
                     >
-                      {s.status === 'draft' ? '▶ Pubblica' : s.status === 'published' ? '⏹ Archivia' : '🔄 Rendi Bozza'}
+                      {s.status === 'draft' ? 'â–¶ Pubblica' : s.status === 'published' ? 'â¹ Archivia' : 'ðŸ”„ Rendi Bozza'}
                     </button>
 
                     <button
                       onClick={() => handleDelete(s.id, s.title)}
                       className="text-xs font-semibold text-red-400 border border-red-500/30 hover:border-red-500/50 px-4 py-2 rounded-lg transition-all"
                     >
-                      🗑️ Elimina
+                      ðŸ—‘ï¸ Elimina
                     </button>
                   </div>
                 </div>

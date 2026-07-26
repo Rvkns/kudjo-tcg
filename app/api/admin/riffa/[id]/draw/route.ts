@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomInt } from 'node:crypto';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -96,8 +97,8 @@ export async function POST(request: Request, props: { params: Params }) {
       const prizeName = prizes[i];
       const totalWeight = pool.reduce((acc, p) => acc + p.quantity, 0);
 
-      // Weighted random selection
-      const randomVal = Math.floor(Math.random() * totalWeight);
+      // Weighted random selection — cryptographically secure, unlike Math.random()
+      const randomVal = randomInt(0, totalWeight);
       let winnerIdx = -1;
       let cumulativeWeight = 0;
 

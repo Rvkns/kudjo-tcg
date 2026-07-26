@@ -1,16 +1,15 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 import Image from 'next/image';
 import KudjoCard from '@/app/components/KudjoCard';
 import { KudjoCardElemento } from '@/lib/schema/kudjo-card';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 export default function AdminNuovaCartaPage() {
   const locale = useLocale();
@@ -47,13 +46,12 @@ export default function AdminNuovaCartaPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      setToken(session?.access_token ?? '');
+      setToken(admin.token);
       setLoading(false);
     };
     init();
@@ -159,7 +157,7 @@ export default function AdminNuovaCartaPage() {
       {/* Top bar */}
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-3 text-sm">
-          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
           <span className="text-neutral-700">/</span>
           <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
           <span className="text-neutral-700">/</span>
@@ -192,7 +190,7 @@ export default function AdminNuovaCartaPage() {
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
-            <span>💎</span> Carta Reale in Vendita (Prezzo € & Foto Reali)
+            <span>ðŸ’Ž</span> Carta Reale in Vendita (Prezzo â‚¬ & Foto Reali)
           </button>
           <button
             type="button"
@@ -203,7 +201,7 @@ export default function AdminNuovaCartaPage() {
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
-            <span>🃏</span> Carta Busta Digitale Kudjo TCG
+            <span>ðŸƒ</span> Carta Busta Digitale Kudjo TCG
           </button>
         </div>
 
@@ -217,7 +215,7 @@ export default function AdminNuovaCartaPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-amber-400 font-bold mb-2">
-                      Prezzo di Vendita (€) *
+                      Prezzo di Vendita (â‚¬) *
                     </label>
                     <input
                       type="number"
@@ -256,7 +254,7 @@ export default function AdminNuovaCartaPage() {
                       onChange={(e) => setGioco(e.target.value)}
                       className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
                     >
-                      <option value="pokemon">Pokémon TCG</option>
+                      <option value="pokemon">PokÃ©mon TCG</option>
                       <option value="one_piece">One Piece TCG</option>
                       <option value="kudjo">Kudjo TCG Original</option>
                       <option value="yugioh">Yu-Gi-Oh!</option>
@@ -378,16 +376,16 @@ export default function AdminNuovaCartaPage() {
                 <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">
-                      Stato Disponibilità Store
+                      Stato DisponibilitÃ  Store
                     </label>
                     <select
                       value={statoVendita}
                       onChange={(e) => setStatoVendita(e.target.value)}
                       className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
                     >
-                      <option value="disponibile">🟢 Disponibile per la vendita</option>
-                      <option value="in_trattativa">🟡 In trattativa</option>
-                      <option value="venduta">🔴 Venduta (Archivio)</option>
+                      <option value="disponibile">ðŸŸ¢ Disponibile per la vendita</option>
+                      <option value="in_trattativa">ðŸŸ¡ In trattativa</option>
+                      <option value="venduta">ðŸ”´ Venduta (Archivio)</option>
                     </select>
                   </div>
                 </div>
@@ -448,20 +446,20 @@ export default function AdminNuovaCartaPage() {
                       onChange={(e) => setElementoDigitale(e.target.value)}
                       className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
                     >
-                      <option value="Fuoco">🔥 Fuoco</option>
-                      <option value="Acqua">💧 Acqua</option>
-                      <option value="Terra">🪨 Terra</option>
-                      <option value="Ombra">🌑 Ombra</option>
-                      <option value="Fulmine">⚡ Fulmine</option>
-                      <option value="Ghiaccio">❄️ Ghiaccio</option>
-                      <option value="Drago">🐉 Drago</option>
-                      <option value="Luce">✨ Luce</option>
+                      <option value="Fuoco">ðŸ”¥ Fuoco</option>
+                      <option value="Acqua">ðŸ’§ Acqua</option>
+                      <option value="Terra">ðŸª¨ Terra</option>
+                      <option value="Ombra">ðŸŒ‘ Ombra</option>
+                      <option value="Fulmine">âš¡ Fulmine</option>
+                      <option value="Ghiaccio">â„ï¸ Ghiaccio</option>
+                      <option value="Drago">ðŸ‰ Drago</option>
+                      <option value="Luce">âœ¨ Luce</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-2">
-                      Rarità *
+                      RaritÃ  *
                     </label>
                     <select
                       value={raritaDigitale}
@@ -510,7 +508,7 @@ export default function AdminNuovaCartaPage() {
                     rows={3}
                     value={notaStoria}
                     onChange={(e) => setNotaStoria(e.target.value)}
-                    placeholder="Descrizione dettagliata della storia o abilità della carta..."
+                    placeholder="Descrizione dettagliata della storia o abilitÃ  della carta..."
                     className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
                   />
                 </div>
@@ -558,7 +556,7 @@ export default function AdminNuovaCartaPage() {
                   <div>
                     <h3 className="text-sm font-bold text-white">{nome || 'Nome Carta Reale'}</h3>
                     <div className="text-xs text-neutral-400 mt-0.5">{cardSetNome} ({gioco.toUpperCase()})</div>
-                    <div className="text-lg font-extrabold text-amber-400 mt-2">€{prezzo}</div>
+                    <div className="text-lg font-extrabold text-amber-400 mt-2">â‚¬{prezzo}</div>
                   </div>
                 </div>
               ) : (

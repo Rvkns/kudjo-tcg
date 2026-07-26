@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
@@ -6,9 +6,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface Concorso {
   id: string;
@@ -35,7 +34,7 @@ function toLocalDatetimeString(iso: string | null) {
 }
 
 function fmt(dt: string | null) {
-  if (!dt) return '—';
+  if (!dt) return 'â€”';
   return new Date(dt).toLocaleDateString('it-IT', {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -90,13 +89,12 @@ export default function AdminConcorsoDetailPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
       await fetchDetail(tok);
       setLoading(false);
@@ -126,15 +124,15 @@ export default function AdminConcorsoDetailPage() {
     setSaving(false);
 
     if (json.error) {
-      showMsg(`✗ Errore: ${json.error}`, 'error');
+      showMsg(`âœ— Errore: ${json.error}`, 'error');
     } else {
-      showMsg('✓ Concorso aggiornato con successo!');
+      showMsg('âœ“ Concorso aggiornato con successo!');
       await fetchDetail(token);
     }
   };
 
   const handleReset = async () => {
-    if (!confirm(`ATTENZIONE: Stai per resettare il concorso "${concorso?.nome}".\n\nVerranno eliminati:\n• Tutte le buste\n• Tutte le carte trovate\n• Tutti i ticket\n\nGli sconti utente sono preservati.\n\nProcedere?`)) return;
+    if (!confirm(`ATTENZIONE: Stai per resettare il concorso "${concorso?.nome}".\n\nVerranno eliminati:\nâ€¢ Tutte le buste\nâ€¢ Tutte le carte trovate\nâ€¢ Tutti i ticket\n\nGli sconti utente sono preservati.\n\nProcedere?`)) return;
     setResetting(true);
     const res = await fetch(`/api/admin/concorsi/${concorsoId}/reset`, {
       method: 'POST',
@@ -143,10 +141,10 @@ export default function AdminConcorsoDetailPage() {
     const json = await res.json();
     setResetting(false);
     if (json.success) {
-      showMsg(`✓ ${json.message}`);
+      showMsg(`âœ“ ${json.message}`);
       await fetchDetail(token);
     } else {
-      showMsg(`✗ ${json.error}`, 'error');
+      showMsg(`âœ— ${json.error}`, 'error');
     }
   };
 
@@ -178,7 +176,7 @@ export default function AdminConcorsoDetailPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -197,9 +195,9 @@ export default function AdminConcorsoDetailPage() {
         {stats && (
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Utenti Partecipanti', value: stats.uniqueUsers, icon: '👥' },
-              { label: 'Buste Distribuite', value: stats.totalPacks, icon: '🎴' },
-              { label: 'Ticket Totali', value: stats.totalTickets, icon: '🎫' },
+              { label: 'Utenti Partecipanti', value: stats.uniqueUsers, icon: 'ðŸ‘¥' },
+              { label: 'Buste Distribuite', value: stats.totalPacks, icon: 'ðŸŽ´' },
+              { label: 'Ticket Totali', value: stats.totalTickets, icon: 'ðŸŽ«' },
             ].map((s) => (
               <div key={s.label} className="bg-white/[0.02] border border-white/5 rounded-xl p-5 text-center">
                 <div className="text-3xl mb-2">{s.icon}</div>
@@ -278,7 +276,7 @@ export default function AdminConcorsoDetailPage() {
 
           <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-6 space-y-4">
             <div>
-              <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-1">⏰ Reset Automatico (Cron Job)</h2>
+              <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-1">â° Reset Automatico (Cron Job)</h2>
               <p className="text-xs text-neutral-500">
                 Il cron job controlla ogni 15 minuti. Imposta data/ora esatta e il sistema resetta automaticamente.
                 {concorso.reset_scheduled_at && (
@@ -296,11 +294,11 @@ export default function AdminConcorsoDetailPage() {
           <div className="flex gap-4">
             <Link href="/admin/concorsi"
               className="flex-1 text-center py-3 border border-white/10 rounded-lg text-sm text-neutral-400 hover:border-white/20 transition-all">
-              ← Torna alla Lista
+              â† Torna alla Lista
             </Link>
             <button type="submit" disabled={saving}
               className="flex-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-sm font-bold uppercase tracking-wider py-3 rounded-lg transition-all">
-              {saving ? 'Salvataggio...' : '💾 Salva Modifiche'}
+              {saving ? 'Salvataggio...' : 'ðŸ’¾ Salva Modifiche'}
             </button>
           </div>
         </form>
@@ -308,7 +306,7 @@ export default function AdminConcorsoDetailPage() {
         {/* Danger Zone */}
         {concorso.stato === 'attivo' && (
           <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-red-400 uppercase tracking-widest mb-2">⚠️ Zona Pericolosa</h2>
+            <h2 className="text-sm font-semibold text-red-400 uppercase tracking-widest mb-2">âš ï¸ Zona Pericolosa</h2>
             <p className="text-xs text-neutral-500 mb-4">
               Il reset manuale elimina immediatamente tutte le buste, carte e ticket del concorso e lo imposta come concluso.
               <strong className="text-neutral-400"> Gli sconti degli utenti NON vengono eliminati.</strong>
@@ -318,7 +316,7 @@ export default function AdminConcorsoDetailPage() {
               disabled={resetting}
               className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-lg transition-all disabled:opacity-50"
             >
-              {resetting ? '⏳ Reset in corso...' : '🔄 Esegui Reset Manuale Ora'}
+              {resetting ? 'â³ Reset in corso...' : 'ðŸ”„ Esegui Reset Manuale Ora'}
             </button>
           </div>
         )}

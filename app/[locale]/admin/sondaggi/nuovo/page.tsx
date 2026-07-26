@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface FormQuestion {
   question_text: string;
@@ -31,13 +30,12 @@ export default function NuovoSondaggioPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      setToken(session?.access_token ?? '');
+      setToken(admin.token);
       setLoading(false);
     };
     init();
@@ -98,7 +96,7 @@ export default function NuovoSondaggioPage() {
 
   const handleSubmit = async (status: 'draft' | 'published') => {
     if (!title.trim()) {
-      setError('Il titolo del sondaggio è obbligatorio.');
+      setError('Il titolo del sondaggio Ã¨ obbligatorio.');
       return;
     }
 
@@ -106,7 +104,7 @@ export default function NuovoSondaggioPage() {
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.question_text.trim()) {
-        setError(`La domanda #${i + 1} non può essere vuota.`);
+        setError(`La domanda #${i + 1} non puÃ² essere vuota.`);
         return;
       }
       if (q.question_type === 'multiple_choice') {
@@ -174,7 +172,7 @@ export default function NuovoSondaggioPage() {
       {/* Top bar */}
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3 text-sm">
-          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
           <span className="text-neutral-700">/</span>
           <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
           <span className="text-neutral-700">/</span>
@@ -216,7 +214,7 @@ export default function NuovoSondaggioPage() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Inserisci una descrizione che verrà mostrata agli utenti nel pop-up..."
+                placeholder="Inserisci una descrizione che verrÃ  mostrata agli utenti nel pop-up..."
                 rows={3}
                 className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-purple-500/50 transition-colors resize-none"
               />
@@ -265,7 +263,7 @@ export default function NuovoSondaggioPage() {
                           : 'bg-transparent border-white/5 text-neutral-500 hover:border-white/20'
                       }`}
                     >
-                      🔘 Scelta Multipla
+                      ðŸ”˜ Scelta Multipla
                     </button>
                     <button
                       type="button"
@@ -276,7 +274,7 @@ export default function NuovoSondaggioPage() {
                           : 'bg-transparent border-white/5 text-neutral-500 hover:border-white/20'
                       }`}
                     >
-                      ✍️ Risposta Aperta
+                      âœï¸ Risposta Aperta
                     </button>
                   </div>
                 </div>
@@ -311,7 +309,7 @@ export default function NuovoSondaggioPage() {
                       onClick={() => handleAddOption(qIdx)}
                       className="text-xs text-purple-400 hover:text-purple-300 font-semibold flex items-center gap-1.5 pt-1 cursor-pointer"
                     >
-                      ➕ Aggiungi Opzione
+                      âž• Aggiungi Opzione
                     </button>
                   </div>
                 )}
@@ -323,7 +321,7 @@ export default function NuovoSondaggioPage() {
               onClick={handleAddQuestion}
               className="w-full py-4 border border-dashed border-white/10 hover:border-purple-500/30 rounded-xl text-xs font-semibold text-neutral-400 hover:text-purple-400 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              ➕ Aggiungi Domanda
+              âž• Aggiungi Domanda
             </button>
           </div>
 

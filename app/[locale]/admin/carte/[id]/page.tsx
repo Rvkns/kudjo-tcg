@@ -1,16 +1,15 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, use } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 import Image from 'next/image';
 import KudjoCard from '@/app/components/KudjoCard';
 import { KudjoCardElemento } from '@/lib/schema/kudjo-card';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 type Params = Promise<{ id: string }>;
 
@@ -35,13 +34,12 @@ export default function AdminEditCartaPage(props: { params: Params }) {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
 
       try {
@@ -127,7 +125,7 @@ export default function AdminEditCartaPage(props: { params: Params }) {
       {/* Top bar */}
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-3 text-sm">
-          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
           <span className="text-neutral-700">/</span>
           <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
           <span className="text-neutral-700">/</span>
@@ -191,20 +189,20 @@ export default function AdminEditCartaPage(props: { params: Params }) {
                   onChange={(e) => setElemento(e.target.value)}
                   className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
                 >
-                  <option value="Fuoco">🔥 Fuoco</option>
-                  <option value="Acqua">💧 Acqua</option>
-                  <option value="Terra">🪨 Terra</option>
-                  <option value="Ombra">🌑 Ombra</option>
-                  <option value="Fulmine">⚡ Fulmine</option>
-                  <option value="Ghiaccio">❄️ Ghiaccio</option>
-                  <option value="Drago">🐉 Drago</option>
-                  <option value="Luce">✨ Luce</option>
+                  <option value="Fuoco">ðŸ”¥ Fuoco</option>
+                  <option value="Acqua">ðŸ’§ Acqua</option>
+                  <option value="Terra">ðŸª¨ Terra</option>
+                  <option value="Ombra">ðŸŒ‘ Ombra</option>
+                  <option value="Fulmine">âš¡ Fulmine</option>
+                  <option value="Ghiaccio">â„ï¸ Ghiaccio</option>
+                  <option value="Drago">ðŸ‰ Drago</option>
+                  <option value="Luce">âœ¨ Luce</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-2">
-                  Rarità *
+                  RaritÃ  *
                 </label>
                 <select
                   value={rarita}

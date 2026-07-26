@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, use } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface Question {
   id: string;
@@ -43,13 +42,13 @@ const STATO_COLORS: Record<string, string> = {
 };
 
 const STATO_LABELS: Record<string, string> = {
-  draft: '📋 Bozza',
-  published: '🟢 Pubblicato',
-  archived: '⛔ Archiviato',
+  draft: 'ðŸ“‹ Bozza',
+  published: 'ðŸŸ¢ Pubblicato',
+  archived: 'â›” Archiviato',
 };
 
 function fmt(dt: string | null) {
-  if (!dt) return '—';
+  if (!dt) return 'â€”';
   return new Date(dt).toLocaleDateString('it-IT', {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -73,13 +72,12 @@ export default function SurveyResultsPage(props: { params: Params }) {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setIsAdmin(true);
 
       try {
@@ -156,7 +154,7 @@ export default function SurveyResultsPage(props: { params: Params }) {
       {/* Top bar */}
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-3 text-sm">
-          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
           <span className="text-neutral-700">/</span>
           <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
           <span className="text-neutral-700">/</span>
@@ -203,7 +201,7 @@ export default function SurveyResultsPage(props: { params: Params }) {
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            📊 Statistiche Domande
+            ðŸ“Š Statistiche Domande
           </button>
           <button
             onClick={() => setActiveTab('responses')}
@@ -213,7 +211,7 @@ export default function SurveyResultsPage(props: { params: Params }) {
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            👤 Risposte Singole ({responses.length})
+            ðŸ‘¤ Risposte Singole ({responses.length})
           </button>
         </div>
 
@@ -314,7 +312,7 @@ export default function SurveyResultsPage(props: { params: Params }) {
                     {responses.map((r) => (
                       <tr key={r.id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors text-sm text-neutral-300">
                         <td className="py-4 px-6">
-                          <div className="font-semibold text-white truncate max-w-[200px]">{r.user.full_name || '—'}</div>
+                          <div className="font-semibold text-white truncate max-w-[200px]">{r.user.full_name || 'â€”'}</div>
                           <div className="text-xs text-neutral-500 truncate max-w-[200px]">{r.user.email}</div>
                         </td>
                         <td className="py-4 px-6 whitespace-nowrap text-xs text-neutral-500">

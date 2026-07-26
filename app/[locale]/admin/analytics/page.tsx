@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface AnalyticsData {
   kpis: {
@@ -105,13 +104,12 @@ export default function AdminAnalyticsDashboardPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
       setIsAdmin(true);
       await fetchAnalytics(tok);
@@ -162,7 +160,7 @@ export default function AdminAnalyticsDashboardPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -177,7 +175,7 @@ export default function AdminAnalyticsDashboardPage() {
               onClick={() => fetchAnalytics(token)}
               className="text-xs bg-white/5 hover:bg-white/10 text-white border border-white/10 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
             >
-              <span>🔄</span> Aggiorna
+              <span>ðŸ”„</span> Aggiorna
             </button>
           </div>
         </div>
@@ -202,7 +200,7 @@ export default function AdminAnalyticsDashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <div className="bg-gradient-to-br from-amber-500/10 to-amber-900/5 border border-amber-500/20 rounded-xl p-3.5 space-y-1">
             <div className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Fatturato Stimato</div>
-            <div className="text-lg font-extrabold text-white">€{kpis.estimated_revenue.toLocaleString()}</div>
+            <div className="text-lg font-extrabold text-white">â‚¬{kpis.estimated_revenue.toLocaleString()}</div>
             <div className="text-[9px] text-neutral-500">Da vendite buste TCG</div>
           </div>
 
@@ -250,7 +248,7 @@ export default function AdminAnalyticsDashboardPage() {
             <div className="flex items-center justify-between border-b border-white/5 pb-4">
               <div>
                 <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                  <span>📦</span> Vendite & Rendita per Tier Busta
+                  <span>ðŸ“¦</span> Vendite & Rendita per Tier Busta
                 </h2>
                 <p className="text-xs text-neutral-500 mt-1">Distribuzione delle vendite sui 4 pacchetti TCG disponibili.</p>
               </div>
@@ -258,10 +256,10 @@ export default function AdminAnalyticsDashboardPage() {
 
             <div className="space-y-4">
               {[
-                { name: 'Bronze #1 (€5)', data: tier_breakdown.bronze, color: 'bg-amber-700', border: 'border-amber-600/40' },
-                { name: 'Silver #2 (€25)', data: tier_breakdown.silver, color: 'bg-slate-400', border: 'border-slate-400/40' },
-                { name: 'Gold #3 (€50)', data: tier_breakdown.gold, color: 'bg-amber-400', border: 'border-amber-400/40' },
-                { name: 'Platinum #4 (€100)', data: tier_breakdown.platinum, color: 'bg-cyan-400', border: 'border-cyan-400/40' },
+                { name: 'Bronze #1 (â‚¬5)', data: tier_breakdown.bronze, color: 'bg-amber-700', border: 'border-amber-600/40' },
+                { name: 'Silver #2 (â‚¬25)', data: tier_breakdown.silver, color: 'bg-slate-400', border: 'border-slate-400/40' },
+                { name: 'Gold #3 (â‚¬50)', data: tier_breakdown.gold, color: 'bg-amber-400', border: 'border-amber-400/40' },
+                { name: 'Platinum #4 (â‚¬100)', data: tier_breakdown.platinum, color: 'bg-cyan-400', border: 'border-cyan-400/40' },
               ].map((tier, idx) => {
                 const pct = kpis.total_packs_count > 0 ? Math.round((tier.data.packs / kpis.total_packs_count) * 100) : 0;
                 return (
@@ -270,7 +268,7 @@ export default function AdminAnalyticsDashboardPage() {
                       <span className="font-semibold text-neutral-200">{tier.name}</span>
                       <div className="text-right font-mono">
                         <span className="text-white font-bold">{tier.data.packs} buste</span>
-                        <span className="text-neutral-500 ml-2">(€{tier.data.revenue.toLocaleString()})</span>
+                        <span className="text-neutral-500 ml-2">(â‚¬{tier.data.revenue.toLocaleString()})</span>
                       </div>
                     </div>
                     <div className="h-3.5 w-full bg-white/5 rounded-full overflow-hidden flex items-center p-0.5">
@@ -291,7 +289,7 @@ export default function AdminAnalyticsDashboardPage() {
             <div className="flex items-center justify-between border-b border-white/5 pb-4">
               <div>
                 <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                  <span>⏰</span> Orari di Maggior Acquisto (Distribuzione 24h)
+                  <span>â°</span> Orari di Maggior Acquisto (Distribuzione 24h)
                 </h2>
                 <p className="text-xs text-neutral-500 mt-1">Volume di acquisti di buste raggruppati per ora del giorno.</p>
               </div>
@@ -337,7 +335,7 @@ export default function AdminAnalyticsDashboardPage() {
           {/* TOP 5 MOST PULLED CARDS */}
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-4">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider flex items-center gap-2">
-              <span>🔥</span> Carte Più Estratte (Top 5)
+              <span>ðŸ”¥</span> Carte PiÃ¹ Estratte (Top 5)
             </h3>
             <div className="space-y-3">
               {card_analytics.top_pulled.map((card, idx) => (
@@ -347,7 +345,7 @@ export default function AdminAnalyticsDashboardPage() {
                     <div>
                       <div className="font-semibold text-white">{card.nome} <span className="text-[10px] text-neutral-500">(#{card.numero})</span></div>
                       <div className="text-[9px] capitalize text-neutral-500" style={{ color: RARITY_COLORS[card.rarita] }}>
-                        {card.rarita.replace('_', ' ')} · {card.elemento}
+                        {card.rarita.replace('_', ' ')} Â· {card.elemento}
                       </div>
                     </div>
                   </div>
@@ -363,7 +361,7 @@ export default function AdminAnalyticsDashboardPage() {
           {/* TOP 5 RAREST PULLED CARDS */}
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-4">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider flex items-center gap-2">
-              <span>💎</span> Carte Più Rare Estratte (Top 5)
+              <span>ðŸ’Ž</span> Carte PiÃ¹ Rare Estratte (Top 5)
             </h3>
             <div className="space-y-3">
               {card_analytics.rarest_pulled.map((card, idx) => (
@@ -373,7 +371,7 @@ export default function AdminAnalyticsDashboardPage() {
                     <div>
                       <div className="font-semibold text-white">{card.nome} <span className="text-[10px] text-neutral-500">(#{card.numero})</span></div>
                       <div className="text-[9px] capitalize font-semibold" style={{ color: RARITY_COLORS[card.rarita] }}>
-                        {card.rarita.replace('_', ' ')} · {card.elemento}
+                        {card.rarita.replace('_', ' ')} Â· {card.elemento}
                       </div>
                     </div>
                   </div>
@@ -389,7 +387,7 @@ export default function AdminAnalyticsDashboardPage() {
           {/* RARITY DISTRIBUTION */}
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-6">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider flex items-center gap-2">
-              <span>📊</span> Distribuzione per Rarità
+              <span>ðŸ“Š</span> Distribuzione per RaritÃ 
             </h3>
 
             <div className="space-y-4 pt-2">
@@ -421,7 +419,7 @@ export default function AdminAnalyticsDashboardPage() {
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <div>
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <span>🏆</span> Classifica Top Collezionisti Kudjo TCG
+                <span>ðŸ†</span> Classifica Top Collezionisti Kudjo TCG
               </h2>
               <p className="text-xs text-neutral-500 mt-1">Gli utenti che hanno raccolto il maggior numero di carte uniche nello specifico set.</p>
             </div>
@@ -475,7 +473,7 @@ export default function AdminAnalyticsDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
             <div>
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <span className="text-indigo-400">📊</span> Analisi Sondaggi & Feedback Community
+                <span className="text-indigo-400">ðŸ“Š</span> Analisi Sondaggi & Feedback Community
               </h2>
               <p className="text-xs text-neutral-400 mt-1">
                 Panoramica sui sondaggi pubblicati e le risposte fornite dagli utenti. Clicca su un sondaggio per accedere all&apos;analisi dettagliata domanda per domanda.
@@ -485,7 +483,7 @@ export default function AdminAnalyticsDashboardPage() {
               href="/admin/sondaggi"
               className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg transition-all shadow-md shrink-0 flex items-center gap-1.5"
             >
-              <span>📋</span> Gestione Sondaggi
+              <span>ðŸ“‹</span> Gestione Sondaggi
             </Link>
           </div>
 
@@ -529,7 +527,7 @@ export default function AdminAnalyticsDashboardPage() {
                         href={`/admin/sondaggi/${s.id}`}
                         className="w-full inline-block text-center text-xs font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 py-2 rounded-md transition-colors"
                       >
-                        📊 Analisi Risposte Dettagliate →
+                        ðŸ“Š Analisi Risposte Dettagliate â†’
                       </Link>
                     </div>
                   </div>

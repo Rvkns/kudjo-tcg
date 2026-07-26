@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { getItemById, PopulatedItem } from '@/lib/data/mock-db';
+import { maskPublicPrice } from '@/lib/data/price-mask';
 import { SOGLIA_PREZZO_PUBBLICO } from '@/lib/config';
 import { useCart } from '@/app/context/CartContext';
 
@@ -34,8 +35,13 @@ export default function CardDetailPage({
       .catch((err) => console.error(err));
   }, [id]);
 
-  // Retrieve item
-  const populatedItem = useMemo(() => dynamicItem ?? getItemById(id), [id, dynamicItem]);
+  // Retrieve item. The static fallback is masked because it ships inside the
+  // client JS bundle (see lib/data/price-mask.ts).
+  const populatedItem = useMemo(() => {
+    if (dynamicItem) return dynamicItem;
+    const staticItem = getItemById(id);
+    return staticItem ? maskPublicPrice(staticItem) : null;
+  }, [id, dynamicItem]);
 
   // Form States
   const [name, setName] = useState('');

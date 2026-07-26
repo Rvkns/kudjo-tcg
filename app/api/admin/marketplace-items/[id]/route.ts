@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { getUnifiedMarketplaceItemById } from '@/lib/data/dynamic-marketplace';
+import { getUnifiedMarketplaceItemByIdRaw } from '@/lib/data/dynamic-marketplace';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +34,7 @@ export async function GET(request: Request, props: { params: Params }) {
   if (guard instanceof NextResponse) return guard;
 
   try {
-    const item = await getUnifiedMarketplaceItemById(id);
+    const item = await getUnifiedMarketplaceItemByIdRaw(id);
     if (!item) return NextResponse.json({ error: 'Carta non trovata.' }, { status: 404 });
     return NextResponse.json({ item });
   } catch (err: unknown) {

@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface CollectionSet {
   id: string;
@@ -52,13 +51,12 @@ export default function AdminCollectionSetsDashboardPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
       setIsAdmin(true);
       await fetchSets(tok);
@@ -68,7 +66,7 @@ export default function AdminCollectionSetsDashboardPage() {
   }, [locale, router, fetchSets]);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Sei sicuro di voler eliminare il Collection Set "${name}"?\n\nQuesta azione non potrà essere annullata.`)) {
+    if (!confirm(`Sei sicuro di voler eliminare il Collection Set "${name}"?\n\nQuesta azione non potrÃ  essere annullata.`)) {
       return;
     }
     setDeletingId(id);
@@ -107,7 +105,7 @@ export default function AdminCollectionSetsDashboardPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -117,7 +115,7 @@ export default function AdminCollectionSetsDashboardPage() {
             href="/admin/collection-sets/nuovo"
             className="text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-all shadow-md flex items-center gap-1.5"
           >
-            <span>＋</span> Nuovo Collection Set
+            <span>ï¼‹</span> Nuovo Collection Set
           </Link>
         </div>
       </div>
@@ -136,7 +134,7 @@ export default function AdminCollectionSetsDashboardPage() {
 
         {sets.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-xl">
-            <div className="text-5xl mb-4">🎴</div>
+            <div className="text-5xl mb-4">ðŸŽ´</div>
             <p className="text-neutral-400 text-sm mb-4">Nessun Collection Set configurato al momento.</p>
             <Link
               href="/admin/collection-sets/nuovo"
@@ -182,14 +180,14 @@ export default function AdminCollectionSetsDashboardPage() {
                     href={`/admin/collection-sets/${s.id}`}
                     className="text-xs text-neutral-300 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded transition-all"
                   >
-                    ✏️ Modifica
+                    âœï¸ Modifica
                   </Link>
                   <button
                     onClick={() => handleDelete(s.id, s.nome)}
                     disabled={deletingId === s.id}
                     className="text-xs text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 px-3 py-1.5 rounded transition-all cursor-pointer disabled:opacity-50"
                   >
-                    {deletingId === s.id ? 'Eliminazione...' : '🗑️ Elimina'}
+                    {deletingId === s.id ? 'Eliminazione...' : 'ðŸ—‘ï¸ Elimina'}
                   </button>
                 </div>
               </div>

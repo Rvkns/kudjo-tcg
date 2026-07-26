@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, use, useCallback } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface Concorso {
   id: string;
@@ -56,9 +55,9 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
 
   // Prizes state
   const [prizes, setPrizes] = useState<string[]>([
-    '1° Premio: Kudjo Mystery Box Premium',
-    '2° Premio: Booster Box Pokémon / One Piece TCG',
-    '3° Premio: Special Art Foil Single Card'
+    '1Â° Premio: Kudjo Mystery Box Premium',
+    '2Â° Premio: Booster Box PokÃ©mon / One Piece TCG',
+    '3Â° Premio: Special Art Foil Single Card'
   ]);
 
   // Drawing animation states
@@ -89,13 +88,12 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
       setIsAdmin(true);
       await fetchDetails(tok);
@@ -134,7 +132,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
       return;
     }
 
-    if (!confirm('Sei pronto ad avviare l\'estrazione ufficiale dei vincitori?\n\nL\'operazione salverà i risultati nel database.')) {
+    if (!confirm('Sei pronto ad avviare l\'estrazione ufficiale dei vincitori?\n\nL\'operazione salverÃ  i risultati nel database.')) {
       return;
     }
 
@@ -203,7 +201,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
   };
 
   const handleResetDraw = async () => {
-    if (!confirm('ATTENZIONE: Sei sicuro di voler annullare l\'estrazione?\n\nQuesto eliminerà in modo permanente l\'elenco dei vincitori per questo concorso, permettendoti di effettuare un nuovo sorteggio.')) {
+    if (!confirm('ATTENZIONE: Sei sicuro di voler annullare l\'estrazione?\n\nQuesto eliminerÃ  in modo permanente l\'elenco dei vincitori per questo concorso, permettendoti di effettuare un nuovo sorteggio.')) {
       return;
     }
 
@@ -256,7 +254,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
       {/* Top bar */}
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-3 text-sm">
-          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
           <span className="text-neutral-700">/</span>
           <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
           <span className="text-neutral-700">/</span>
@@ -274,7 +272,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
               Gestione Estrazione: <span className="text-red-400 font-semibold">{concorso.nome}</span>
             </h1>
             <p className="text-sm text-neutral-400 max-w-2xl">
-              Configura i premi da estrarre ed effettua il sorteggio basato sulla quantità di ticket accumulati dagli utenti.
+              Configura i premi da estrarre ed effettua il sorteggio basato sulla quantitÃ  di ticket accumulati dagli utenti.
             </p>
           </div>
           <div className="text-neutral-500 text-xs md:text-right">
@@ -287,7 +285,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
         {isDrawing && (
           <div className="bg-red-950/20 border border-red-500/30 rounded-xl p-8 mb-8 text-center space-y-6 animate-pulse">
             <div className="inline-block px-3 py-1 bg-red-500/20 border border-red-500/40 rounded-full text-red-400 text-[10px] font-bold tracking-widest uppercase">
-              ⚡ Estrazione in corso...
+              âš¡ Estrazione in corso...
             </div>
             
             <div className="space-y-1">
@@ -324,13 +322,13 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
               <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                    <span>🏆</span> Vincitori Ufficiali
+                    <span>ðŸ†</span> Vincitori Ufficiali
                   </h2>
                   <button
                     onClick={handleResetDraw}
                     className="text-xs text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 px-3 py-1.5 rounded transition-all cursor-pointer"
                   >
-                    🔄 Resetta Sorteggio
+                    ðŸ”„ Resetta Sorteggio
                   </button>
                 </div>
 
@@ -343,7 +341,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
                       <div className="space-y-1.5">
                         <div className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">{w.prize}</div>
                         <div className="text-base font-bold text-white flex items-center gap-2">
-                          <span>👤</span> {w.user.full_name || '—'}
+                          <span>ðŸ‘¤</span> {w.user.full_name || 'â€”'}
                         </div>
                         <div className="text-xs text-neutral-400">{w.user.email}</div>
                       </div>
@@ -352,7 +350,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
                         <div className="text-[10px] text-neutral-500 uppercase tracking-wider">Ticket Posseduti</div>
                         <div className="text-sm font-semibold text-red-400">{w.ticket_count} ticket</div>
                         <div className="text-[9px] text-neutral-600">
-                          Probabilità: {totalTickets > 0 ? ((w.ticket_count / totalTickets) * 100).toFixed(1) : 0}%
+                          ProbabilitÃ : {totalTickets > 0 ? ((w.ticket_count / totalTickets) * 100).toFixed(1) : 0}%
                         </div>
                       </div>
 
@@ -369,10 +367,10 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
               !isDrawing && (
                 <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-6">
                   <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                    <span>⚙️</span> Configura Premi Riffa
+                    <span>âš™ï¸</span> Configura Premi Riffa
                   </h2>
                   <p className="text-xs text-neutral-500 leading-relaxed">
-                    Aggiungi l&apos;elenco dei premi finali in ordine di estrazione. Il sorteggio finale assegnerà ciascun premio a un utente estratto casualmente in modo ponderato (più ticket equivalgono a maggiore probabilità). Ciascun utente può vincere un solo premio.
+                    Aggiungi l&apos;elenco dei premi finali in ordine di estrazione. Il sorteggio finale assegnerÃ  ciascun premio a un utente estratto casualmente in modo ponderato (piÃ¹ ticket equivalgono a maggiore probabilitÃ ). Ciascun utente puÃ² vincere un solo premio.
                   </p>
 
                   <div className="space-y-3">
@@ -403,7 +401,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
                     onClick={handleAddPrizeInput}
                     className="text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1.5 pt-1 cursor-pointer"
                   >
-                    ➕ Aggiungi Premio
+                    âž• Aggiungi Premio
                   </button>
 
                   <div className="border-t border-white/5 pt-6 bg-transparent">
@@ -411,7 +409,7 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
                       onClick={handleExecuteDraw}
                       className="w-full bg-red-600 hover:bg-red-500 text-white font-bold uppercase tracking-widest text-xs py-4 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_25px_rgba(239,68,68,0.35)] transition-all cursor-pointer"
                     >
-                      🎲 Avvia Estrazione Ufficiale
+                      ðŸŽ² Avvia Estrazione Ufficiale
                     </button>
                   </div>
                 </div>
@@ -435,12 +433,12 @@ export default function ConcorsoRaffleDetailPage(props: { params: Params }) {
                     return (
                       <div key={tRow.user_id} className="text-xs flex items-center justify-between border-b border-white/5 pb-2.5">
                         <div className="truncate max-w-[160px]">
-                          <div className="font-semibold text-neutral-200 truncate">{tRow.user.full_name || '—'}</div>
+                          <div className="font-semibold text-neutral-200 truncate">{tRow.user.full_name || 'â€”'}</div>
                           <div className="text-[10px] text-neutral-500 truncate">{tRow.user.email}</div>
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-red-400">{tRow.quantity} ticket</div>
-                          <div className="text-[9px] text-neutral-600">Probabilità: {prob}%</div>
+                          <div className="text-[9px] text-neutral-600">ProbabilitÃ : {prob}%</div>
                         </div>
                       </div>
                     );

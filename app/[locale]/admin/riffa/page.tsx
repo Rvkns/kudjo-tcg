@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface ConcorsoRaffle {
   id: string;
@@ -27,9 +26,9 @@ const STATO_COLORS: Record<string, string> = {
 };
 
 const STATO_LABELS: Record<string, string> = {
-  draft: '📋 Bozza',
-  attivo: '🟢 Attivo',
-  concluso: '⛔ Concluso',
+  draft: 'ðŸ“‹ Bozza',
+  attivo: 'ðŸŸ¢ Attivo',
+  concluso: 'â›” Concluso',
 };
 
 export default function AdminRiffaDashboardPage() {
@@ -60,13 +59,12 @@ export default function AdminRiffaDashboardPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setIsAdmin(true);
       await fetchRaffles(tok);
       setLoading(false);
@@ -90,7 +88,7 @@ export default function AdminRiffaDashboardPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -113,7 +111,7 @@ export default function AdminRiffaDashboardPage() {
 
         {concorsi.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-xl">
-            <div className="text-5xl mb-4">🎫</div>
+            <div className="text-5xl mb-4">ðŸŽ«</div>
             <p className="text-neutral-400 text-sm">Nessun concorso registrato a cui associare una riffa.</p>
           </div>
         ) : (
@@ -157,12 +155,12 @@ export default function AdminRiffaDashboardPage() {
                         <div>
                           {c.has_drawn ? (
                             <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                              ✓ Completata ({c.winners_count} vincitori)
+                              âœ“ Completata ({c.winners_count} vincitori)
                             </span>
                           ) : c.total_participants === 0 ? (
                             <span className="text-neutral-600">Nessun ticket distribuito</span>
                           ) : (
-                            <span className="text-amber-400 font-semibold animate-pulse">⚡ Da Estrarre</span>
+                            <span className="text-amber-400 font-semibold animate-pulse">âš¡ Da Estrarre</span>
                           )}
                         </div>
                       </div>
@@ -174,7 +172,7 @@ export default function AdminRiffaDashboardPage() {
                       href={`/admin/riffa/${c.id}`}
                       className="w-full md:w-auto text-center text-xs font-bold uppercase tracking-wider bg-red-600 hover:bg-red-500 text-white px-5 py-3 rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.15)] hover:shadow-[0_0_20px_rgba(239,68,68,0.25)] transition-all"
                     >
-                      {c.has_drawn ? '📊 Vedi Risultati' : '🎟️ Gestisci Sorteggio'}
+                      {c.has_drawn ? 'ðŸ“Š Vedi Risultati' : 'ðŸŽŸï¸ Gestisci Sorteggio'}
                     </Link>
                   </div>
                 </div>

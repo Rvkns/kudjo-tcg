@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 export default function NuovoConcorsoPage() {
   const locale = useLocale();
@@ -28,13 +27,12 @@ export default function NuovoConcorsoPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      setToken(session?.access_token ?? '');
+      setToken(admin.token);
       setLoading(false);
     };
     init();
@@ -43,7 +41,7 @@ export default function NuovoConcorsoPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalNome = isDemo ? (nome.trim() || 'Concorso Demo TCG') : nome.trim();
-    if (!finalNome) { setError('Il nome del concorso è obbligatorio.'); return; }
+    if (!finalNome) { setError('Il nome del concorso Ã¨ obbligatorio.'); return; }
     setSaving(true);
     setError('');
 
@@ -88,7 +86,7 @@ export default function NuovoConcorsoPage() {
       {/* Top bar */}
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3 text-sm">
-          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+          <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
           <span className="text-neutral-700">/</span>
           <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
           <span className="text-neutral-700">/</span>
@@ -111,7 +109,7 @@ export default function NuovoConcorsoPage() {
             <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg p-4 text-sm">{error}</div>
           )}
 
-          {/* Modalità Demo Card */}
+          {/* ModalitÃ  Demo Card */}
           <div className={`relative border rounded-xl p-6 transition-all duration-300 ${
             isDemo 
               ? 'bg-amber-500/5 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.05)]' 
@@ -120,11 +118,11 @@ export default function NuovoConcorsoPage() {
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-widest flex items-center gap-2">
-                  <span>🧪</span> Modalità Demo / Test
+                  <span>ðŸ§ª</span> ModalitÃ  Demo / Test
                 </h2>
                 <p className="text-xs text-neutral-500 max-w-xl">
                   {isIt 
-                    ? 'Abilitando questa opzione, il concorso verrà creato con un ID statico dedicato. Verranno generati automaticamente 500 ticket, 10 buste per ciascun tier e 20 carte di prova per il tuo profilo attuale.' 
+                    ? 'Abilitando questa opzione, il concorso verrÃ  creato con un ID statico dedicato. Verranno generati automaticamente 500 ticket, 10 buste per ciascun tier e 20 carte di prova per il tuo profilo attuale.' 
                     : 'Enabling this option creates the contest with a dedicated static ID and automatically seeds 500 tickets, 10 packs per tier, and 20 demo cards for your current profile.'}
                 </p>
               </div>
@@ -192,7 +190,7 @@ export default function NuovoConcorsoPage() {
                           : 'bg-transparent border-white/5 text-neutral-500 hover:border-white/20'
                       }`}
                     >
-                      {s === 'draft' ? '📋 Bozza' : '🟢 Attivo'}
+                      {s === 'draft' ? 'ðŸ“‹ Bozza' : 'ðŸŸ¢ Attivo'}
                     </button>
                   ))}
                 </div>
@@ -231,9 +229,9 @@ export default function NuovoConcorsoPage() {
           {!isDemo && (
             <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-6 space-y-4">
               <div>
-                <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-1">⏰ Reset Automatico</h2>
+                <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-1">â° Reset Automatico</h2>
                 <p className="text-xs text-neutral-500">
-                  Imposta la data/ora in cui il cron job (ogni 15 minuti) dovrà resettare automaticamente il concorso.
+                  Imposta la data/ora in cui il cron job (ogni 15 minuti) dovrÃ  resettare automaticamente il concorso.
                   Lascia vuoto per gestire il reset manualmente.
                 </p>
               </div>

@@ -1,16 +1,15 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 import Image from 'next/image';
 import KudjoCard from '@/app/components/KudjoCard';
 import { KudjoCardElemento } from '@/lib/schema/kudjo-card';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface RealMarketplaceItem {
   id: string;
@@ -63,14 +62,14 @@ const RARITY_BADGES: Record<string, string> = {
 };
 
 const ELEMENT_ICONS: Record<string, string> = {
-  Fuoco: '🔥',
-  Acqua: '💧',
-  Terra: '🪨',
-  Ombra: '🌑',
-  Fulmine: '⚡',
-  Ghiaccio: '❄️',
-  Drago: '🐉',
-  Luce: '✨',
+  Fuoco: 'ðŸ”¥',
+  Acqua: 'ðŸ’§',
+  Terra: 'ðŸª¨',
+  Ombra: 'ðŸŒ‘',
+  Fulmine: 'âš¡',
+  Ghiaccio: 'â„ï¸',
+  Drago: 'ðŸ‰',
+  Luce: 'âœ¨',
 };
 
 export default function AdminCartePage() {
@@ -148,13 +147,12 @@ export default function AdminCartePage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
       setIsAdmin(true);
 
@@ -274,7 +272,7 @@ export default function AdminCartePage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -285,7 +283,7 @@ export default function AdminCartePage() {
             href="/admin/carte/nuova"
             className="text-xs font-bold bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-lg transition-all shadow-md flex items-center gap-1.5"
           >
-            <span>＋</span> Nuova Carta (Reale o Digitale)
+            <span>ï¼‹</span> Nuova Carta (Reale o Digitale)
           </Link>
         </div>
       </div>
@@ -314,7 +312,7 @@ export default function AdminCartePage() {
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            <span>💎</span> Carte Reali in Vendita nello Store ({realItems.length})
+            <span>ðŸ’Ž</span> Carte Reali in Vendita nello Store ({realItems.length})
           </button>
 
           <button
@@ -325,7 +323,7 @@ export default function AdminCartePage() {
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            <span>🃏</span> Buste Digitali TCG ({digitalCards.length})
+            <span>ðŸƒ</span> Buste Digitali TCG ({digitalCards.length})
           </button>
 
           <button
@@ -336,7 +334,7 @@ export default function AdminCartePage() {
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            <span>📦</span> Prezzi Pacchetti (4 Tier)
+            <span>ðŸ“¦</span> Prezzi Pacchetti (4 Tier)
           </button>
         </div>
 
@@ -348,7 +346,7 @@ export default function AdminCartePage() {
                 type="text"
                 value={realSearch}
                 onChange={(e) => setRealSearch(e.target.value)}
-                placeholder="Cerca carta per nome, set o gioco (es. Charizard, Pokémon, OP-05)..."
+                placeholder="Cerca carta per nome, set o gioco (es. Charizard, PokÃ©mon, OP-05)..."
                 className="w-full sm:w-96 bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500/50"
               />
 
@@ -356,7 +354,7 @@ export default function AdminCartePage() {
                 href="/admin/carte/nuova"
                 className="text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
               >
-                <span>＋</span> Inserisci Carta Reale da Vendere
+                <span>ï¼‹</span> Inserisci Carta Reale da Vendere
               </Link>
             </div>
 
@@ -389,7 +387,7 @@ export default function AdminCartePage() {
                     <div>
                       <h3 className="text-sm font-bold text-white truncate">{r.card.nome}</h3>
                       <div className="text-xs text-neutral-400 mt-0.5 truncate">{r.set.nome}</div>
-                      <div className="text-lg font-extrabold text-amber-400 mt-2">€{r.item.prezzo}</div>
+                      <div className="text-lg font-extrabold text-amber-400 mt-2">â‚¬{r.item.prezzo}</div>
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] border-t border-white/5 pt-2">
@@ -408,14 +406,14 @@ export default function AdminCartePage() {
                       target="_blank"
                       className="text-[11px] text-neutral-400 hover:text-white transition-colors"
                     >
-                      👁️ Vedi nello Store
+                      ðŸ‘ï¸ Vedi nello Store
                     </Link>
 
                     <button
                       onClick={() => handleDeleteRealItem(r.id, r.card.nome)}
                       className="text-[11px] text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                     >
-                      🗑️ Elimina
+                      ðŸ—‘ï¸ Elimina
                     </button>
                   </div>
                 </div>
@@ -441,7 +439,7 @@ export default function AdminCartePage() {
                 onChange={(e) => setRarityFilter(e.target.value)}
                 className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500/50"
               >
-                <option value="all">Tutte le Rarità</option>
+                <option value="all">Tutte le RaritÃ </option>
                 <option value="comune">Comuni</option>
                 <option value="non_comune">Non Comuni</option>
                 <option value="raro">Rare</option>
@@ -453,14 +451,14 @@ export default function AdminCartePage() {
                 className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500/50"
               >
                 <option value="all">Tutti gli Elementi</option>
-                <option value="Fuoco">🔥 Fuoco</option>
-                <option value="Acqua">💧 Acqua</option>
-                <option value="Terra">🪨 Terra</option>
-                <option value="Ombra">🌑 Ombra</option>
-                <option value="Fulmine">⚡ Fulmine</option>
-                <option value="Ghiaccio">❄️ Ghiaccio</option>
-                <option value="Drago">🐉 Drago</option>
-                <option value="Luce">✨ Luce</option>
+                <option value="Fuoco">ðŸ”¥ Fuoco</option>
+                <option value="Acqua">ðŸ’§ Acqua</option>
+                <option value="Terra">ðŸª¨ Terra</option>
+                <option value="Ombra">ðŸŒ‘ Ombra</option>
+                <option value="Fulmine">âš¡ Fulmine</option>
+                <option value="Ghiaccio">â„ï¸ Ghiaccio</option>
+                <option value="Drago">ðŸ‰ Drago</option>
+                <option value="Luce">âœ¨ Luce</option>
               </select>
             </div>
 
@@ -504,7 +502,7 @@ export default function AdminCartePage() {
                         <h3 className="text-xs font-bold text-white truncate">{c.nome}</h3>
                         <div className="flex items-center justify-between mt-1 text-[10px]">
                           <span className="text-neutral-400">
-                            {ELEMENT_ICONS[c.elemento] || '✨'} {c.elemento}
+                            {ELEMENT_ICONS[c.elemento] || 'âœ¨'} {c.elemento}
                           </span>
                           <span className="font-mono text-cyan-400 font-bold">PWR: {c.potere}</span>
                         </div>
@@ -525,14 +523,14 @@ export default function AdminCartePage() {
                         href={`/admin/carte/${c.id}`}
                         className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors"
                       >
-                        ✏️ Modifica
+                        âœï¸ Modifica
                       </Link>
                       {c.is_custom && (
                         <button
                           onClick={() => handleDeleteDigitalCard(c.id, c.nome)}
                           className="text-[10px] text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                         >
-                          🗑️ Elimina
+                          ðŸ—‘ï¸ Elimina
                         </button>
                       )}
                     </div>
@@ -555,7 +553,7 @@ export default function AdminCartePage() {
                       <span className="text-xs text-neutral-500 font-mono uppercase">{tier.tier_key}</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-extrabold text-cyan-400">€{tier.prezzo_eur}</div>
+                      <div className="text-2xl font-extrabold text-cyan-400">â‚¬{tier.prezzo_eur}</div>
                       <div className="text-[10px] text-neutral-500 font-mono">Prezzo Busta</div>
                     </div>
                   </div>
@@ -578,7 +576,7 @@ export default function AdminCartePage() {
                       onClick={() => setEditingTier(tier)}
                       className="w-full bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 font-semibold text-xs py-2.5 rounded-lg transition-colors cursor-pointer"
                     >
-                      ✏️ Modifica Prezzo & Descrizione
+                      âœï¸ Modifica Prezzo & Descrizione
                     </button>
                   </div>
                 </div>
@@ -597,7 +595,7 @@ export default function AdminCartePage() {
                       onClick={() => setEditingTier(null)}
                       className="text-neutral-500 hover:text-white transition-colors"
                     >
-                      ✕
+                      âœ•
                     </button>
                   </div>
 
@@ -618,7 +616,7 @@ export default function AdminCartePage() {
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">
-                          Prezzo (€)
+                          Prezzo (â‚¬)
                         </label>
                         <input
                           type="number"

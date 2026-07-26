@@ -1,4 +1,5 @@
 import { getPopulatedItems } from '@/lib/data/mock-db';
+import { maskPublicPrices } from '@/lib/data/price-mask';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import HoloCard from '@/app/components/HoloCard';
@@ -17,7 +18,10 @@ export default function HomePage() {
     'item_p_sylveon_psa9',
   ];
 
-  const allItems = getPopulatedItems();
+  // Masked: this is a Server Component, so any unmasked price above
+  // SOGLIA_PREZZO_PUBBLICO would be serialized into the page's RSC payload even
+  // though the UI displays "Su richiesta" — see lib/data/price-mask.ts.
+  const allItems = maskPublicPrices(getPopulatedItems());
   const items = featuredIds
     .map(id => allItems.find(item => item.id === id))
     .filter((item): item is NonNullable<typeof item> => !!item);

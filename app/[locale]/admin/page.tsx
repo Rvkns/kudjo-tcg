@@ -1,13 +1,11 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
-
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
 export default function AdminPage() {
   const locale = useLocale();
@@ -18,13 +16,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     const checkAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      setUserEmail(email);
-      if (!email || !ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
+      setUserEmail(admin.email);
       setIsAdmin(true);
       setLoading(false);
     };
@@ -44,7 +41,7 @@ export default function AdminPage() {
   const adminCards = [
     {
       href: '/admin/analytics',
-      icon: '📈',
+      icon: 'ðŸ“ˆ',
       title: 'Analytics & KPI Dashboard',
       description: 'Panoramica e dettaglio di fatturato, acquisti per orario, pull rate carte, utenti e conversioni.',
       color: 'from-cyan-500/10 to-blue-900/5 border-cyan-500/20 hover:border-cyan-500/40',
@@ -52,7 +49,7 @@ export default function AdminPage() {
     },
     {
       href: '/admin/carte',
-      icon: '🃏',
+      icon: 'ðŸƒ',
       title: 'Gestione Carte & Pacchetti',
       description: 'Aggiungi nuove carte TCG, modifica descrizioni/grafica ed aggiorna i prezzi dei pacchetti.',
       color: 'from-cyan-500/10 to-emerald-900/5 border-cyan-500/20 hover:border-cyan-500/40',
@@ -60,7 +57,7 @@ export default function AdminPage() {
     },
     {
       href: '/admin/concorsi',
-      icon: '🏆',
+      icon: 'ðŸ†',
       title: 'Gestione Concorsi',
       description: 'Crea, attiva, concludi concorsi. Configura reset automatici e visualizza statistiche.',
       color: 'from-amber-500/10 to-amber-900/5 border-amber-500/20 hover:border-amber-500/40',
@@ -68,7 +65,7 @@ export default function AdminPage() {
     },
     {
       href: '/admin/sondaggi',
-      icon: '📊',
+      icon: 'ðŸ“Š',
       title: 'Gestione Sondaggi',
       description: 'Crea, pubblica e archivia sondaggi per raccogliere feedback dagli utenti. Visualizza le risposte.',
       color: 'from-purple-500/10 to-purple-900/5 border-purple-500/20 hover:border-purple-500/40',
@@ -76,7 +73,7 @@ export default function AdminPage() {
     },
     {
       href: '/admin/collection-sets',
-      icon: '🎴',
+      icon: 'ðŸŽ´',
       title: 'Collection Sets',
       description: 'Configura le collezioni da completare per sbloccare sconti agli utenti.',
       color: 'from-blue-500/10 to-blue-900/5 border-blue-500/20 hover:border-blue-500/40',
@@ -84,7 +81,7 @@ export default function AdminPage() {
     },
     {
       href: '/admin/riffa',
-      icon: '🎫',
+      icon: 'ðŸŽ«',
       title: 'Ticket & Riffa',
       description: 'Visualizza la distribuzione dei ticket e gestisci il sorteggio finale.',
       color: 'from-red-500/10 to-red-900/5 border-red-500/20 hover:border-red-500/40',
@@ -92,7 +89,7 @@ export default function AdminPage() {
     },
     {
       href: '/admin/sconti',
-      icon: '💸',
+      icon: 'ðŸ’¸',
       title: 'Sconti Utenti',
       description: 'Visualizza e gestisci gli sconti permanenti degli utenti.',
       color: 'from-emerald-500/10 to-emerald-900/5 border-emerald-500/20 hover:border-emerald-500/40',
@@ -100,7 +97,7 @@ export default function AdminPage() {
     },
     {
       href: '/admin/wiki',
-      icon: '📖',
+      icon: 'ðŸ“–',
       title: 'Guida & Admin Wiki',
       description: 'Manuale d\'uso completo per la gestione di carte reali, buste, concorsi, sondaggi e sconti.',
       color: 'from-amber-500/10 to-cyan-900/5 border-cyan-500/30 hover:border-amber-500/50',
@@ -115,7 +112,7 @@ export default function AdminPage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-neutral-400 hover:text-white transition-colors text-sm">
-              ← Sito
+              â† Sito
             </Link>
             <span className="text-neutral-700">/</span>
             <span className="text-white font-semibold text-sm">Admin Panel</span>
@@ -131,7 +128,7 @@ export default function AdminPage() {
         {/* Header */}
         <div className="mb-12">
           <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold tracking-widest uppercase px-3 py-1.5 rounded-full mb-4">
-            🔐 Accesso Amministratore
+            ðŸ” Accesso Amministratore
           </div>
           <h1 className="text-3xl md:text-4xl font-light text-white mb-2">
             Kudjo <span className="text-amber-400 font-semibold">Admin</span>
@@ -161,7 +158,7 @@ export default function AdminPage() {
               </div>
               {card.href !== '#' && (
                 <div className="text-xs text-amber-400 font-semibold flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-                  Apri sezione <span>→</span>
+                  Apri sezione <span>â†’</span>
                 </div>
               )}
             </Link>

@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface Concorso {
   id: string;
@@ -27,13 +26,13 @@ const STATO_COLORS: Record<string, string> = {
 };
 
 const STATO_LABELS: Record<string, string> = {
-  draft: '📋 Bozza',
-  attivo: '🟢 Attivo',
-  concluso: '⛔ Concluso',
+  draft: 'ðŸ“‹ Bozza',
+  attivo: 'ðŸŸ¢ Attivo',
+  concluso: 'â›” Concluso',
 };
 
 function fmt(dt: string | null) {
-  if (!dt) return '—';
+  if (!dt) return 'â€”';
   return new Date(dt).toLocaleDateString('it-IT', {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -63,13 +62,12 @@ export default function AdminConcorsiPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
-      const tok = session?.access_token ?? '';
+      const tok = admin.token;
       setToken(tok);
       setIsAdmin(true);
       await fetchConcorsi(tok);
@@ -79,7 +77,7 @@ export default function AdminConcorsiPage() {
   }, [locale, router, fetchConcorsi]);
 
   const handleReset = async (c: Concorso) => {
-    if (!confirm(`Sei sicuro di voler resettare e concludere "${c.nome}"?\n\nQuesta operazione:\n• Elimina tutte le buste del concorso\n• Elimina tutte le carte trovate\n• Elimina tutti i ticket\n• Imposta il concorso come "Concluso"\n\nGli sconti degli utenti vengono preservati.`)) return;
+    if (!confirm(`Sei sicuro di voler resettare e concludere "${c.nome}"?\n\nQuesta operazione:\nâ€¢ Elimina tutte le buste del concorso\nâ€¢ Elimina tutte le carte trovate\nâ€¢ Elimina tutti i ticket\nâ€¢ Imposta il concorso come "Concluso"\n\nGli sconti degli utenti vengono preservati.`)) return;
     setResettingId(c.id);
     setResetMsg('');
     const res = await fetch(`/api/admin/concorsi/${c.id}/reset`, {
@@ -89,10 +87,10 @@ export default function AdminConcorsiPage() {
     const json = await res.json();
     setResettingId(null);
     if (json.success) {
-      setResetMsg(`✓ ${json.message}`);
+      setResetMsg(`âœ“ ${json.message}`);
       await fetchConcorsi(token);
     } else {
-      setResetMsg(`✗ Errore: ${json.error}`);
+      setResetMsg(`âœ— Errore: ${json.error}`);
     }
     setTimeout(() => setResetMsg(''), 6000);
   };
@@ -128,7 +126,7 @@ export default function AdminConcorsiPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -146,21 +144,21 @@ export default function AdminConcorsiPage() {
       <div className="max-w-7xl mx-auto px-6 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-light text-white mb-1">Gestione <span className="text-amber-400 font-semibold">Concorsi</span></h1>
-          <p className="text-neutral-500 text-sm">Crea e gestisci i concorsi TCG digitali. Solo un concorso può essere attivo alla volta.</p>
+          <p className="text-neutral-500 text-sm">Crea e gestisci i concorsi TCG digitali. Solo un concorso puÃ² essere attivo alla volta.</p>
         </div>
 
         {fetchError && (
           <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg p-4 text-sm">{fetchError}</div>
         )}
         {resetMsg && (
-          <div className={`mb-6 rounded-lg p-4 text-sm border ${resetMsg.startsWith('✓') ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+          <div className={`mb-6 rounded-lg p-4 text-sm border ${resetMsg.startsWith('âœ“') ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
             {resetMsg}
           </div>
         )}
 
         {concorsi.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-xl">
-            <div className="text-5xl mb-4">🏆</div>
+            <div className="text-5xl mb-4">ðŸ†</div>
             <p className="text-neutral-400 text-sm mb-6">Nessun concorso trovato. Crea il primo concorso!</p>
             <Link
               href="/admin/concorsi/nuovo"
@@ -219,7 +217,7 @@ export default function AdminConcorsiPage() {
                       href={`/admin/concorsi/${c.id}`}
                       className="text-xs font-semibold text-amber-400 hover:text-amber-300 border border-amber-500/30 hover:border-amber-500/50 px-4 py-2 rounded-lg transition-all text-center"
                     >
-                      ✏️ Gestisci
+                      âœï¸ Gestisci
                     </Link>
 
                     {c.stato !== 'concluso' && (
@@ -231,7 +229,7 @@ export default function AdminConcorsiPage() {
                             : 'text-neutral-400 border-neutral-600/30 hover:border-neutral-500/50'
                         }`}
                       >
-                        {c.stato === 'draft' ? '▶ Attiva' : '⏸ Concludi'}
+                        {c.stato === 'draft' ? 'â–¶ Attiva' : 'â¸ Concludi'}
                       </button>
                     )}
 
@@ -241,7 +239,7 @@ export default function AdminConcorsiPage() {
                         disabled={resettingId === c.id}
                         className="text-xs font-semibold text-red-400 border border-red-500/30 hover:border-red-500/50 px-4 py-2 rounded-lg transition-all disabled:opacity-50"
                       >
-                        {resettingId === c.id ? '⏳ Reset...' : '🔄 Reset Ora'}
+                        {resettingId === c.id ? 'â³ Reset...' : 'ðŸ”„ Reset Ora'}
                       </button>
                     )}
                   </div>

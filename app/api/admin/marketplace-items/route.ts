@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { getUnifiedMarketplaceItems } from '@/lib/data/dynamic-marketplace';
+import { getUnifiedMarketplaceItemsRaw } from '@/lib/data/dynamic-marketplace';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +31,9 @@ export async function GET(request: Request) {
   if (guard instanceof NextResponse) return guard;
 
   try {
-    const items = await getUnifiedMarketplaceItems();
+    // Admin inventory management needs real prices, including items above
+    // SOGLIA_PREZZO_PUBBLICO ("Su richiesta") — never use the masked variant here.
+    const items = await getUnifiedMarketplaceItemsRaw();
     return NextResponse.json({ items });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

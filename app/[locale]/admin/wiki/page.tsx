@@ -1,13 +1,12 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-import { supabase } from '@/lib/supabase';
+import { verifyAdminAccess } from '@/lib/adminAuth';
 
-const ADMIN_EMAILS = ['kudjotcg@gmail.com', 'sentz01@gmail.com'];
 
 interface WikiSection {
   id: string;
@@ -33,9 +32,8 @@ export default function AdminWikiPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase() ?? '';
-      if (!ADMIN_EMAILS.includes(email)) {
+      const admin = await verifyAdminAccess();
+      if (!admin) {
         router.replace('/');
         return;
       }
@@ -49,7 +47,7 @@ export default function AdminWikiPage() {
     {
       id: 'panoramica',
       category: 'Generale',
-      icon: '🏰',
+      icon: 'ðŸ°',
       title: 'Panoramica & Permessi Admin',
       badge: 'Architettura & Accesso',
       description: 'Spiegazione del pannello amministrativo Kudjo, ruoli e permessi di sicurezza.',
@@ -58,11 +56,11 @@ export default function AdminWikiPage() {
       steps: [
         {
           title: 'Accesso Riservato Admin',
-          detail: 'L\'accesso al pannello /admin è protetto da Middleware ed invoca la verifica dell\'email Supabase Auth. Solo le email autorizzate (kudjotcg@gmail.com, sentz01@gmail.com) possono visualizzare e modificare le risorse gestionali.',
+          detail: 'L\'accesso al pannello /admin Ã¨ protetto da Middleware ed invoca la verifica dell\'email Supabase Auth. Solo le email autorizzate (kudjotcg@gmail.com, sentz01@gmail.com) possono visualizzare e modificare le risorse gestionali.',
         },
         {
           title: 'Struttura Moduli',
-          detail: 'La piattaforma Kudjo è suddivisa in 7 aree amministrative principali: Analytics, Carte & Pacchetti, Concorsi, Sondaggi, Collection Sets, Ticket & Riffa, e Sconti Utenti.',
+          detail: 'La piattaforma Kudjo Ã¨ suddivisa in 7 aree amministrative principali: Analytics, Carte & Pacchetti, Concorsi, Sondaggi, Collection Sets, Ticket & Riffa, e Sconti Utenti.',
         },
       ],
       importantNotes: [
@@ -72,7 +70,7 @@ export default function AdminWikiPage() {
     {
       id: 'carte',
       category: 'Prodotti & Store',
-      icon: '💎',
+      icon: 'ðŸ’Ž',
       title: 'Gestione Carte Reali, Kudjo TCG & Prezzi Buste',
       badge: 'Store & Catalogo',
       description: 'Come inserire carte reali da vendere nello store, carte del gioco digitale Kudjo TCG e modificare i prezzi delle buste.',
@@ -81,25 +79,25 @@ export default function AdminWikiPage() {
       steps: [
         {
           title: 'Inserire una Carta Reale in Vendita nello Store (/collezione)',
-          detail: 'Nel form "Nuova Carta", seleziona il tab "💎 Carta Reale in Vendita". Inserisci il Prezzo di Vendita in € (es. 150.00), il Nome della carta (es. Charizard ex SAR), il Gioco TCG (Pokémon, One Piece, Yu-Gi-Oh!, Kudjo), il Set/Edizione, lo stato di Gradazione (PSA 10, BGS 9.5 o Raw NM) e le foto ad alta risoluzione (Fronte, Angolata, Retro). La carta apparirà immediatamente nella Collezione pubblica.',
+          detail: 'Nel form "Nuova Carta", seleziona il tab "ðŸ’Ž Carta Reale in Vendita". Inserisci il Prezzo di Vendita in â‚¬ (es. 150.00), il Nome della carta (es. Charizard ex SAR), il Gioco TCG (PokÃ©mon, One Piece, Yu-Gi-Oh!, Kudjo), il Set/Edizione, lo stato di Gradazione (PSA 10, BGS 9.5 o Raw NM) e le foto ad alta risoluzione (Fronte, Angolata, Retro). La carta apparirÃ  immediatamente nella Collezione pubblica.',
         },
         {
           title: 'Inserire una Carta Busta Digitale Kudjo TCG',
-          detail: 'Nel form "Nuova Carta", seleziona "🃏 Carta Busta Digitale". Inserisci il Numero di raccolta (#1..#55), l\'Elemento (Fuoco, Acqua, Terra, Ombra, Fulmine, Ghiaccio, Drago, Luce), la Rarità (Comune, Non Comune, Raro) ed il Potere PWR (es. 500). Se non viene fornito un URL foto custom, il gioco utilizzerà automaticamente la grafica olografica procedurale Kudjo TCG.',
+          detail: 'Nel form "Nuova Carta", seleziona "ðŸƒ Carta Busta Digitale". Inserisci il Numero di raccolta (#1..#55), l\'Elemento (Fuoco, Acqua, Terra, Ombra, Fulmine, Ghiaccio, Drago, Luce), la RaritÃ  (Comune, Non Comune, Raro) ed il Potere PWR (es. 500). Se non viene fornito un URL foto custom, il gioco utilizzerÃ  automaticamente la grafica olografica procedurale Kudjo TCG.',
         },
         {
           title: 'Modificare Prezzo & Contenuto dei 4 Pacchetti Buste',
-          detail: 'Nel tab "📦 Prezzi Pacchetti", seleziona uno dei 4 Tier (Busta Rame, Argento, Oro, Platino). Puoi modificare il prezzo in Euro, il numero di carte erogate per busta ed il numero di Ticket Riffa inclusi omaggio. I nuovi prezzi aggiornano istantaneamente le sessioni Stripe Checkout & PayPal.',
+          detail: 'Nel tab "ðŸ“¦ Prezzi Pacchetti", seleziona uno dei 4 Tier (Busta Rame, Argento, Oro, Platino). Puoi modificare il prezzo in Euro, il numero di carte erogate per busta ed il numero di Ticket Riffa inclusi omaggio. I nuovi prezzi aggiornano istantaneamente le sessioni Stripe Checkout & PayPal.',
         },
       ],
       importantNotes: [
-        'Ricorda: Le carte reali in vendita nello store richiedono obbligatoriamente un prezzo in € e la foto del pezzo fisico.',
+        'Ricorda: Le carte reali in vendita nello store richiedono obbligatoriamente un prezzo in â‚¬ e la foto del pezzo fisico.',
       ],
     },
     {
       id: 'analytics',
       category: 'Statistiche',
-      icon: '📈',
+      icon: 'ðŸ“ˆ',
       title: 'Analytics & KPI Dashboard Executive',
       badge: 'Metriche & Insight',
       description: 'Analisi dettagliata di fatturato, scontrino medio, buste acquistate per orario, pull rate e feedback utenti.',
@@ -108,15 +106,15 @@ export default function AdminWikiPage() {
       steps: [
         {
           title: 'KPI Summary Cards',
-          detail: 'Visualizza in tempo reale il Fatturato Totale (€), il totale Buste Vendute, il totale Utenti Registrati, le Carte Sbustate ed il totale Ticket Riffa in circolazione.',
+          detail: 'Visualizza in tempo reale il Fatturato Totale (â‚¬), il totale Buste Vendute, il totale Utenti Registrati, le Carte Sbustate ed il totale Ticket Riffa in circolazione.',
         },
         {
           title: 'Heatmap Orario delle Vendite (24h)',
-          detail: 'Grafico a barre interattivo per individuare in quali fasce orarie della giornata gli utenti acquistano più buste digitali.',
+          detail: 'Grafico a barre interattivo per individuare in quali fasce orarie della giornata gli utenti acquistano piÃ¹ buste digitali.',
         },
         {
-          title: 'Analisi Carte più Sbustate vs più Rare',
-          detail: 'Ranking delle carte che escono di più durante le aperture ed i relativi tassi di rarità e distribuzione per elemento.',
+          title: 'Analisi Carte piÃ¹ Sbustate vs piÃ¹ Rare',
+          detail: 'Ranking delle carte che escono di piÃ¹ durante le aperture ed i relativi tassi di raritÃ  e distribuzione per elemento.',
         },
         {
           title: 'Analisi Sondaggi & Feedback Community',
@@ -127,7 +125,7 @@ export default function AdminWikiPage() {
     {
       id: 'concorsi',
       category: 'Gioco & Concorsi',
-      icon: '🏆',
+      icon: 'ðŸ†',
       title: 'Concorsi, Reset Carte & Estrazione Riffa',
       badge: 'Regolamento & Sorteggio',
       description: 'Come gestire i concorsi a premi temporizzati, il reset automatico ed il sorteggio con peso probabilistico.',
@@ -144,7 +142,7 @@ export default function AdminWikiPage() {
         },
         {
           title: 'Estrazione Riffa / Sorteggio Finale (/admin/riffa)',
-          detail: 'Nel pannello /admin/riffa/[id], l\'admin può avviare il sorteggio automatico con il pulsante "Esegui Estrazione". L\'algoritmo utilizza una selezione casuale ponderata (weighted random selection) dove ciascun ticket posseduto dall\'utente rappresenta 1 chance di vittoria. Il vincitore viene salvato ed esposto pubblicamente nella pagina /concorso.',
+          detail: 'Nel pannello /admin/riffa/[id], l\'admin puÃ² avviare il sorteggio automatico con il pulsante "Esegui Estrazione". L\'algoritmo utilizza una selezione casuale ponderata (weighted random selection) dove ciascun ticket posseduto dall\'utente rappresenta 1 chance di vittoria. Il vincitore viene salvato ed esposto pubblicamente nella pagina /concorso.',
         },
       ],
       importantNotes: [
@@ -154,7 +152,7 @@ export default function AdminWikiPage() {
     {
       id: 'collection_sets',
       category: 'Gamification',
-      icon: '🎴',
+      icon: 'ðŸŽ´',
       title: 'Collection Sets & Sblocchi Ricompense',
       badge: 'Progresso Utenti',
       description: 'Creazione di set di carte tematici che gli utenti devono completare per sbloccare codici sconto esclusivi.',
@@ -178,7 +176,7 @@ export default function AdminWikiPage() {
     {
       id: 'sconti',
       category: 'Promozioni',
-      icon: '💸',
+      icon: 'ðŸ’¸',
       title: 'Sconti Utenti & Assegnazioni Manuali',
       badge: 'Fidelizzazione',
       description: 'Pannello per monitorare gli sconti attivi e regalare codici sconto o bonus direttamente a specifici utenti.',
@@ -191,14 +189,14 @@ export default function AdminWikiPage() {
         },
         {
           title: 'Assegnazione Manuale (/admin/sconti/assegna)',
-          detail: 'Seleziona un utente dal menu a tendina, digita il codice sconto (es. "VIP50"), la percentuale ed un messaggio di motivazione. Lo sconto sarà disponibile immediatamente nel profilo dell\'utente.',
+          detail: 'Seleziona un utente dal menu a tendina, digita il codice sconto (es. "VIP50"), la percentuale ed un messaggio di motivazione. Lo sconto sarÃ  disponibile immediatamente nel profilo dell\'utente.',
         },
       ],
     },
     {
       id: 'sondaggi',
       category: 'Community',
-      icon: '📊',
+      icon: 'ðŸ“Š',
       title: 'Sondaggi & Community Feedback',
       badge: 'Sondaggi Dinamici',
       description: 'Come creare sondaggi con domande e risposte dinamiche per raccogliere opinioni e premiare la community.',
@@ -222,7 +220,7 @@ export default function AdminWikiPage() {
     {
       id: 'infrastruttura',
       category: 'Tecnico',
-      icon: '⚙️',
+      icon: 'âš™ï¸',
       title: 'Infrastruttura Stripe, PayPal & Supabase',
       badge: 'Integrazioni backend',
       description: 'Dettagli tecnici sui webhook di pagamento e la configurazione del database SQL Supabase.',
@@ -273,7 +271,7 @@ export default function AdminWikiPage() {
       <div className="border-b border-white/5 bg-[#0d0d0f]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">← Sito</Link>
+            <Link href="/" className="text-neutral-400 hover:text-white transition-colors">â† Sito</Link>
             <span className="text-neutral-700">/</span>
             <Link href="/admin" className="text-neutral-400 hover:text-white transition-colors">Admin</Link>
             <span className="text-neutral-700">/</span>
@@ -285,7 +283,7 @@ export default function AdminWikiPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="🔍 Cerca nella wiki (es. reset, PSA, ticket)..."
+              placeholder="ðŸ” Cerca nella wiki (es. reset, PSA, ticket)..."
               className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50"
             />
           </div>
@@ -297,13 +295,13 @@ export default function AdminWikiPage() {
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-white/5 pb-8">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
-              📖 Manuale Operativo Completo
+              ðŸ“– Manuale Operativo Completo
             </div>
             <h1 className="text-3xl font-light text-white">
               Guida Gestionale <span className="text-cyan-400 font-semibold">Kudjo Admin Wiki</span>
             </h1>
             <p className="text-neutral-400 text-sm mt-1 max-w-3xl">
-              Documentazione completa ed istruzioni dettagliate passo-passo per gestire ogni funzionalità della piattaforma Kudjo TCG.
+              Documentazione completa ed istruzioni dettagliate passo-passo per gestire ogni funzionalitÃ  della piattaforma Kudjo TCG.
             </p>
           </div>
 
@@ -311,7 +309,7 @@ export default function AdminWikiPage() {
             href="/admin"
             className="self-start md:self-auto bg-white/5 hover:bg-white/10 text-white text-xs font-semibold px-4 py-2.5 rounded-xl border border-white/10 transition-colors"
           >
-            ← Torna al Pannello Admin
+            â† Torna al Pannello Admin
           </Link>
         </div>
 
@@ -378,14 +376,14 @@ export default function AdminWikiPage() {
                     rel="noreferrer"
                     className="text-xs bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow"
                   >
-                    <span>🔗</span> {activeSection.quickLinkText}
+                    <span>ðŸ”—</span> {activeSection.quickLinkText}
                   </a>
                 ) : (
                   <Link
                     href={activeSection.quickLink}
                     className="text-xs bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow"
                   >
-                    <span>⚡</span> {activeSection.quickLinkText}
+                    <span>âš¡</span> {activeSection.quickLinkText}
                   </Link>
                 )}
               </div>
@@ -397,7 +395,7 @@ export default function AdminWikiPage() {
             {activeSection.importantNotes && activeSection.importantNotes.length > 0 && (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 space-y-2">
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-                  <span>⚠️</span> Avvertenza & Regola Importante
+                  <span>âš ï¸</span> Avvertenza & Regola Importante
                 </div>
                 {activeSection.importantNotes.map((note, idx) => (
                   <p key={idx} className="text-xs text-amber-200/90 leading-relaxed">
@@ -410,7 +408,7 @@ export default function AdminWikiPage() {
             {/* Step-by-Step Procedure */}
             <div className="space-y-6">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
-                <span>📑</span> Procedura Dettagliata Operativa
+                <span>ðŸ“‘</span> Procedura Dettagliata Operativa
               </h3>
 
               <div className="space-y-4">

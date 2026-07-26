@@ -7,6 +7,14 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'kudjotcg@gmail.com,sentz01@gm
   .split(',')
   .map((e) => e.trim().toLowerCase());
 
+// PostgREST's `.or()` filter syntax treats ',', '(' and ')' as structural characters
+// that separate/group conditions. Stripping them from user input prevents a crafted
+// search term from breaking out of the intended ilike condition and injecting
+// additional filter clauses against the profiles table.
+function sanitizeSearchTerm(raw: string): string {
+  return raw.replace(/[,()]/g, '').trim();
+}
+
 async function assertAdmin(request: Request): Promise<{ userId: string } | NextResponse> {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,7 +38,7 @@ export async function GET(request: Request) {
   if (guard instanceof NextResponse) return guard;
 
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get('q') || '';
+  const q = sanitizeSearchTerm(searchParams.get('q') || '');
 
   try {
     let query = supabaseAdmin
@@ -39,8 +47,8 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (q.trim()) {
-      query = query.or(`email.ilike.%${q.trim()}%,full_name.ilike.%${q.trim()}%`);
+    if (q) {
+      query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
     }
 
     const { data: users, error } = await query;

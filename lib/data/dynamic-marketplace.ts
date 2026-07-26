@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getPopulatedItems, PopulatedItem } from '@/lib/data/mock-db';
+import { maskPublicPrices } from '@/lib/data/price-mask';
 import { Gioco } from '@/lib/schema/gioco';
 import { Item } from '@/lib/schema/item';
 import { Variant } from '@/lib/schema/variant';
@@ -21,7 +22,14 @@ export interface DBMarketplaceItemRow {
   created_at: string;
 }
 
-export async function getUnifiedMarketplaceItems(): Promise<PopulatedItem[]> {
+/**
+ * Full-fidelity item list with real prices, including pieces priced above
+ * SOGLIA_PREZZO_PUBBLICO ("Su richiesta"). SERVER-ONLY: use only in admin-gated
+ * routes or trusted server-side price validation (e.g. checkout). Never return
+ * this directly from a public API route or pass it as props to a client component —
+ * use getUnifiedMarketplaceItems() (masked) for anything that reaches the browser.
+ */
+export async function getUnifiedMarketplaceItemsRaw(): Promise<PopulatedItem[]> {
   const staticItems = getPopulatedItems();
 
   try {
@@ -97,7 +105,28 @@ export async function getUnifiedMarketplaceItems(): Promise<PopulatedItem[]> {
   }
 }
 
-export async function getUnifiedMarketplaceItemById(id: string): Promise<PopulatedItem | null> {
-  const all = await getUnifiedMarketplaceItems();
+/**
+ * Public, safe-by-default item list: prices at or above SOGLIA_PREZZO_PUBBLICO are
+ * clamped to the threshold (see lib/data/price-mask.ts). Use this everywhere the
+ * result reaches a browser — public API routes, server-rendered props, client
+ * fallback data.
+ */
+export async function getUnifiedMarketplaceItems(): Promise<PopulatedItem[]> {
+  const items = await getUnifiedMarketplaceItemsRaw();
+  return maskPublicPrices(items);
+}
+
+/**
+ * Real-price lookup by ID. SERVER-ONLY — used for admin editing and checkout price
+ * validation. Never expose this response directly to the client.
+ */
+export async function getUnifiedMarketplaceItemByIdRaw(id: string): Promise<PopulatedItem | null> {
+  const all = await getUnifiedMarketplaceItemsRaw();
   return all.find(i => i.id === id) || null;
+}
+
+/** Public, masked single-item lookup (see getUnifiedMarketplaceItems). */
+export async function getUnifiedMarketplaceItemById(id: string): Promise<PopulatedItem | null> {
+  const item = await getUnifiedMarketplaceItemByIdRaw(id);
+  return item ? maskPublicPrices([item])[0] : null;
 }
