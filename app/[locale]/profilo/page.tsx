@@ -99,16 +99,23 @@ export default function ProfiloPage() {
   const refreshState = async () => {
     try {
       const col   = await getUserCollection();
-      const packs = await getPendingPacks();
+      const rawPacks = await getPendingPacks();
+      const packs = rawPacks.filter(p => p.quantity > 0);
       const tix   = await getUserTickets();
       setCollection(col);
       setPendingPacks(packs);
       setUserTickets(tix);
       const total = packs.reduce((sum, p) => sum + p.quantity, 0);
       setTotalPacks(total);
-      // Auto-select first available tier if none is selected
-      if (packs.length > 0 && !selectedTier) {
-        setSelectedTier(packs[0].tier);
+      
+      // Auto-select first available tier if none selected or selected tier no longer available
+      if (packs.length > 0) {
+        setSelectedTier((prev) => {
+          if (prev && packs.some(p => p.tier === prev)) return prev;
+          return packs[0].tier;
+        });
+      } else {
+        setSelectedTier('');
       }
       await fetchCollectionSets();
     } catch (err) {

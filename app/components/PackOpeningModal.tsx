@@ -238,15 +238,19 @@ export default function PackOpeningModal({
 
             {/* Clickable 3D Pack Cover with Floating Effect */}
             <div 
-              onClick={handleStartOpening}
-              className="relative w-48 h-64 cursor-pointer select-none group floating-pack mt-4 transition-transform duration-300 hover:scale-[1.03]"
+              onClick={availablePacks > 0 ? handleStartOpening : undefined}
+              className={`relative w-48 h-64 select-none group floating-pack mt-4 transition-transform duration-300 ${
+                availablePacks > 0 ? 'cursor-pointer hover:scale-[1.03]' : 'opacity-60 cursor-not-allowed'
+              }`}
             >
               {/* Interactive glow border and label */}
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-30 rounded-xl border border-bronze/20">
-                <div className="bg-bronze text-[#0a0a0b] text-[10px] font-bold px-4 py-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 tracking-widest uppercase">
-                  Tocca per aprire
+              {availablePacks > 0 && (
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-30 rounded-xl border border-bronze/20">
+                  <div className="bg-bronze text-[#0a0a0b] text-[10px] font-bold px-4 py-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 tracking-widest uppercase">
+                    Tocca per aprire
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Complete pack cover */}
               <img 
@@ -259,9 +263,10 @@ export default function PackOpeningModal({
             <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-2">
               <button
                 onClick={handleStartOpening}
-                className="w-full bg-[#e11b22] hover:bg-red-700 text-white py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer shadow-lg font-sans"
+                disabled={availablePacks <= 0}
+                className="w-full bg-[#e11b22] hover:bg-red-700 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed text-white py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all cursor-pointer shadow-lg font-sans"
               >
-                Apri 1 Busta Singola
+                {availablePacks > 0 ? 'Apri 1 Busta Singola' : 'Nessuna Busta Disponibile'}
               </button>
 
               {availablePacks > 1 && (
@@ -276,7 +281,9 @@ export default function PackOpeningModal({
 
             <div className="text-center space-y-1">
               <p className="text-neutral-500 text-[10px] uppercase tracking-wider">
-                Contiene 5 carte casuali · Kudjo Set I
+                {availablePacks > 0
+                  ? 'Contiene 5 carte casuali · Kudjo Set I'
+                  : 'Acquista altre buste nel Concorso per aprire questo pacchetto!'}
               </p>
             </div>
           </div>

@@ -230,7 +230,8 @@ export async function getPendingPacks(): Promise<KudjoPendingPack[]> {
       const { data, error } = await supabase
         .from('pending_packs')
         .select('tier, quantity')
-        .eq('user_id', session.user.id);
+        .eq('user_id', session.user.id)
+        .gt('quantity', 0);
       
       if (error) {
         console.error('Error fetching packs from Supabase:', error);
